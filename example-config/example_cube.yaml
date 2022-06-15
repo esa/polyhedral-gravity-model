@@ -1,0 +1,14 @@
+---
+gravityModel:
+  input:
+    polyhedron:
+      - "../example-config/data/cube_origin.node"
+      - "../example-config/data/cube.face"
+    density: 1.0
+    points:
+      - [0, 0, 0]
+      - [1, 1, 1]
+      - [1, 0, 0]
+      - [0, 0, 1]
+  output:
+    filename: "gravity_result_cube.csv"

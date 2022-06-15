@@ -1,0 +1,11 @@
+---
+gravityModel:
+  input:
+    polyhedron:
+      - "../example-config/data/tsoulis.node"
+      - "../example-config/data/tsoulis.face"
+    density: 2670.0
+    points:
+      - [0, 0, 0]
+  output:
+    filename: "gravity_result_tsoulis.csv"
