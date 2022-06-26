@@ -1,4 +1,4 @@
-# polyhedral-gravity-model-cpp
+# polyhedral-gravity-model
 
 ![Build and Test](https://github.com/schuhmaj/polyhedral-gravity-model-cpp/actions/workflows/ctest.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/polyhedral-gravity-model-cpp/badge/?version=latest)](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/?badge=latest)
@@ -28,7 +28,19 @@ all of them are **automatically** set-up via CMake:
 - thrust 1.16.0 (required for parallelization and utility)
 - xsimd 8.1.0 (required for vectorization of the `atan(..)`)
 
-## Build
+## Python interface
+
+Use pip to install the python interface in your local python runtime.
+The module will be build using CMake and the using the above
+requirements. Just execute in repository root:
+
+    pip install .
+
+To modify the build options (like parallelization) have a look
+at the `setupy.py` and the [next paragraph](#build-c).
+
+## Build C++
+
 The program is build by using CMake. So first make sure that you installed
 CMake and then follow these steps:
 
@@ -54,7 +66,7 @@ the defaults of the others are already correctly set):
 
     cmake .. -DPARALLELIZATION_DEVICE="TBB"
 
-## Execution
+## Execution C++
 
 ### Overview
 
@@ -122,7 +134,7 @@ The calculation outputs the following parameters for every Computation Point _P_
 |          Vx, Vy, Vz          |      m/s^2      | The gravitational accerleration in the three cartesian directions |
 | Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |      1/s^2      |   The spatial rate of change of the gravitational accleration    |
 
-## Testing
+## Testing C++
 The project uses GoogleTest for testing. In oder to execute those
 tests just execute the following command in the build directory:
 

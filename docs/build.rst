@@ -1,8 +1,21 @@
 Requirements and Build
 ======================
 
-CMake
------
+Requirements
+------------
+
+Requirements (all of them are automatically set-up via :code:`CMake`):
+
+- GoogleTest 1.11.0 (only required for testing)
+- spdlog 1.9.2 (required for logging)
+- tetgen 1.6 (required for I/O)
+- yaml-cpp 0.7.0 (required for I/O)
+- thrust 1.16.0 (required for parallelization and utility)
+- xsimd 8.1.0 (required for vectorization of the `atan(..)`)
+
+
+Build with CMake
+----------------
 
 The C++ implementation relies on :code:`CMake` as build system.
 The requirements (see below) are set-up automatically during
@@ -30,18 +43,22 @@ BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)    Build the Tests
 BUILD_POLYHEDRAL_PYTHON_INTERFACE (:code:`ON`) Build the Python interface
 ============================================== ===================================================================================================================================
 
+Build & Installation with pip
+-----------------------------
 
-Requirements
-------------
+Use pip to install the python interface in your local python runtime.
+The module will be build using CMake. Just execute in repository root:
 
-Requirements (all of them are automatically set-up via :code:`CMake`):
+.. code-block::
 
-- GoogleTest 1.11.0 (only required for testing)
-- spdlog 1.9.2 (required for logging)
-- tetgen 1.6 (required for I/O)
-- yaml-cpp 0.7.0 (required for I/O)
-- thrust 1.16.0 (required for parallelization and utility)
-- xsimd 8.1.0 (required for vectorization of the `atan(..)`)
+    pip install .
 
+To modify the build options (like parallelization) have a look
+at the :code:`setupy.py`.
+
+Installation with conda
+-----------------------
+
+TODO
 
 
