@@ -111,6 +111,9 @@ class CMakeBuild(build_ext):
             f"-DBUILD_POLYHEDRAL_PYTHON_INTERFACE={BUILD_POLYHEDRAL_PYTHON_INTERFACE}"
         ]
 
+        # Enables log messages for thrust
+        cmake_args += ["--log-level=VERBOSE"]
+
         # Call CMake and build the project
         subprocess.check_call(["cmake", ext.sourcedir] + cmake_args, cwd=build_temp)
         subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=build_temp)
@@ -124,7 +127,7 @@ class CMakeBuild(build_ext):
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="1.0.2",
+    version="1.0.3",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points",
