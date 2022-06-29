@@ -2,13 +2,14 @@ include(FetchContent)
 
 message(STATUS "Setting up thrust")
 
-find_package(Thrust 1.16 QUIET)
+find_package(Thrust 1.16.0 QUIET)
 
 if (${Thrust_FOUND})
 
     message(STATUS "Using local thrust installation")
 
 else()
+    message(STATUS "Using thrust from git repository")
     # Fetches the version 1.16.0 of the official NVIDIA Thrust repository
     FetchContent_Declare(thrust
             GIT_REPOSITORY https://github.com/NVIDIA/thrust.git
