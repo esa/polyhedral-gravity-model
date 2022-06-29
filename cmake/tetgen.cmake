@@ -2,6 +2,9 @@ include(FetchContent)
 
 message(STATUS "Setting up tetgen")
 
+# IMPORTANT NOTE
+# We do ot use findPackage here, as we modify the one source file slightly to suppress output via stdout!!!
+
 #Fetches the version 1.6 for tetgen
 FetchContent_Declare(tetgen
         GIT_REPOSITORY https://github.com/libigl/tetgen.git

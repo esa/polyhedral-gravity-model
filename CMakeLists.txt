@@ -55,7 +55,7 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC
 
 # Link libaries
 target_link_libraries(${PROJECT_NAME}_lib
-        spdlog
+        spdlog::spdlog
         tetgen
         yaml-cpp
         xsimd
