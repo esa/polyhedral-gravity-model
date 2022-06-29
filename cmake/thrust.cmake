@@ -15,8 +15,6 @@ else()
             GIT_TAG 1.16.0
             )
 
-    set(Thrust_DIR ${CMAKE_BINARY_DIR}/_deps/thrust-src/thrust/cmake/)
-
     # Disable stuff not needed
     set(THRUST_ENABLE_HEADER_TESTING "OFF")
     set(THRUST_ENABLE_TESTING "OFF")
