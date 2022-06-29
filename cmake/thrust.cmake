@@ -2,10 +2,10 @@ include(FetchContent)
 
 message(STATUS "Setting up thrust")
 
-# Fetches the version 1.16.0 of the official NVIDIA Thrust repository
+# Fetches the version 1.17.0 of the official NVIDIA Thrust repository
 FetchContent_Declare(thrust
         GIT_REPOSITORY https://github.com/NVIDIA/thrust.git
-        GIT_TAG 1.16.0
+        GIT_TAG 1.17.0
         )
 
 set(Thrust_DIR ${CMAKE_BINARY_DIR}/_deps/thrust-src/thrust/cmake/)
