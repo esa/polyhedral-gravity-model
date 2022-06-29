@@ -2,7 +2,7 @@ include(FetchContent)
 
 message(STATUS "Setting up thrust")
 
-find_package(Thrust 1.16)
+find_package(Thrust 1.16 QUIET)
 
 if (${Thrust_FOUND})
 

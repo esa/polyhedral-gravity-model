@@ -2,7 +2,7 @@ include(FetchContent)
 
 message(STATUS "Setting up yaml-cpp")
 
-find_package(yaml-cpp 0.7.0)
+find_package(yaml-cpp 0.7.0 QUIET)
 
 if (${yaml-cpp_FOUND})
 

@@ -2,7 +2,7 @@ include(FetchContent)
 
 message(STATUS "Setting up pybind11")
 
-find_package(pybind11 2.9.2)
+find_package(pybind11 2.9.2 QUIET)
 
 if (${pybind11_FOUND})
 

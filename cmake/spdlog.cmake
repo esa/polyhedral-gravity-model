@@ -2,7 +2,7 @@ include(FetchContent)
 
 message(STATUS "Setting up spdlog")
 
-find_package(spdlog 1.10.0)
+find_package(spdlog 1.10.0 QUIET)
 
 if (${spdlog_FOUND})
 
