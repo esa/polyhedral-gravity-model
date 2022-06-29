@@ -65,10 +65,10 @@ class CMakeBuild(build_ext):
             cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
         # Get the path/to/conda/env and include it in the cmake prefix path
-        conda_prefix = os.environ.get("CONDA_PREFIX", "")
-        if conda_prefix:
+        prefix = os.environ.get("PREFIX", "")
+        if prefix:
             cmake_args += [
-                f"-DCMAKE_PREFIX_PATH={conda_prefix}"
+                f"-DCMAKE_PREFIX_PATH={prefix}"
             ]
 
         # Sets the CMake Generator if specified
@@ -134,7 +134,7 @@ class CMakeBuild(build_ext):
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="1.0.8",
+    version="1.0.9",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points",
