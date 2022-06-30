@@ -30,33 +30,37 @@ else()
         # Set standard CPP Dialect to 17 (default of thrust would be 14)
         set(THRUST_CPP_DIALECT 17)
 
-        # Original Content of the problematic file
-        ## Parse version information from version.h:
-        ##unset(_THRUST_VERSION_INCLUDE_DIR CACHE) # Clear old result to force search
-        ##find_path(_THRUST_VERSION_INCLUDE_DIR thrust/version.h
-        ##  NO_DEFAULT_PATH # Only search explicit paths below:
-        ##  PATHS
-        ##    "${CMAKE_CURRENT_LIST_DIR}/../.."            # Source tree
-        ##)
-        ##set_property(CACHE _THRUST_VERSION_INCLUDE_DIR PROPERTY TYPE INTERNAL)
 
-        if(EXISTS ${thrust_SOURCE_DIR}/thrust/cmake/thrust-header-search.cmake)
-            message(STATUS "Found problem causing thrust file!")
+        if(EXISTS ${thrust_SOURCE_DIR}/thrust/cmake/thrust-config-version.cmake)
+            message(STATUS "Found problem causing thrust file (1)")
+            file(READ ${thrust_SOURCE_DIR}/thrust/cmake/thrust-config-version.cmake THRUST_CONFIG_VERSION_FILE)
+            string(REPLACE
+                    "file(READ \"\${_THRUST_VERSION_INCLUDE_DIR}/thrust/version.h\" THRUST_VERSION_HEADER)"
+                    "file(READ \"${thrust_SOURCE_DIR}/thrust/version.h\" THRUST_VERSION_HEADER)"
+                    THRUST_CONFIG_VERSION_FILE "${THRUST_CONFIG_VERSION_FILE}")
 
-            file(WRITE ${thrust_SOURCE_DIR}/thrust/cmake/thrust-header-search.cmake
-                    "
-# Parse version information from version.h:
-unset(_THRUST_VERSION_INCLUDE_DIR CACHE) # Clear old result to force search
-find_path(_THRUST_VERSION_INCLUDE_DIR thrust/version.h
-  # NO_DEFAULT_PATH # Only search explicit paths below: COMMENTED BY POLYHEDRAL_GRAVITY_CMAKE
-  PATHS
-    \"${thrust_SOURCE_DIR}/\"            # Source tree
-)
-set_property(CACHE _THRUST_VERSION_INCLUDE_DIR PROPERTY TYPE INTERNAL)
-                    ")
-            message(STATUS "Modified the the problem causing file!")
+            file(WRITE ${thrust_SOURCE_DIR}/thrust/cmake/thrust-config-version.cmake
+                    "${THRUST_CONFIG_VERSION_FILE}"
+                    )
+            message(STATUS "Modified the the problem causing file (1)")
         else()
-            message(STATUS "Problem causing thrust file not found!")
+            message(STATUS "Problem causing thrust file (1) not found!")
+        endif()
+
+        if(EXISTS ${thrust_SOURCE_DIR}/thrust/cmake/thrust-config.cmake)
+            message(STATUS "Found problem causing thrust file (2)")
+            file(READ ${thrust_SOURCE_DIR}/thrust/cmake/thrust-config.cmake THRUST_CONFIG_FILE)
+            string(REPLACE
+                    "target_include_directories(_Thrust_Thrust INTERFACE \"\${_THRUST_INCLUDE_DIR}\")"
+                    "target_include_directories(_Thrust_Thrust INTERFACE \"${thrust_SOURCE_DIR}\")"
+                    THRUST_CONFIG_FILE "${THRUST_CONFIG_FILE}")
+
+            file(WRITE ${thrust_SOURCE_DIR}/thrust/cmake/thrust-config.cmake
+                    "${THRUST_CONFIG_FILE}"
+                    )
+            message(STATUS "Modified the the problem causing file (2)")
+        else()
+            message(STATUS "Problem causing thrust file (2) not found!")
         endif()
 
         # Bring the populated content into the build
