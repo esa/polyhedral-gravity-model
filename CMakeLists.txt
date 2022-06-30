@@ -32,10 +32,10 @@ add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${LOGGING_LEVEL})
 # and include everything necessary
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+include(thrust)
 include(spdlog)
 include(tetgen)
 include(yaml)
-include(thrust)
 include(xsimd)
 
 # Main file, containing the gravity model's driver
