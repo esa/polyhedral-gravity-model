@@ -8,25 +8,29 @@ from setuptools.command.build_ext import build_ext
 
 # ---------------------------------------------------------------------------------
 # Modify these variables to customize the build of the polyhedral gravity interface
+# All variables can be overwritten by setting equally named env variables
 # ---------------------------------------------------------------------------------
-# The generator used for CMake (Leave empty "" for using the default generator!)
+# The generator used for CMake
 CMAKE_GENERATOR = "Ninja"
-# The Build Type (Should be release!)
-CMAKE_BUILD_TYPE = "Release"
-# Modify to change the parallelization (Default value: CPP)
-PARALLELIZATION_HOST = "CPP"
-# Modify to change the parallelization (Default value: CPP)
-PARALLELIZATION_DEVICE = "CPP"
-# Default value (INFO=2)
-LOGGING_LEVEL = 2
-# Default value (OFF)
-USE_LOCAL_TBB = "OFF"
-# Not required for the python interface (--> OFF)
-BUILD_POLYHEDRAL_GRAVITY_DOCS = "OFF"
-# Not required for the python interface (--> OFF)
-BUILD_POLYHEDRAL_GRAVITY_TESTS = "OFF"
-# Should be of course ON!
-BUILD_POLYHEDRAL_PYTHON_INTERFACE = "ON"
+# The other CMake options
+CMAKE_OPTIONS = {
+    # The Build Type (Should be release!)
+    "CMAKE_BUILD_TYPE": "Release",
+    # Modify to change the parallelization (Default value: CPP)
+    "PARALLELIZATION_HOST": "CPP",
+    # Modify to change the parallelization (Default value: CPP)
+    "PARALLELIZATION_DEVICE": "CPP",
+    # Default value (INFO=2)
+    "LOGGING_LEVEL": 2,
+    # Default value (OFF)
+    "USE_LOCAL_TBB": "OFF",
+    # Not required for the python interface (--> OFF)
+    "BUILD_POLYHEDRAL_GRAVITY_DOCS": "OFF",
+    # Not required for the python interface (--> OFF)
+    "BUILD_POLYHEDRAL_GRAVITY_TESTS": "OFF",
+    # Should be of course ON!
+    "BUILD_POLYHEDRAL_PYTHON_INTERFACE": "ON"
+}
 # ---------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------
@@ -56,11 +60,12 @@ class CMakeBuild(build_ext):
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
-            f"-DCMAKE_BUILD_TYPE={CMAKE_BUILD_TYPE}",  # not used on MSVC, but no harm
         ]
         build_args = []
+
         # Adding CMake arguments set as environment variable
         # (needed e.g. to build for ARM OSx on conda-forge)
+        # (no specified CMAKE_ARGS not covered by CMAKE_OPTIONS)
         if "CMAKE_ARGS" in os.environ:
             cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
@@ -71,22 +76,32 @@ class CMakeBuild(build_ext):
                 f"-DCMAKE_PREFIX_PATH={prefix}"
             ]
 
-        # Sets the CMake Generator if specified
-        if CMAKE_GENERATOR:
+        # Use the values specified in the script if no env variable (like on conda) overwrites it
+        for option_name, option_default_value in CMAKE_OPTIONS.items():
+            final_value = os.environ.get(option_name, option_default_value)
             cmake_args += [
-                f"-G{CMAKE_GENERATOR}",
+                f"-D{option_name}={final_value}"
             ]
 
+        # Sets the CMake Generator if specified (this is separate from the other variables since it is given to
+        # CMake vie the -G prefix
+        final_generator = os.environ.get("CMAKE_GENERATOR", CMAKE_GENERATOR)
+        cmake_args += [
+            f"-G{final_generator}"
+        ]
+
+        # MSVC special cases
         if self.compiler.compiler_type == "msvc":
             # Single config generators are handled "normally"
             single_config = any(x in CMAKE_GENERATOR for x in {"NMake", "Ninja"})
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
-                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{CMAKE_BUILD_TYPE.upper()}={extdir}"
+                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{CMAKE_OPTIONS['CMAKE_BUILD_TYPE'].upper()}={extdir}"
                 ]
-                build_args += ["--config", CMAKE_BUILD_TYPE]
+                build_args += ["--config", CMAKE_OPTIONS['CMAKE_BUILD_TYPE']]
 
+        # MacOS special cases
         if sys.platform.startswith("darwin"):
             # Cross-compile support for macOS - respect ARCHFLAGS if set
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
@@ -106,18 +121,6 @@ class CMakeBuild(build_ext):
         if not os.path.exists(build_temp):
             os.makedirs(build_temp)
 
-        # Add project specific arguments
-        # Note that all options are listed here, even if the default value would suffice
-        cmake_args += [
-            f"-DPARALLELIZATION_HOST={PARALLELIZATION_HOST}",
-            f"-DPARALLELIZATION_DEVICE={PARALLELIZATION_DEVICE}",
-            f"-DLOGGING_LEVEL={LOGGING_LEVEL}",
-            f"-DUSE_LOCAL_TBB={USE_LOCAL_TBB}",
-            f"-DBUILD_POLYHEDRAL_GRAVITY_DOCS={BUILD_POLYHEDRAL_GRAVITY_DOCS}",
-            f"-DBUILD_POLYHEDRAL_GRAVITY_TESTS={BUILD_POLYHEDRAL_GRAVITY_TESTS}",
-            f"-DBUILD_POLYHEDRAL_PYTHON_INTERFACE={BUILD_POLYHEDRAL_PYTHON_INTERFACE}"
-        ]
-
         # Enables log messages for thrust
         cmake_args += ["--log-level=VERBOSE"]
 
@@ -134,7 +137,7 @@ class CMakeBuild(build_ext):
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="1.0.13",
+    version="1.1.0",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points",
