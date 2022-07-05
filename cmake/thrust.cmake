@@ -11,9 +11,9 @@ set(THRUST_ENABLE_EXAMPLES "OFF")
 # Set standard CPP Dialect to 17 (default of thrust would be 14)
 set(THRUST_CPP_DIALECT 17)
 
-find_package(thrust 1.16.0 QUIET)
+find_package(Thrust 1.16.0 QUIET)
 
-if (${thrust_FOUND})
+if (${Thrust_FOUND})
 
     message(STATUS "Using local thrust installation")
 
