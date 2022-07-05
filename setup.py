@@ -29,7 +29,9 @@ CMAKE_OPTIONS = {
     # Not required for the python interface (--> OFF)
     "BUILD_POLYHEDRAL_GRAVITY_TESTS": "OFF",
     # Should be of course ON!
-    "BUILD_POLYHEDRAL_PYTHON_INTERFACE": "ON"
+    "BUILD_POLYHEDRAL_PYTHON_INTERFACE": "ON",
+    # Build shared libs by default
+    "BUILD_SHARED_LIBS": "ON"
 }
 # ---------------------------------------------------------------------------------
 
