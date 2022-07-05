@@ -46,7 +46,7 @@ file(GLOB_RECURSE SRC
         "${PROJECT_SOURCE_DIR}/src/polyhedralGravity/*.h"
         "${PROJECT_SOURCE_DIR}/src/polyhedralGravity/*.cpp")
 
-add_library(${PROJECT_NAME}_lib ${SRC})
+add_library(${PROJECT_NAME}_lib STATIC ${SRC})
 
 # Adds the include Path PROJECT_SOURCE_DIR/src to the target polyhedralGravity
 target_include_directories(${PROJECT_NAME}_lib PUBLIC
