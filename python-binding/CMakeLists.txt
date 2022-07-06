@@ -4,9 +4,24 @@ include(pybind11)
 # Stores the file of the python interface in a variable
 set(pythonInterface ${CMAKE_CURRENT_SOURCE_DIR}/python-interface.cpp)
 
-pybind11_add_module(polyhedral_gravity ${pythonInterface})
+file(GLOB_RECURSE PYTHON_INTERFACE_SRC
+        "${PROJECT_SOURCE_DIR}/src/polyhedralGravity/*.h"
+        "${PROJECT_SOURCE_DIR}/src/polyhedralGravity/*.cpp")
 
-target_link_libraries(polyhedral_gravity PUBLIC ${PROJECT_NAME}_lib)
+list(FILTER PYTHON_INTERFACE_SRC EXCLUDE REGEX ".*YAML.*")
+
+pybind11_add_module(polyhedral_gravity ${pythonInterface} ${PYTHON_INTERFACE_SRC})
+
+target_include_directories(polyhedral_gravity PUBLIC
+        "${PROJECT_SOURCE_DIR}/src"
+        )
+
+target_link_libraries(polyhedral_gravity PUBLIC
+        spdlog::spdlog
+        tetgen
+        xsimd
+        Thrust
+        )
 
 # Checks if MinGW is used, in this case, the .dll of the the standard library need to be linked statically to the
 # Python interface since otherwise they won't be found

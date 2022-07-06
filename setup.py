@@ -28,8 +28,12 @@ CMAKE_OPTIONS = {
     "BUILD_POLYHEDRAL_GRAVITY_DOCS": "OFF",
     # Not required for the python interface (--> OFF)
     "BUILD_POLYHEDRAL_GRAVITY_TESTS": "OFF",
+    # Not required for the python interface (--> OFF)
+    "BUILD_POLYHEDRAL_GRAVITY_LIBRARY": "OFF",
+    # Not required for the python interface (--> OFF)
+    "BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE": "OFF",
     # Should be of course ON!
-    "BUILD_POLYHEDRAL_PYTHON_INTERFACE": "ON",
+    "BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE": "ON",
     # Build shared libs by default
     "BUILD_SHARED_LIBS": "ON"
 }
@@ -139,7 +143,7 @@ class CMakeBuild(build_ext):
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="1.1.5",
+    version="1.1.6",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points",
