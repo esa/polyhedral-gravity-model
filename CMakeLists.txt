@@ -72,7 +72,18 @@ endif ()
 # Thrust set-up i.e. the parallelization library, create targets according to the users specification
 thrust_create_target(Thrust HOST ${PARALLELIZATION_HOST} DEVICE ${PARALLELIZATION_DEVICE})
 message(STATUS "Set Parallelization: HOST ${PARALLELIZATION_HOST} DEVICE ${PARALLELIZATION_DEVICE}")
+
+# Adds the include Path PROJECT_SOURCE_DIR/src to the target polyhedralGravity
+target_include_directories(${PROJECT_NAME}_lib PUBLIC
+        "${PROJECT_SOURCE_DIR}/src"
+        )
+
+# Link libraries needed in all targets
 target_link_libraries(${PROJECT_NAME}_lib
+        spdlog::spdlog
+        yaml-cpp
+        tetgen
+        xsimd
         Thrust
         )
 
