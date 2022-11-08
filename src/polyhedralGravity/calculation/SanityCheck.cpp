@@ -12,17 +12,18 @@ namespace polyhedralGravity::SanityCheck {
             // The unit normal of the plane
             const Array3 normal = util::normal(face[0], face[1]);
             // The origin of the array has a slight offset in direction of the normal
-            const Array3 rayOrigin = centroid + normal * util::EPSILON;
+            const Array3 rayOrigin = centroid + (normal * EPSILON);
             // If the ray intersects the polyhedron even-times than the normal points outwards
-            return detail::rayIntersectsPolyhedron(rayOrigin, normal, polyhedron) % 2 == 0;
+            const size_t intersects = detail::rayIntersectsPolyhedron(rayOrigin, normal, polyhedron);
+            return intersects % 2 == 0;
         });
     }
 
     size_t detail::rayIntersectsPolyhedron(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
         auto it = GravityModel::transformPolyhedron(polyhedron);
         // Count every triangular face which is intersected by the ray
-        return std::count_if(it.first, it.second, [&rayOrigin, &rayVector](const Array3Triplet &face) {
-            return rayIntersectsTriangle(rayOrigin, rayVector, face);
+        return std::count_if(it.first, it.second, [&rayOrigin, &rayVector](const Array3Triplet &triangle) {
+            return rayIntersectsTriangle(rayOrigin, rayVector, triangle);
         });
     }
 
@@ -38,7 +39,7 @@ namespace polyhedralGravity::SanityCheck {
             return false;
         }
 
-        const double f = 1.0/a;
+        const double f = 1.0 / a;
         const Array3 s = rayOrigin - triangle[0];
         const double u = f * dot(s, h);
         if (u < 0.0 || u > 1.0) {
