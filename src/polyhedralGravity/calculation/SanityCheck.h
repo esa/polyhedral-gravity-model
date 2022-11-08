@@ -8,6 +8,9 @@
 
 namespace polyhedralGravity::SanityCheck {
 
+    /**
+     * The EPSILON used for the Möller–Trumbore algorithm. This is generously chosen.
+     */
     static constexpr double RAY_EPSILON = 1e-4;
 
     /**

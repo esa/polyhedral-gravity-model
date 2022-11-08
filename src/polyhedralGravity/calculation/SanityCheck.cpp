@@ -9,7 +9,7 @@ namespace polyhedralGravity::SanityCheck {
         return std::all_of(it.first, it.second, [&polyhedron](const Array3Triplet &face) {
             // The centroid of the triangular face
             const Array3 centroid = (face[0] + face[1] + face[2]) / 3.0;
-            // The unit normal of the plane
+            // The normal of the plane
             const Array3 normal = util::cross(face[0], face[1]);
             // The origin of the array has a slight offset in direction of the normal
             const Array3 rayOrigin = centroid + normal;
