@@ -31,7 +31,7 @@ namespace polyhedralGravity {
                             a.acceleration + b.acceleration,
                             a.gradiometricTensor + b.gradiometricTensor
                     };
-        });
+                });
 
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Finished the sums. Applying final prefix and eliminating rounding errors.");
@@ -207,11 +207,8 @@ namespace polyhedralGravity {
     }
 
     Array3 GravityModel::detail::buildUnitNormalOfPlane(const Array3 &segmentVector1, const Array3 &segmentVector2) {
-        using namespace util;
         //Calculate N_i as (G_i1 * G_i2) / |G_i1 * G_i2| with * being the cross product
-        const Array3 crossProduct = cross(segmentVector1, segmentVector2);
-        const double norm = euclideanNorm(crossProduct);
-        return crossProduct / norm;
+        return util::normal(segmentVector1, segmentVector2);
     }
 
     Array3Triplet GravityModel::detail::buildUnitNormalOfSegments(
@@ -220,15 +217,13 @@ namespace polyhedralGravity {
         //Calculate n_ij as (G_ij * N_i) / |G_ig * N_i| with * being the cross product
         std::transform(segmentVectors.cbegin(), segmentVectors.end(), segmentUnitNormal.begin(),
                        [&planeUnitNormal](const Array3 &segmentVector) -> Array3 {
-                           using namespace util;
-                           const Array3 crossProduct = cross(segmentVector, planeUnitNormal);
-                           const double norm = euclideanNorm(crossProduct);
-                           return crossProduct / norm;
+                           return util::normal(segmentVector, planeUnitNormal);
                        });
         return segmentUnitNormal;
     }
 
-    double GravityModel::detail::computeUnitNormalOfPlaneDirection(const Array3 &planeUnitNormal, const Array3 &vertex0) {
+    double
+    GravityModel::detail::computeUnitNormalOfPlaneDirection(const Array3 &planeUnitNormal, const Array3 &vertex0) {
         using namespace util;
         //Calculate N_i * -G_i1 where * is the dot product and then use the inverted sgn
         //We abstain on the double multiplication with -1 in the line above and beyond since two
@@ -340,7 +335,7 @@ namespace polyhedralGravity {
     }
 
     Array3 GravityModel::detail::projectPointOrthogonallyOntoSegment(const Array3 &vertex1, const Array3 &vertex2,
-                                                             const Array3 &orthogonalProjectionPointOnPlane) {
+                                                                     const Array3 &orthogonalProjectionPointOnPlane) {
         using namespace util;
         //Preparing our the planes/ equations in matrix form
         const Array3 matrixRow1 = vertex2 - vertex1;
@@ -360,7 +355,7 @@ namespace polyhedralGravity {
     }
 
     Array3 GravityModel::detail::distancesBetweenProjectionPoints(const Array3 &orthogonalProjectionPointOnPlane,
-                                                          const Array3Triplet &orthogonalProjectionPointOnSegments) {
+                                                                  const Array3Triplet &orthogonalProjectionPointOnSegments) {
         std::array<double, 3> segmentDistances{};
         //The inner loop with the running j --> iterating over the segments
         //Using the values P'_i and P''_ij for the calculation of the distance
