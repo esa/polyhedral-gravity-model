@@ -69,6 +69,14 @@ namespace polyhedralGravity {
                 const std::vector<Array3> &computationPoints);
 
         /**
+         * Evaluates the polyhedral gravity model at one polyhedral face/ plane.
+         * @param face - the polyhedral face/ plane
+         * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration
+         * for the computation Point P as resulting from the given face
+         */
+        GravityModelResult evaluateSinglePlane(const Array3Triplet &face);
+
+        /**
          * Computes the segment vectors G_ij for one plane of the polyhedron according to Tsoulis (18).
          * The segment vectors G_ij represent the vector from one vertex of the face to the neighboring vertex and
          * depict every line segment of the triangular face (A-B-C)
@@ -88,7 +96,6 @@ namespace polyhedralGravity {
          * @return plane unit normal
          */
         Array3 buildUnitNormalOfPlane(const Array3 &segmentVector1, const Array3 &segmentVector2);
-
 
         /**
          * Computes the segment unit normals n_pq for one plane p of the polyhedron according to Tsoulis (20).
@@ -245,6 +252,7 @@ namespace polyhedralGravity {
                                                           double planeDistance,
                                                           double planeNormalOrientation);
 
+
         /**
          * Computes the L2 norms of the orthogonal projection point P' on a plane p with each vertex of that plane p.
          * The values are later used to determine if P' is situated at a vertex.
@@ -255,7 +263,6 @@ namespace polyhedralGravity {
         Array3 computeNormsOfProjectionPointAndVertices(
                 const Array3 &orthogonalProjectionPointOnPlane,
                 const Array3Triplet &face);
-
 
         /**
          * An iterator transforming the polyhedron's coordinates on demand by a given offset.
@@ -277,7 +284,6 @@ namespace polyhedralGravity {
             auto last = thrust::make_transform_iterator(polyhedron.getFaces().end(), lambdaOffsetApplication);
             return std::make_pair(first, last);
         }
-
     };
 
 }

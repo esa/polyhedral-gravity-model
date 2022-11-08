@@ -10,6 +10,11 @@
 
 namespace py = pybind11;
 
+/**
+ * This method converts a named tuples GravityModelResult to a tuple
+ * @param result a named tuple of type GravityModelResult
+ * @return tuple of potential, acceleration and gradiometric tensor
+ */
 std::tuple<double, std::array<double, 3>, std::array<double, 6>> convertToTuple(
         const polyhedralGravity::GravityModelResult &result) {
     return std::make_tuple(result.gravitationalPotential,
@@ -17,6 +22,11 @@ std::tuple<double, std::array<double, 3>, std::array<double, 6>> convertToTuple(
                            result.gradiometricTensor);
 }
 
+/**
+ * This method converts a vector of named tuples GravityModelResult to a vector of tuples
+ * @param resultVector a vector of named tuples of type GravityModelResult
+ * @return vector of tuples of potential, acceleration and gradiometric tensor
+ */
 std::vector<std::tuple<double, std::array<double, 3>, std::array<double, 6>>> convertToTupleVector(
         const std::vector<polyhedralGravity::GravityModelResult> &resultVector) {
     std::vector<std::tuple<double, std::array<double, 3>, std::array<double, 6>>> resVectorTuple{resultVector.size()};
