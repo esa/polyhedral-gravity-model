@@ -6,9 +6,11 @@ find_package(spdlog 1.10.0 QUIET)
 
 if (${spdlog_FOUND})
 
-    message(STATUS "Using local spdlog installation")
+    message(STATUS "Using existing spdlog installation")
 
 else()
+
+    message(STATUS "Using spdlog from git repository")
 
     #Fetches the version 1.10.0 for spdlog
     FetchContent_Declare(spdlog
