@@ -5,6 +5,7 @@ namespace polyhedralGravity {
     GravityModelResult GravityModel::evaluate(
             const Polyhedron &polyhedron, double density, const Array3 &computationPoint) {
         using namespace util;
+        using namespace detail;
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
                             computationPoint[0], computationPoint[1], computationPoint[2], density);
@@ -22,7 +23,7 @@ namespace polyhedralGravity {
 #endif
                 polyhedronIterator.first,
                 polyhedronIterator.second,
-                &GravityModel::evaluateSinglePlane, result,
+                &evaluateSinglePlane, result,
                 [](const GravityModelResult &a, const GravityModelResult &b) {
                     //8. Step: Accumulate the partial sums
                     return GravityModelResult{
@@ -48,7 +49,7 @@ namespace polyhedralGravity {
         return result;
     }
 
-    GravityModelResult GravityModel::evaluateSinglePlane(const Array3Triplet &face) {
+    GravityModelResult GravityModel::detail::evaluateSinglePlane(const Array3Triplet &face) {
         using namespace util;
         SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Evaluating the plane with vertices: v1 = [{}, {}, {}], v2 = [{}, {}, {}], "
@@ -198,14 +199,14 @@ namespace polyhedralGravity {
         return result;
     }
 
-    Array3Triplet GravityModel::buildVectorsOfSegments(
+    Array3Triplet GravityModel::detail::buildVectorsOfSegments(
             const Array3 &vertex0, const Array3 &vertex1, const Array3 &vertex2) {
         using util::operator-;
         //Calculate G_ij
         return {vertex1 - vertex0, vertex2 - vertex1, vertex0 - vertex2};
     }
 
-    Array3 GravityModel::buildUnitNormalOfPlane(const Array3 &segmentVector1, const Array3 &segmentVector2) {
+    Array3 GravityModel::detail::buildUnitNormalOfPlane(const Array3 &segmentVector1, const Array3 &segmentVector2) {
         using namespace util;
         //Calculate N_i as (G_i1 * G_i2) / |G_i1 * G_i2| with * being the cross product
         const Array3 crossProduct = cross(segmentVector1, segmentVector2);
@@ -213,7 +214,7 @@ namespace polyhedralGravity {
         return crossProduct / norm;
     }
 
-    Array3Triplet GravityModel::buildUnitNormalOfSegments(
+    Array3Triplet GravityModel::detail::buildUnitNormalOfSegments(
             const Array3Triplet &segmentVectors, const Array3 &planeUnitNormal) {
         Array3Triplet segmentUnitNormal{};
         //Calculate n_ij as (G_ij * N_i) / |G_ig * N_i| with * being the cross product
@@ -227,7 +228,7 @@ namespace polyhedralGravity {
         return segmentUnitNormal;
     }
 
-    double GravityModel::computeUnitNormalOfPlaneDirection(const Array3 &planeUnitNormal, const Array3 &vertex0) {
+    double GravityModel::detail::computeUnitNormalOfPlaneDirection(const Array3 &planeUnitNormal, const Array3 &vertex0) {
         using namespace util;
         //Calculate N_i * -G_i1 where * is the dot product and then use the inverted sgn
         //We abstain on the double multiplication with -1 in the line above and beyond since two
@@ -235,7 +236,7 @@ namespace polyhedralGravity {
         return sgn(dot(planeUnitNormal, vertex0), util::EPSILON);
     }
 
-    HessianPlane GravityModel::computeHessianPlane(const Array3 &p, const Array3 &q, const Array3 &r) {
+    HessianPlane GravityModel::detail::computeHessianPlane(const Array3 &p, const Array3 &q, const Array3 &r) {
         using namespace util;
         constexpr Array3 origin{0.0, 0.0, 0.0};
         const auto crossProduct = cross(p - q, p - r);
@@ -245,7 +246,7 @@ namespace polyhedralGravity {
         return {crossProduct[0], crossProduct[1], crossProduct[2], d};
     }
 
-    double GravityModel::distanceBetweenOriginAndPlane(const HessianPlane &hessianPlane) {
+    double GravityModel::detail::distanceBetweenOriginAndPlane(const HessianPlane &hessianPlane) {
         //Compute h_p as D/sqrt(A^2 + B^2 + C^2)
         return std::abs(hessianPlane.d / std::sqrt(
                 hessianPlane.a * hessianPlane.a +
@@ -253,7 +254,7 @@ namespace polyhedralGravity {
                 hessianPlane.c * hessianPlane.c));
     }
 
-    Array3 GravityModel::projectPointOrthogonallyOntoPlane(
+    Array3 GravityModel::detail::projectPointOrthogonallyOntoPlane(
             const Array3 &planeUnitNormal,
             double planeDistance,
             const HessianPlane &hessianPlane) {
@@ -290,7 +291,7 @@ namespace polyhedralGravity {
         return orthogonalProjectionPoint;
     }
 
-    Array3 GravityModel::computeUnitNormalOfSegmentsDirections(
+    Array3 GravityModel::detail::computeUnitNormalOfSegmentsDirections(
             const Array3Triplet &vertices,
             const Array3 &projectionPointOnPlane,
             const Array3Triplet &segmentUnitNormalsForPlane) {
@@ -311,7 +312,7 @@ namespace polyhedralGravity {
         return segmentNormalOrientations;
     }
 
-    Array3Triplet GravityModel::projectPointOrthogonallyOntoSegments(
+    Array3Triplet GravityModel::detail::projectPointOrthogonallyOntoSegments(
             const Array3 &projectionPointOnPlane,
             const Array3 &segmentNormalOrientations,
             const Array3Triplet &face) {
@@ -338,7 +339,7 @@ namespace polyhedralGravity {
         return orthogonalProjectionPointOnSegmentPerPlane;
     }
 
-    Array3 GravityModel::projectPointOrthogonallyOntoSegment(const Array3 &vertex1, const Array3 &vertex2,
+    Array3 GravityModel::detail::projectPointOrthogonallyOntoSegment(const Array3 &vertex1, const Array3 &vertex2,
                                                              const Array3 &orthogonalProjectionPointOnPlane) {
         using namespace util;
         //Preparing our the planes/ equations in matrix form
@@ -358,7 +359,7 @@ namespace polyhedralGravity {
         } / determinant;
     }
 
-    Array3 GravityModel::distancesBetweenProjectionPoints(const Array3 &orthogonalProjectionPointOnPlane,
+    Array3 GravityModel::detail::distancesBetweenProjectionPoints(const Array3 &orthogonalProjectionPointOnPlane,
                                                           const Array3Triplet &orthogonalProjectionPointOnSegments) {
         std::array<double, 3> segmentDistances{};
         //The inner loop with the running j --> iterating over the segments
@@ -371,7 +372,7 @@ namespace polyhedralGravity {
         return segmentDistances;
     }
 
-    std::array<Distance, 3> GravityModel::distancesToSegmentEndpoints(
+    std::array<Distance, 3> GravityModel::detail::distancesToSegmentEndpoints(
             const Array3Triplet &segmentVectorsForPlane,
             const Array3Triplet &orthogonalProjectionPointsOnSegmentForPlane,
             const Array3Triplet &face) {
@@ -449,7 +450,7 @@ namespace polyhedralGravity {
     }
 
     std::array<TranscendentalExpression, 3>
-    GravityModel::computeTranscendentalExpressions(
+    GravityModel::detail::computeTranscendentalExpressions(
             const std::array<Distance, 3> &distancesForPlane,
             double planeDistance, const Array3 &segmentDistancesForPlane,
             const Array3 &segmentNormalOrientationsForPlane,
@@ -522,7 +523,7 @@ namespace polyhedralGravity {
         return transcendentalExpressionsForPlane;
     }
 
-    std::pair<double, Array3> GravityModel::computeSingularityTerms(
+    std::pair<double, Array3> GravityModel::detail::computeSingularityTerms(
             const Array3Triplet &segmentVectorsForPlane,
             const Array3 &segmentNormalOrientationForPlane,
             const Array3 &projectionPointVertexNorms,
@@ -606,7 +607,7 @@ namespace polyhedralGravity {
                 Array3{0.0, 0.0, 0.0});                                         //sing beta  = 0
     }
 
-    Array3 GravityModel::computeNormsOfProjectionPointAndVertices(
+    Array3 GravityModel::detail::computeNormsOfProjectionPointAndVertices(
             const Array3 &orthogonalProjectionPointOnPlane,
             const Array3Triplet &face) {
         using namespace util;

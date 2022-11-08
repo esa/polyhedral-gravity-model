@@ -3,6 +3,7 @@
 namespace polyhedralGravity {
 
     std::vector<Array3Triplet> GravityModel::calculateSegmentVectors(const Polyhedron &polyhedron) {
+        using namespace detail;
         std::vector<Array3Triplet> segmentVectors{polyhedron.countFaces()};
         //Calculate G_ij for every plane given as input the three vertices of every face
         std::transform(polyhedron.getFaces().cbegin(), polyhedron.getFaces().cend(), segmentVectors.begin(),
@@ -16,6 +17,7 @@ namespace polyhedralGravity {
     }
 
     std::vector<Array3> GravityModel::calculatePlaneUnitNormals(const std::vector<Array3Triplet> &segmentVectors) {
+        using namespace detail;
         std::vector<Array3> planeUnitNormals{segmentVectors.size()};
         //Calculate N_p for every plane given as input: G_i0 and G_i1 of every plane
         std::transform(segmentVectors.cbegin(), segmentVectors.cend(), planeUnitNormals.begin(),
@@ -28,6 +30,7 @@ namespace polyhedralGravity {
     std::vector<Array3Triplet> GravityModel::calculateSegmentUnitNormals(
             const std::vector<Array3Triplet> &segmentVectors,
             const std::vector<Array3> &planeUnitNormals) {
+        using namespace detail;
         std::vector<Array3Triplet> segmentUnitNormals{segmentVectors.size()};
         //Loop" over G_i (running i=p) and N_p calculating n_p for every plane
         std::transform(segmentVectors.cbegin(), segmentVectors.cend(), planeUnitNormals.cbegin(),
@@ -41,6 +44,7 @@ namespace polyhedralGravity {
     std::vector<double>
     GravityModel::calculatePlaneNormalOrientations(const Array3 &computationPoint, const Polyhedron &polyhedron,
                                                    const std::vector<Array3> &planeUnitNormals) {
+        using namespace detail;
         std::vector<double> planeNormalOrientations(planeUnitNormals.size(), 0.0);
         auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
         //Calculate sigma_p for every plane given as input: N_p and vertex0 of every face
@@ -55,6 +59,7 @@ namespace polyhedralGravity {
 
     std::vector<HessianPlane>
     GravityModel::calculateFacesToHessianPlanes(const Array3 &computationPoint, const Polyhedron &polyhedron) {
+        using namespace detail;
         std::vector<HessianPlane> hessianPlanes{polyhedron.countFaces()};
         auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
         //Calculate for each face/ plane/ triangle (here) the Hessian Plane
@@ -68,6 +73,7 @@ namespace polyhedralGravity {
     }
 
     std::vector<double> GravityModel::calculatePlaneDistances(const std::vector<HessianPlane> &plane) {
+        using namespace detail;
         std::vector<double> planeDistances(plane.size(), 0.0);
         //For each plane compute h_p
         std::transform(plane.cbegin(), plane.cend(), planeDistances.begin(),
@@ -81,6 +87,7 @@ namespace polyhedralGravity {
             const std::vector<HessianPlane> &hessianPlanes,
             const std::vector<Array3> &planeUnitNormals,
             const std::vector<double> &planeDistances) {
+        using namespace detail;
         std::vector<Array3> orthogonalProjectionPointsOfP{planeUnitNormals.size()};
 
         //Zip the three required arguments together: Plane normal N_i, Plane Distance h_i and the Hessian Form
@@ -102,6 +109,7 @@ namespace polyhedralGravity {
             const Polyhedron &polyhedron,
             const std::vector<Array3Triplet> &segmentUnitNormals,
             const std::vector<Array3> &orthogonalProjectionPointsOnPlane) {
+        using namespace detail;
         std::vector<Array3> segmentNormalOrientations{segmentUnitNormals.size()};
 
         auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
@@ -127,6 +135,7 @@ namespace polyhedralGravity {
             const Polyhedron &polyhedron,
             const std::vector<Array3> &orthogonalProjectionPointsOnPlane,
             const std::vector<Array3> &segmentNormalOrientation) {
+        using namespace detail;
         std::vector<Array3Triplet> orthogonalProjectionPointsOnSegments{orthogonalProjectionPointsOnPlane.size()};
 
         //Zip the three required arguments together: P' for every plane, sigma_pq for every segment, the faces
@@ -152,6 +161,7 @@ namespace polyhedralGravity {
     std::vector<Array3> GravityModel::calculateSegmentDistances(
             const std::vector<Array3> &orthogonalProjectionPointsOnPlane,
             const std::vector<Array3Triplet> &orthogonalProjectionPointsOnSegment) {
+        using namespace detail;
         std::vector<Array3> segmentDistances{orthogonalProjectionPointsOnPlane.size()};
         //Iterating over planes (P'_i and P''_i are the parameters of the lambda)
         std::transform(orthogonalProjectionPointsOnPlane.cbegin(), orthogonalProjectionPointsOnPlane.cend(),
@@ -167,6 +177,7 @@ namespace polyhedralGravity {
             const Polyhedron &polyhedron,
             const std::vector<Array3Triplet> &segmentVectors,
             const std::vector<Array3Triplet> &orthogonalProjectionPointsOnSegment) {
+        using namespace detail;
         std::vector<std::array<Distance, 3>> distances{segmentVectors.size()};
 
         //Zip the three required arguments together: G_ij for every segment, P'' for every segment
@@ -194,6 +205,7 @@ namespace polyhedralGravity {
             const std::vector<Array3> &segmentDistances,
             const std::vector<Array3> &segmentNormalOrientation,
             const std::vector<Array3> &orthogonalProjectionPointsOnPlane) {
+        using namespace detail;
         std::vector<std::array<TranscendentalExpression, 3>> transcendentalExpressions{distances.size()};
 
         //Zip iterator consisting of  3D and 1D distances l1/l2 and s1/2 | h_p | h_pq | sigma_pq | P'_p | faces
@@ -232,6 +244,7 @@ namespace polyhedralGravity {
             const std::vector<double> &planeDistances,
             const std::vector<double> &planeNormalOrientations,
             const std::vector<Array3> &planeUnitNormals) {
+        using namespace detail;
         //The result
         std::vector<std::pair<double, Array3>> singularities{planeDistances.size()};
 
