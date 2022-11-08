@@ -22,17 +22,6 @@
 namespace polyhedralGravity {
 
     /**
-     * Alias for an array of size 3
-     * @example for x, y, z coordinates.
-     */
-    using Array3 = std::array<double, 3>;
-    /**
-     * Alias for a triplet of arrays of size 3
-     * @example for the segment of a triangular face
-     */
-    using Array3Triplet = std::array<Array3, 3>;
-
-    /**
      * Namespace containing the methods used to evaluate the polyhedrale Gravity Model
      * @note Naming scheme corresponds to the following:
      * evaluate()           --> main Method for evaluating the gravity model
