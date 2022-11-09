@@ -9,11 +9,6 @@
 namespace polyhedralGravity::SanityCheck {
 
     /**
-     * The EPSILON used for the Möller–Trumbore algorithm. This is generously chosen.
-     */
-    static constexpr double RAY_EPSILON = 1e-4;
-
-    /**
      * Checks if the vertices are in such a order that the unit normals of each plane point outwards the polyhedron
      * @param polyhedron - the polyhedron consisting of vertices and triangular faces
      * @return true if all the unit normals are pointing outwards

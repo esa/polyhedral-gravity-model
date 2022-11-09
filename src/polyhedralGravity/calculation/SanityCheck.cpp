@@ -9,10 +9,15 @@ namespace polyhedralGravity::SanityCheck {
         return std::all_of(it.first, it.second, [&polyhedron](const Array3Triplet &face) {
             // The centroid of the triangular face
             const Array3 centroid = (face[0] + face[1] + face[2]) / 3.0;
-            // The normal of the plane
-            const Array3 normal = util::cross(face[0], face[1]);
+
+            // The normal of the plane calculated with two segments of the triangle
+            const Array3 segmentVector1 = face[1] - face[0];
+            const Array3 segmentVector2 = face[2] - face[1];
+            const Array3 normal = util::normal(segmentVector1, segmentVector2);
+
             // The origin of the array has a slight offset in direction of the normal
-            const Array3 rayOrigin = centroid + normal;
+            const Array3 rayOrigin = centroid + (normal * EPSILON);
+
             // If the ray intersects the polyhedron even-times than the normal points outwards
             const size_t intersects = detail::rayIntersectsPolyhedron(rayOrigin, normal, polyhedron);
             return intersects % 2 == 0;
@@ -35,7 +40,7 @@ namespace polyhedralGravity::SanityCheck {
         const Array3 edge2 = triangle[2] - triangle[0];
         const Array3 h = cross(rayVector, edge2);
         const double a = dot(edge1, h);
-        if (a > -RAY_EPSILON && a < RAY_EPSILON) {
+        if (a > -EPSILON && a < EPSILON) {
             return false;
         }
 
@@ -53,6 +58,6 @@ namespace polyhedralGravity::SanityCheck {
         }
 
         const double t = f * dot(edge2, q);
-        return t > RAY_EPSILON;
+        return t > EPSILON;
     }
 }
