@@ -22,12 +22,15 @@ int main(int argc, char *argv[]) {
         auto density = config->getDensity();
         auto computationPoints = config->getPointsOfInterest();
         auto outputFileName = config->getOutputFileName();
+        bool checkPolyhedralInput = config->getInputCheckEnablement();
 
-        // Checking that the vertices are correctly set-up in the input
-        if (!SanityCheck::checkNormalsOutwardPointing(poly)) {
-            SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                               "The plane unit normals are not pointing outwards! Please check the order "
-                               "of the vertices in the polyhedral input source!");
+        // Checking that the vertices are correctly set-up in the input if activated
+        if (checkPolyhedralInput) {
+            if (!SanityCheck::checkNormalsOutwardPointing(poly)) {
+                throw std::runtime_error{
+                        "The plane unit normals are not pointing outwards! Please check the order "
+                        "of the vertices in the polyhedral input source!"};
+            }
         }
 
         SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The calculation started...");

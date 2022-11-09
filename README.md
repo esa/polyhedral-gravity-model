@@ -97,6 +97,7 @@ gravityModel:
     density: 2670.0                             #constant density in [kg/m^3]
     points:                                     #Location of the computation point(s) P
       - [0, 0, 0]                               #Here it is situated at the origin
+    check: true                                 #Fully optional, input checking is enabled
   output:
     filename: "gravity_result.csv"              #The name of the output file 
 
@@ -123,6 +124,12 @@ ASCII and binary format) are e.g.:
 
 - [Meshio](https://github.com/nschloe/meshio) for Python
 - [OpenMesh](https://openmesh-python.readthedocs.io/en/latest/readwrite.html) for Python
+
+The polyhedron's plane unit normals must point outwards!
+Typically, the nodes of a mesh are either given in clockwise or counter-clockwise ordering.
+To check that you've the right format the program is equipped with an input checking procedure using the
+Möller–Trumbore algorithm. However, this procedure has quadratic complexity. Hence, it can be optionally enabled
+the yaml configuration file.
 
 ### Output
 

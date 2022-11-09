@@ -63,6 +63,30 @@ protected:
                                                            {6, 4, 7}}
     };
 
+    const polyhedralGravity::Polyhedron _wrongCube2{{
+                                                           {-1.0, -1.0, -1.0},
+                                                           {1.0, -1.0, -1.0},
+                                                           {1.0, 1.0, -1.0},
+                                                           {-1.0, 1.0, -1.0},
+                                                           {-1.0, -1.0, 1.0},
+                                                           {1.0, -1.0, 1.0},
+                                                           {1.0, 1.0, 1.0},
+                                                           {-1.0, 1.0, 1.0}},
+                                                   {
+                                                           {3, 1, 2},
+                                                           {0, 3, 1},
+                                                           {0, 1, 5},
+                                                           {0, 5, 4},
+                                                           {0, 7, 3},
+                                                           {0, 4, 7},
+                                                           {1, 2, 6},
+                                                           {1, 6, 5},
+                                                           {2, 3, 6},
+                                                           {3, 7, 6},
+                                                           {4, 5, 6},
+                                                           {4, 6, 7}}
+    };
+
 
     const polyhedralGravity::Polyhedron _correctPrism{{
                                                               {-20.0, 0.0, 25.0},
@@ -122,6 +146,12 @@ TEST_F(SanityCheckTest, CorrectCube) {
 TEST_F(SanityCheckTest, WrongCube) {
     using namespace testing;
     ASSERT_FALSE(polyhedralGravity::SanityCheck::checkNormalsOutwardPointing(_wrongCube))
+    << "The vertices of the cube are incorrectly sorted, however the Sanity Check failed to notice that!";
+}
+
+TEST_F(SanityCheckTest, WrongCube2) {
+    using namespace testing;
+    ASSERT_FALSE(polyhedralGravity::SanityCheck::checkNormalsOutwardPointing(_wrongCube2))
     << "The vertices of the cube are incorrectly sorted, however the Sanity Check failed to notice that!";
 }
 

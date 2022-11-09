@@ -38,6 +38,12 @@ namespace polyhedralGravity {
         virtual std::vector<std::array<double, 3>> getPointsOfInterest() = 0;
 
         /**
+         * Returns the enablement status of the input polyhedron sanity check
+         * @return true if enabled
+         */
+        virtual bool getInputCheckEnablement() = 0;
+
+        /**
          * The DataSource of the given Polyhedron.
          * @return data source (e. g. a file reader)
          */

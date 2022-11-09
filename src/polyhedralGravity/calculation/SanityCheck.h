@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+#include <optional>
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
@@ -41,7 +43,8 @@ namespace polyhedralGravity::SanityCheck {
          *
          * @related Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
          */
-        bool rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
+        std::optional<Array3>
+        rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
 
     }
 

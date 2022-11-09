@@ -26,13 +26,19 @@ namespace polyhedralGravity::SanityCheck {
 
     size_t detail::rayIntersectsPolyhedron(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
         auto it = GravityModel::transformPolyhedron(polyhedron);
+        std::set<Array3> intersections{};
         // Count every triangular face which is intersected by the ray
-        return std::count_if(it.first, it.second, [&rayOrigin, &rayVector](const Array3Triplet &triangle) {
-            return rayIntersectsTriangle(rayOrigin, rayVector, triangle);
+        std::for_each(it.first, it.second, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &triangle) {
+            const auto intersection = rayIntersectsTriangle(rayOrigin, rayVector, triangle);
+            if (intersection.has_value()) {
+                intersections.insert(intersection.value());
+            }
         });
+        return intersections.size();
     }
 
-    bool detail::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet& triangle) {
+    std::optional<Array3>
+    detail::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle) {
         // Adapted Möller–Trumbore intersection algorithm
         // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
         using namespace util;
@@ -41,23 +47,27 @@ namespace polyhedralGravity::SanityCheck {
         const Array3 h = cross(rayVector, edge2);
         const double a = dot(edge1, h);
         if (a > -EPSILON && a < EPSILON) {
-            return false;
+            return std::nullopt;
         }
 
         const double f = 1.0 / a;
         const Array3 s = rayOrigin - triangle[0];
         const double u = f * dot(s, h);
         if (u < 0.0 || u > 1.0) {
-            return false;
+            return std::nullopt;
         }
 
         const Array3 q = cross(s, edge1);
         const double v = f * dot(rayVector, q);
         if (v < 0.0 || u + v > 1.0) {
-            return false;
+            return std::nullopt;
         }
 
         const double t = f * dot(edge2, q);
-        return t > EPSILON;
+        if (t > EPSILON) {
+            return rayOrigin + rayVector * t;
+        } else {
+            return std::nullopt;
+        }
     }
 }

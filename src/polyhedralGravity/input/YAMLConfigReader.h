@@ -24,6 +24,7 @@ namespace polyhedralGravity {
         static constexpr char INPUT_POLYHEDRON[] = "polyhedron";
         static constexpr char INPUT_DENSITY[] = "density";
         static constexpr char INPUT_POINTS[] = "points";
+        static constexpr char INPUT_CHECK[] = "check";
         static constexpr char OUTPUT[] = "output";
         static constexpr char OUTPUT_FILENAME[] = "filename";
 
@@ -77,6 +78,12 @@ namespace polyhedralGravity {
          * @return vector of computation points
          */
         std::vector<std::array<double, 3>> getPointsOfInterest() override;
+
+        /**
+         * Reads the enablement of the input sanity check from the yaml file.
+         * @return true if explicitly enabled, otherwise per-default false
+         */
+        bool getInputCheckEnablement() override;
 
         /**
          * Reads the DataSource from the yaml configuration file.
