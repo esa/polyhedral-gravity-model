@@ -18,9 +18,7 @@ namespace polyhedralGravity {
                             "Starting to iterate over the planes...");
         GravityModelResult result{};
         result = thrust::transform_reduce(
-#ifdef DEVICE
                 thrust::device,
-#endif
                 polyhedronIterator.first,
                 polyhedronIterator.second,
                 &evaluateSinglePlane, result,

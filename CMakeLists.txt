@@ -10,14 +10,9 @@ include(CMakeDependentOption)
 # PARALLELIZATION OPTIONS AND LOGGING
 #####################################
 # Parallelization on the HOST
-set(PARALLELIZATION_HOST "CPP" CACHE STRING "Host parallelization chosen by the user
+set(POLYHEDRAL_GRAVITY_PARALLELIZATION "CPP" CACHE STRING "Host parallelization chosen by the user
  (CPP= Serial, OMP = OpenMP, TBB = Intel Threading Building Blocks")
-set_property(CACHE PARALLELIZATION_HOST PROPERTY STRINGS CPP, OMP, TBB)
-
-# Parallelization on the DEVICE
-set(PARALLELIZATION_DEVICE "CPP" CACHE STRING "Device parallelization chosen by the user
- (CPP= Serial, OMP = OpenMP, TBB = Intel Threading Building Blocks")
-set_property(CACHE PARALLELIZATION_DEVICE PROPERTY STRINGS CPP, OMP, TBB)
+set_property(CACHE POLYHEDRAL_GRAVITY_PARALLELIZATION PROPERTY STRINGS CPP, OMP, TBB)
 
 # Enforce to use an already installed tbb library instead of compiling from source
 option(USE_LOCAL_TBB "Uses the local tbb installation rather than on using the automatically fetched version from
@@ -70,20 +65,14 @@ include(xsimd)
 # Get a version of tbb from the github repository, simplifies compilation for the user since tbb does not need to be
 # preinstalled but rather gets automatically set up via CMake
 # Nevertheless, there is still the option to enforce to use a local installation if one exists
-if (NOT USE_LOCAL_TBB AND (${PARALLELIZATION_HOST} STREQUAL "TBB" OR ${PARALLELIZATION_DEVICE} STREQUAL "TBB"))
+if (NOT USE_LOCAL_TBB AND ${POLYHEDRAL_GRAVITY_PARALLELIZATION} STREQUAL "TBB")
     include(tbb)
     thrust_set_TBB_target(tbb)
 endif ()
 
 # Thrust set-up i.e. the parallelization library, create targets according to the users specification
-thrust_create_target(Thrust HOST ${PARALLELIZATION_HOST} DEVICE ${PARALLELIZATION_DEVICE})
-message(STATUS "Set Parallelization: HOST ${PARALLELIZATION_HOST} DEVICE ${PARALLELIZATION_DEVICE}")
-
-# This definitions will set the main eval(..) routine to be executed on the DEVICE if the users has given
-# an option parallelize on the Device
-if(NOT PARALLELIZATION_DEVICE STREQUAL "CPP")
-    add_compile_definitions(DEVICE)
-endif()
+thrust_create_target(Thrust HOST CPP DEVICE ${POLYHEDRAL_GRAVITY_PARALLELIZATION})
+message(STATUS "Set Parallelization: HOST CPP DEVICE ${POLYHEDRAL_GRAVITY_PARALLELIZATION}")
 
 ################################
 # Building the Polyhedral Libray

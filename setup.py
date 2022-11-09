@@ -17,9 +17,7 @@ CMAKE_OPTIONS = {
     # The Build Type (Should be release!)
     "CMAKE_BUILD_TYPE": "Release",
     # Modify to change the parallelization (Default value: CPP)
-    "PARALLELIZATION_HOST": "CPP",
-    # Modify to change the parallelization (Default value: CPP)
-    "PARALLELIZATION_DEVICE": "CPP",
+    "POLYHEDRAL_GRAVITY_PARALLELIZATION": "CPP",
     # Default value (INFO=2)
     "LOGGING_LEVEL": 2,
     # Default value (OFF)

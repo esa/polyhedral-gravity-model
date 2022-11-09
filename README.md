@@ -51,20 +51,18 @@ CMake and then follow these steps:
 
 The following options are available:
 
-|         Name (Default)         |                                                       Options and Remark                                                      |
-|:------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------:|
-|  PARALLELIZATION_HOST (`CPP`)  |             `CPP` = Serial Execution on Host, `OMP`/ `TBB` = Parallel Execution on Host with OpenMP or Intel's TBB              |
-| PARALLELIZATION_DEVICE (`CPP`) | `CPP`= Serial Execution on Device, `OMP`/ `TBB` = Parallel Execution on Device with OpenMP or Intel's TBB |
-|      LOGGING_LEVEL (`2`)       |                          `0`= TRACE, `1`=DEBUG, `2`=INFO, `3`=WARN, `4`=ERROR, `5`=CRITICAL, `6`=OFF                          |
+|         Name (Default)         |                                                  Options and Remark                                                   |
+|:------------------------------:|:---------------------------------------------------------------------------------------------------------------------:|
+|  POLYHEDRAL_GRAVITY_PARALLELIZATION (`CPP`)  |                `CPP` = Serial Execution, `OMP`/ `TBB` = Parallel Execution with OpenMP or Intel's TBB                 |
+|      LOGGING_LEVEL (`2`)       |                      `0`= TRACE, `1`=DEBUG, `2`=INFO, `3`=WARN, `4`=ERROR, `5`=CRITICAL, `6`=OFF                      |
 
-During testing the combination PARALLELIZATION_HOST=`CPP` and PARALLELIZATION_DEVICE=`TBB`
-has been the most performant.
+During testing POLYHEDRAL_GRAVITY_PARALLELIZATION=`TBB` has been the most performant.
 It is further not recommend to change the LOGGING_LEVEL to something else than `INFO=2`.
 
 The recommended CMake command would look like this (we only need to change `PARALLELIZATION_DEVICE`, since
 the defaults of the others are already correctly set):
 
-    cmake .. -DPARALLELIZATION_DEVICE="TBB"
+    cmake .. -POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
 
 ## Execution C++
 
