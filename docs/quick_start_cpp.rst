@@ -101,3 +101,21 @@ from a .yaml file.
         // Main method, notice that the last argument can also be a
         // vector of points
         GravityResult result = GravityModel::evaluate(poly, density, point);
+
+**Example 4:** A guard statement checks that the plane unit
+normals are pointing outwards. Only use this statement if one needs clarification
+about the vertices' ordering due to its quadratic complexity!
+
+.. code-block:: cpp
+
+        // Reading the configuration from a yaml file
+        std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>("config.yaml");
+        Polyhedron poly = config->getDataSource()->getPolyhedron();
+        double density = config->getDensity();
+        std::array<double, 3> point = config->getPointsOfInterest()[0];
+
+        // Guard statement
+        if (!SanityCheck::checkNormalsOutwardPointing(poly)) {
+            GravityResult result = GravityModel::evaluate(poly, density, point);
+        }
+

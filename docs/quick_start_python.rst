@@ -62,3 +62,27 @@ in some source files for a specific point and density.
 
 For example 2a and 2b, refer to :ref:`supported-polyhedron-source-files` to view the available
 options for polyhedral input.
+
+**Example 3:** A guard statement checks that the plane unit
+normals are pointing outwards. Only use this statement if one needs clarification
+about the vertices' ordering due to its quadratic complexity!
+
+.. code-block:: python
+
+    import polyhedral_gravity as model
+    import polyhedral_gravity.utility as model_sanity
+
+    # Defining every input parameter in the source code
+    vertices = ...              # [] of [] or np.array of length 3 and type float
+    faces = ...                 # [] of [] or np.array of length 3 and type int
+    density = ...               # float
+    computation_point = ...     # [] or np.array of length 3
+
+    # Evaluate the gravity model
+    # Notice that the last argument could also be a list of points
+    # Returns (list of) tuple of potential, acceleration and tensor
+
+    # Additional guard statement
+    if model_sanity.check_input(vertices, faces):
+        potential, acceleration, tensor = model.evaluate(vertices, faces, density, computation_point)
+
