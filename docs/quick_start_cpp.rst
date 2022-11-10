@@ -32,14 +32,15 @@ Further one must specify the name of the .csv output file.
     ---
     gravityModel:
       input:
-        polyhedron:                                 # polyhedron source-file(s)
+        polyhedron: #polyhedron source-file(s)
           - "../example-config/data/tsoulis.node"   # .node contains the vertices
           - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
         density: 2670.0                             # constant density in [kg/m^3]
-        points:                                     # Location of the computation point(s) P
-          - [0, 0, 0]                               # Here it is situated at the origin
+        points: # Location of the computation point(s) P
+          - [ 0, 0, 0 ]                             # Here it is situated at the origin
+        check: true                                 # Fully optional, enables input checking (not given: false)
       output:
-        filename: "gravity_result.csv"              #The name of the output file
+        filename: "gravity_result.csv"              # The name of the output file
 
 
 Have a look at :ref:`supported-polyhedron-source-files` to view the available

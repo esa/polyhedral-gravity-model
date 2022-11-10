@@ -1,5 +1,5 @@
-Requirements and Build
-======================
+Requirements, Build, Installation
+=================================
 
 Requirements
 ------------
@@ -58,6 +58,9 @@ at the :code:`setupy.py`.
 Installation with conda
 -----------------------
 
-TODO
+The python interface can be easily installed with `conda <https://anaconda.org/conda-forge/polyhedral-gravity-model>`__:
 
+.. code-block::
+
+    conda install -c conda-forge polyhedral-gravity-model
 

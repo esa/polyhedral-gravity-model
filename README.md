@@ -5,20 +5,23 @@
 
 Implementation of the Polyhedral Gravity Model in C++ 17.
 
-The implementation is based on the paper [Tsoulis, D., 2012. Analytical computation of the full gravity tensor of a homogeneous arbitrarily shaped polyhedral source using line integrals. Geophysics, 77(2), pp.F1-F11.](http://dx.doi.org/10.1190/geo2010-0334.1)
+The implementation is based on the
+paper [Tsoulis, D., 2012. Analytical computation of the full gravity tensor of a homogeneous arbitrarily shaped polyhedral source using line integrals. Geophysics, 77(2), pp.F1-F11.](http://dx.doi.org/10.1190/geo2010-0334.1)
 and its corresponding [implementation in FORTRAN](https://software.seg.org/2012/0001/index.html).
 
-Supplementary details can be found in the more recent paper [TSOULIS, Dimitrios; GAVRIILIDOU, Georgia. A computational review of the line integral analytical formulation of the polyhedral gravity signal. Geophysical Prospecting, 2021, 69. Jg., Nr. 8-9, S. 1745-1760.](https://doi.org/10.1111/1365-2478.13134)
+Supplementary details can be found in the more recent
+paper [TSOULIS, Dimitrios; GAVRIILIDOU, Georgia. A computational review of the line integral analytical formulation of the polyhedral gravity signal. Geophysical Prospecting, 2021, 69. Jg., Nr. 8-9, S. 1745-1760.](https://doi.org/10.1111/1365-2478.13134)
 and its corresponding [implementation in MATLAB](https://github.com/Gavriilidou/GPolyhedron),
 which is strongly based on the former implementation in FORTRAN.
 
-## Documentation
+## Documentation (readthedocs)
 
-The full extensive documentation can be found on [readthedocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/).
-
+The full extensive documentation can be found
+on [readthedocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/).
 
 ## Requirements
-The project uses the following dependencies, 
+
+The project uses the following dependencies,
 all of them are **automatically** set-up via CMake:
 
 - GoogleTest 1.11.0 (only required for testing)
@@ -29,6 +32,15 @@ all of them are **automatically** set-up via CMake:
 - xsimd 8.1.0 (required for vectorization of the `atan(..)`)
 
 ## Python interface
+
+### conda
+
+The python interface can be easily installed with
+[conda](https://anaconda.org/conda-forge/polyhedral-gravity-model):
+
+    conda install -c conda-forge polyhedral-gravity-model
+
+### pip
 
 Use pip to install the python interface in your local python runtime.
 The module will be build using CMake and the using the above
@@ -51,10 +63,14 @@ CMake and then follow these steps:
 
 The following options are available:
 
-|         Name (Default)         |                                                  Options and Remark                                                   |
-|:------------------------------:|:---------------------------------------------------------------------------------------------------------------------:|
-|  POLYHEDRAL_GRAVITY_PARALLELIZATION (`CPP`)  |                `CPP` = Serial Execution, `OMP`/ `TBB` = Parallel Execution with OpenMP or Intel's TBB                 |
-|      LOGGING_LEVEL (`2`)       |                      `0`= TRACE, `1`=DEBUG, `2`=INFO, `3`=WARN, `4`=ERROR, `5`=CRITICAL, `6`=OFF                      |
+|                             Name (Default) | Options                                                                                    |
+|-------------------------------------------:|:-------------------------------------------------------------------------------------------|
+| POLYHEDRAL_GRAVITY_PARALLELIZATION (`CPP`) | `CPP` = Serial Execution / `OMP` or `TBB` = Parallel Execution with OpenMP or Intel\'s TBB |
+|                        LOGGING_LEVEL (`2`) | `0` = TRACE/ `1` = DEBUG/ `2` = INFO / `3` = WARN/ `4` = ERROR/ `5` = CRITICAL/ `6` = OFF  |
+|                      USE_LOCAL_TBB (`OFF`) | Use a local installation of `TBB` instead of setting it up via `CMake`                     |
+|      BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`) | Build this documentation                                                                   |
+|      BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`) | Build the Tests                                                                            |
+|   BUILD_POLYHEDRAL_PYTHON_INTERFACE (`ON`) | Build the Python interface                                                                 |
 
 During testing POLYHEDRAL_GRAVITY_PARALLELIZATION=`TBB` has been the most performant.
 It is further not recommend to change the LOGGING_LEVEL to something else than `INFO=2`.
@@ -89,15 +105,15 @@ Further one must specify the name of the .csv output file.
 ---
 gravityModel:
   input:
-    polyhedron:                                 #polyhedron source-file(s)
-      - "../example-config/data/tsoulis.node"   #.node contains the vertices
-      - "../example-config/data/tsoulis.face"   #.face contains the triangular faces
-    density: 2670.0                             #constant density in [kg/m^3]
-    points:                                     #Location of the computation point(s) P
-      - [0, 0, 0]                               #Here it is situated at the origin
-    check: true                                 #Fully optional, input checking is enabled
+    polyhedron: #polyhedron source-file(s)
+      - "../example-config/data/tsoulis.node"   # .node contains the vertices
+      - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
+    density: 2670.0                             # constant density in [kg/m^3]
+    points: # Location of the computation point(s) P
+      - [ 0, 0, 0 ]                             # Here it is situated at the origin
+    check: true                                 # Fully optional, enables input checking (not given: false)
   output:
-    filename: "gravity_result.csv"              #The name of the output file 
+    filename: "gravity_result.csv"              # The name of the output file 
 
 ````
 
@@ -123,11 +139,11 @@ ASCII and binary format) are e.g.:
 - [Meshio](https://github.com/nschloe/meshio) for Python
 - [OpenMesh](https://openmesh-python.readthedocs.io/en/latest/readwrite.html) for Python
 
-The polyhedron's plane unit normals must point outwards!
-Typically, the nodes of a mesh are either given in clockwise or counter-clockwise ordering.
-To check that you've the right format the program is equipped with an input checking procedure using the
-Möller–Trumbore algorithm. However, this procedure has quadratic complexity. Hence, it can be optionally enabled
-the yaml configuration file.
+The vertices in the input mesh file must be ordered so that the plane unit normals point outwards of the polyhedron for
+every face.
+One can use the program input-checking procedure to ensure the correct format. This method is activated via the
+corresponding configuration option and uses the Möller–Trumbore intersection algorithm. Notice that this algorithm is a
+quadratic complexity, so the check should only be utilized in case of uncertainty.
 
 ### Output
 
@@ -140,6 +156,7 @@ The calculation outputs the following parameters for every Computation Point _P_
 | Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |      1/s^2      |   The spatial rate of change of the gravitational accleration    |
 
 ## Testing C++
+
 The project uses GoogleTest for testing. In oder to execute those
 tests just execute the following command in the build directory:
 
