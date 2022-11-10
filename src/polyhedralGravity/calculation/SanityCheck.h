@@ -2,6 +2,8 @@
 
 #include <set>
 #include <optional>
+#include "thrust/transform_reduce.h"
+#include "thrust/execution_policy.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/util/UtilityContainer.h"

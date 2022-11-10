@@ -6,25 +6,28 @@ namespace polyhedralGravity::SanityCheck {
         using namespace util;
         auto it = GravityModel::transformPolyhedron(polyhedron);
         // All normals have to point outwards (intersect the polyhedron even times)
-        return std::all_of(it.first, it.second, [&polyhedron](const Array3Triplet &face) {
-            // The centroid of the triangular face
-            const Array3 centroid = (face[0] + face[1] + face[2]) / 3.0;
+        return thrust::transform_reduce(
+                thrust::device,
+                it.first, it.second, [&polyhedron](const Array3Triplet &face) {
+                    // The centroid of the triangular face
+                    const Array3 centroid = (face[0] + face[1] + face[2]) / 3.0;
 
-            // The normal of the plane calculated with two segments of the triangle
-            const Array3 segmentVector1 = face[1] - face[0];
-            const Array3 segmentVector2 = face[2] - face[1];
-            const Array3 normal = util::normal(segmentVector1, segmentVector2);
+                    // The normal of the plane calculated with two segments of the triangle
+                    const Array3 segmentVector1 = face[1] - face[0];
+                    const Array3 segmentVector2 = face[2] - face[1];
+                    const Array3 normal = util::normal(segmentVector1, segmentVector2);
 
-            // The origin of the array has a slight offset in direction of the normal
-            const Array3 rayOrigin = centroid + (normal * EPSILON);
+                    // The origin of the array has a slight offset in direction of the normal
+                    const Array3 rayOrigin = centroid + (normal * EPSILON);
 
-            // If the ray intersects the polyhedron even-times than the normal points outwards
-            const size_t intersects = detail::rayIntersectsPolyhedron(rayOrigin, normal, polyhedron);
-            return intersects % 2 == 0;
-        });
+                    // If the ray intersects the polyhedron even-times than the normal points outwards
+                    const size_t intersects = detail::rayIntersectsPolyhedron(rayOrigin, normal, polyhedron);
+                    return intersects % 2 == 0;
+                }, true, thrust::logical_and<bool>());
     }
 
-    size_t detail::rayIntersectsPolyhedron(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
+    size_t
+    detail::rayIntersectsPolyhedron(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
         auto it = GravityModel::transformPolyhedron(polyhedron);
         std::set<Array3> intersections{};
         // Count every triangular face which is intersected by the ray
