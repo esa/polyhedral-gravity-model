@@ -37,7 +37,7 @@ std::vector<std::tuple<double, std::array<double, 3>, std::array<double, 6>>> co
 PYBIND11_MODULE(polyhedral_gravity, m) {
     using namespace polyhedralGravity;
     m.doc() = "Computes the full gravity tensor for a given constant density polyhedron which consists of some "
-              "vertices and triangular faces at a given computation point P";
+              "vertices and triangular faces at a given computation points";
 
     /*
      * Methods for vertices and faces from the script context
@@ -47,18 +47,38 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
           [](const std::vector<std::array<double, 3>> &vertices, const std::vector<std::array<size_t, 3>> &faces,
              double density, const std::array<double, 3> &computationPoint) {
               return convertToTuple(GravityModel::evaluate({vertices, faces}, density, computationPoint));
-          },
-          "Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices "
-          "and triangular faces at a given computation point P",
+          }, R"mydelimiter(
+            Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices
+            and triangular faces at a given computation point P
+
+            Args:
+                vertices (2-D array-like): (N, 3) array of vertex coordinates (floats)
+                faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints)
+                density (float): the constant density of the polyhedron
+                computation_point (2-D array-like): (N, 3) cartesian points
+            Returns:
+                tuple of potential, acceleration and second derivative gravity tensor
+
+          )mydelimiter",
           py::arg("vertices"), py::arg("faces"), py::arg("density"), py::arg("computation_point"));
 
     m.def("evaluate",
           [](const std::vector<std::array<double, 3>> &vertices, const std::vector<std::array<size_t, 3>> &faces,
              double density, const std::vector<std::array<double, 3>> &computationPoints) {
               return convertToTupleVector(GravityModel::evaluate({vertices, faces}, density, computationPoints));
-          },
-          "Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices "
-          "and triangular faces at multiple given computation points",
+          }, R"mydelimiter(
+            Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices
+            and triangular faces at multiple given computation points
+
+            Args:
+                vertices (2-D array-like): (N, 3) array of vertex coordinates (floats)
+                faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints)
+                density (float): the constant density of the polyhedron
+                computation_point (array-like): cartesian point
+            Returns:
+                array of tuples of potential, acceleration and second derivative gravity tensor
+
+          )mydelimiter",
           py::arg("vertices"), py::arg("faces"), py::arg("density"), py::arg("computation_points"));
 
     /*
@@ -70,10 +90,19 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
              double density, const std::array<double, 3> &computationPoint) {
               TetgenAdapter tetgen{filenames};
               return convertToTuple(GravityModel::evaluate(tetgen.getPolyhedron(), density, computationPoint));
-          },
-          "Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices"
-          "and triangular faces at a given computation point P. The vertices and faces are read from input "
-          "files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!",
+          }, R"mydelimiter(
+            Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices
+            and triangular faces at a given computation point P. The vertices and faces are read from input
+            files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
+
+            Args:
+                input_files (List[str]): list of input files
+                density (float): the constant density of the polyhedron
+                computation_point (array-like): cartesian point
+            Returns:
+                tuple of potential, acceleration and second derivative gravity tensor
+
+          )mydelimiter",
           py::arg("input_files"), py::arg("density"), py::arg("computation_point"));
 
     m.def("evaluate",
@@ -81,9 +110,18 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
              double density, const std::vector<std::array<double, 3>> &computationPoints) {
               TetgenAdapter tetgen{filenames};
               return convertToTupleVector(GravityModel::evaluate(tetgen.getPolyhedron(), density, computationPoints));
-          },
-          "Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices "
-          "and triangular faces at multiple given computation points. The vertices and faces are read from "
-          "input files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!",
+          }, R"mydelimiter(
+            Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices
+            and triangular faces multiple given computation points. The vertices and faces are read from input
+            files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
+
+            Args:
+                input_files (List[str]): list of input files
+                density (float): the constant density of the polyhedron
+                computation_point (2-D array-like): (N, 3) cartesian points
+            Returns:
+                array of tuples of potential, acceleration and second derivative gravity tensor
+
+          )mydelimiter",
           py::arg("input_files"), py::arg("density"), py::arg("computation_points"));
 }
