@@ -49,15 +49,15 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
               return convertToTuple(GravityModel::evaluate({vertices, faces}, density, computationPoint));
           }, R"mydelimiter(
             Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices
-            and triangular faces at a given computation point P
+            and triangular faces at a given computation point P.
 
             Args:
-                vertices (2-D array-like): (N, 3) array of vertex coordinates (floats)
-                faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints)
-                density (float): the constant density of the polyhedron
-                computation_point (2-D array-like): (N, 3) cartesian points
+                vertices (2-D array-like): (N, 3) array of vertex coordinates (floats).
+                faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints).
+                density (float): the constant density of the polyhedron.
+                computation_point (2-D array-like): (N, 3) cartesian points.
             Returns:
-                tuple of potential, acceleration and second derivative gravity tensor
+                tuple of potential, acceleration and second derivative gravity tensor.
 
           )mydelimiter",
           py::arg("vertices"), py::arg("faces"), py::arg("density"), py::arg("computation_point"));
@@ -68,15 +68,15 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
               return convertToTupleVector(GravityModel::evaluate({vertices, faces}, density, computationPoints));
           }, R"mydelimiter(
             Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices
-            and triangular faces at multiple given computation points
+            and triangular faces at multiple given computation points.
 
             Args:
-                vertices (2-D array-like): (N, 3) array of vertex coordinates (floats)
-                faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints)
-                density (float): the constant density of the polyhedron
-                computation_point (array-like): cartesian point
+                vertices (2-D array-like): (N, 3) array of vertex coordinates (floats).
+                faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints).
+                density (float): the constant density of the polyhedron.
+                computation_point (array-like): cartesian point.
             Returns:
-                array of tuples of potential, acceleration and second derivative gravity tensor
+                array of tuples of potential, acceleration and second derivative gravity tensor.
 
           )mydelimiter",
           py::arg("vertices"), py::arg("faces"), py::arg("density"), py::arg("computation_points"));
@@ -96,11 +96,11 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
 
             Args:
-                input_files (List[str]): list of input files
-                density (float): the constant density of the polyhedron
-                computation_point (array-like): cartesian point
+                input_files (List[str]): list of input files.
+                density (float): the constant density of the polyhedron.
+                computation_point (array-like): cartesian point.
             Returns:
-                tuple of potential, acceleration and second derivative gravity tensor
+                tuple of potential, acceleration and second derivative gravity tensor.
 
           )mydelimiter",
           py::arg("input_files"), py::arg("density"), py::arg("computation_point"));
@@ -116,11 +116,11 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
 
             Args:
-                input_files (List[str]): list of input files
-                density (float): the constant density of the polyhedron
-                computation_point (2-D array-like): (N, 3) cartesian points
+                input_files (List[str]): list of input files.
+                density (float): the constant density of the polyhedron.
+                computation_point (2-D array-like): (N, 3) cartesian points.
             Returns:
-                array of tuples of potential, acceleration and second derivative gravity tensor
+                array of tuples of potential, acceleration and second derivative gravity tensor.
 
           )mydelimiter",
           py::arg("input_files"), py::arg("density"), py::arg("computation_points"));
