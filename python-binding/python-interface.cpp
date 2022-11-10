@@ -5,6 +5,7 @@
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/calculation/GravityModel.h"
+#include "polyhedralGravity/calculation/SanityCheck.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
 
 
@@ -124,4 +125,58 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
           )mydelimiter",
           py::arg("input_files"), py::arg("density"), py::arg("computation_points"));
+
+    py::module_ utility = m.def_submodule("utility",
+                                          "This submodule contains useful utility functions like parsing meshes "
+                                          "or checking if the polyhedron's mesh plane unit normals point outwards "
+                                          "like it is required by the polyhedral-gravity model.");
+
+    utility.def("read",
+                [](const std::vector<std::string> &filenames) {
+                    TetgenAdapter tetgen{filenames};
+                    auto polyhedron = tetgen.getPolyhedron();
+                    return std::make_tuple(polyhedron.getVertices(), polyhedron.getFaces());
+                }, R"mydelimiter(
+            Reads a polyhedron from a mesh file. The vertices and faces are read from input
+            files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
+
+            Args:
+                input_files (List[str]): list of input files.
+            Returns:
+                tuple of vertices (N, 3) (floats) and faces (N, 3) (ints).
+          )mydelimiter",
+                py::arg("input_files"));
+
+    utility.def("check_input",
+                [](const std::vector<std::array<double, 3>> &vertices,
+                   const std::vector<std::array<size_t, 3>> &faces) {
+                    return SanityCheck::checkNormalsOutwardPointing({vertices, faces});
+                }, R"mydelimiter(
+                Checks if all the polyhedrons plane unit normals are pointing outwards.
+                Reads a polyhedron from a mesh file.
+
+                Args:
+                    vertices (2-D array-like): (N, 3) array of vertex coordinates (floats).
+                    faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints).
+                Returns:
+                    True if the polyhedrons plane unit normals are all pointing outwards.
+          )mydelimiter",
+                py::arg("vertices"), py::arg("faces"));
+
+
+    utility.def("check_input",
+                [](const std::vector<std::string> &filenames) {
+                    TetgenAdapter tetgen{filenames};
+                    return SanityCheck::checkNormalsOutwardPointing(tetgen.getPolyhedron());
+                }, R"mydelimiter(
+                Checks if all the polyhedrons plane unit normals are pointing outwards.
+                Reads a polyhedron from a mesh file. The vertices and faces are read from input
+                files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
+
+                Args:
+                    input_files (List[str]): list of input files.
+                Returns:
+                    True if the polyhedrons plane unit normals are all pointing outwards.
+          )mydelimiter",
+                py::arg("input_files"));
 }
