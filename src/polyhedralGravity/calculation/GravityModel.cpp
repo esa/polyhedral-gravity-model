@@ -22,6 +22,8 @@ namespace polyhedralGravity {
                 polyhedronIterator.first,
                 polyhedronIterator.second,
                 [](const Array3Triplet &face) {
+                    using namespace util;
+                    using namespace detail;
                     SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                                         "Evaluating the plane with vertices: v1 = [{}, {}, {}], v2 = [{}, {}, {}], "
                                         "v3 = [{}, {}, {}]",
