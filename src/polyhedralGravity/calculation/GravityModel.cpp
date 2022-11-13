@@ -498,8 +498,8 @@ namespace polyhedralGravity {
 
                         //The last subtraction is implemented via -distance.l1 (the minus/ inversion
                         // is sustained through all operations, even the atan(..)
-                        xsimd::batch<double> reg1(distance.s2, distance.s1);
-                        xsimd::batch<double> reg2(distance.l2, -distance.l1);
+                        xsimd::batch<double> reg1({distance.s2, distance.s1});
+                        xsimd::batch<double> reg2({distance.l2, -distance.l1});
 
                         reg1 = xsimd::mul(reg1, planeDistance);
                         reg2 = xsimd::mul(reg2, segmentDistance);
@@ -508,7 +508,7 @@ namespace polyhedralGravity {
                         reg1 = xsimd::atan(reg1);
 
                         // "Subtraction" masked as addition (l1 was previously inverted with a minus)
-                        transcendentalExpressionPerSegment.an = xsimd::reduce_add(reg1);
+                        transcendentalExpressionPerSegment.an = xsimd::hadd(reg1);
                     }
 
                     return transcendentalExpressionPerSegment;
