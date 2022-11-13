@@ -29,7 +29,7 @@ all of them are **automatically** set-up via CMake:
 - tetgen 1.6 (required for I/O)
 - yaml-cpp 0.7.0 (required for I/O)
 - thrust 1.16.0 (required for parallelization and utility)
-- xsimd 8.1.0 (required for vectorization of the `atan(..)`)
+- xsimd 9.0.1 (required for vectorization of the `atan(..)`)
 
 ## Python interface
 

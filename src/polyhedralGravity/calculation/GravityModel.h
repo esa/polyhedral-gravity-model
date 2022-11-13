@@ -83,14 +83,6 @@ namespace polyhedralGravity {
         namespace detail {
 
             /**
-             * Evaluates the polyhedral gravity model at one polyhedral face/ plane.
-             * @param face - the polyhedral face/ plane
-             * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration
-             * for the computation Point P as resulting from the given face
-             */
-            GravityModelResult evaluateSinglePlane(const Array3Triplet &face);
-
-            /**
              * Computes the segment vectors G_ij for one plane of the polyhedron according to Tsoulis (18).
              * The segment vectors G_ij represent the vector from one vertex of the face to the neighboring vertex and
              * depict every line segment of the triangular face (A-B-C)
