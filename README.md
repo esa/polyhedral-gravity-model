@@ -16,7 +16,7 @@ which is strongly based on the former implementation in FORTRAN.
 
 ### Results and Plots
 
-Some worth seeing results and plots are stored in the
+Some exemplary results and plots are stored in the
 [jupyter notebook](https://github.com/esa/polyhedral-gravity-model/blob/vertices-checking/script/polyhedral-gravity.ipynb).
 It also provides a good introduction to the application of
 the python interface.
