@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
 
         // Checking that the vertices are correctly set-up in the input if activated
         if (checkPolyhedralInput) {
+            SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Checking mesh...");
             if (!SanityCheck::checkNormalsOutwardPointing(poly)) {
                 throw std::runtime_error{
                         "The plane unit normals are not pointing outwards! Please check the order "
