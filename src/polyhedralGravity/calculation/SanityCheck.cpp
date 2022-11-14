@@ -21,13 +21,13 @@ namespace polyhedralGravity::SanityCheck {
                     const Array3 rayOrigin = centroid + (normal * EPSILON);
 
                     // If the ray intersects the polyhedron even-times than the normal points outwards
-                    const size_t intersects = detail::rayIntersectsPolyhedron(rayOrigin, normal, polyhedron);
+                    const size_t intersects = detail::countRayPolyhedronIntersections(rayOrigin, normal, polyhedron);
                     return intersects % 2 == 0;
                 }, true, thrust::logical_and<bool>());
     }
 
     size_t
-    detail::rayIntersectsPolyhedron(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
+    detail::countRayPolyhedronIntersections(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
         auto it = GravityModel::transformPolyhedron(polyhedron);
         std::set<Array3> intersections{};
         // Count every triangular face which is intersected by the ray

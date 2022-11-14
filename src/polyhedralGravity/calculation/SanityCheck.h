@@ -33,7 +33,8 @@ namespace polyhedralGravity::SanityCheck {
          * @param polyhedron - the polyhedron consisting of vertices and triangular faces
          * @return true if the ray intersects the triangle
          */
-        size_t rayIntersectsPolyhedron(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron);
+        size_t
+        countRayPolyhedronIntersections(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron);
 
         /**
          * Calculates how often a vector starting at a specific origin intersects a triangular face.
