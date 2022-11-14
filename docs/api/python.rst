@@ -105,6 +105,6 @@ like it is required by the polyhedral-gravity model.
     files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
 
     :param List[str] input_files: polyhedral source files
-    :return: True if no triangle is degenerated and the polyhedron's plane unit normals are all pointing outwards.
+    :return: True if no triangle is degenerate and the polyhedron's plane unit normals are all pointing outwards.
     :rtype: Bool
 
