@@ -300,6 +300,16 @@ namespace polyhedralGravity::util {
     }
 
     /**
+     * Calculates the surface area of a triangle consisting of three cartesian vertices.
+     * @tparam T - numerical type
+     * @return surface area
+     */
+    template<typename T>
+    T surfaceArea(const Matrix<T, 3, 3> &triangle) {
+        return 0.5 * euclideanNorm(cross(triangle[1] - triangle[0], triangle[2] - triangle[0]));
+    }
+
+    /**
      * Operator << for an array of any size.
      * @tparam T - type of the array, must have an << operator overload
      * @tparam N - size of the array

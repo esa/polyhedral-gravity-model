@@ -142,6 +142,7 @@ TEST_F(SanityCheckTest, CorrectCube) {
     // All normals are pointing outwards
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_correctCube))
     << "The vertices of the cube are correctly sorted, however the Sanity Check came to the wrong conclusion!";
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_correctCube));
 }
 
 TEST_F(SanityCheckTest, WrongCube) {
@@ -149,6 +150,7 @@ TEST_F(SanityCheckTest, WrongCube) {
     // All normals are pointing inwards (reversed order)
     ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongCube))
     << "The vertices of the cube are incorrectly sorted, however the Sanity Check failed to notice that!";
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_wrongCube));
 }
 
 TEST_F(SanityCheckTest, WrongCube2) {
@@ -156,6 +158,7 @@ TEST_F(SanityCheckTest, WrongCube2) {
     // All normals are pointing outwards expect one which points inwards (and has a reversed order)
     ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongCube2))
     << "The vertices of the cube are incorrectly sorted, however the Sanity Check failed to notice that!";
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_wrongCube2));
 }
 
 TEST_F(SanityCheckTest, CorrectPrism) {
@@ -163,6 +166,7 @@ TEST_F(SanityCheckTest, CorrectPrism) {
     // All normals are pointing outwards
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_correctPrism))
     << "The vertices of the prism are correctly sorted, however the Sanity Check came to the wrong conclusion!";
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_correctPrism));
 }
 
 TEST_F(SanityCheckTest, WrongPrism) {
@@ -170,6 +174,7 @@ TEST_F(SanityCheckTest, WrongPrism) {
     // All normals are pointing inwards (reversed order)
     ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongPrism))
     << "The vertices of the prism are incorrectly sorted, however the Sanity Check failed to notice that!";
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_wrongPrism));
 }
 
 TEST_F(SanityCheckTest, CorrectBigPolyhedron) {
@@ -181,5 +186,6 @@ TEST_F(SanityCheckTest, CorrectBigPolyhedron) {
                     {"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}}.getPolyhedron()};
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(polyhedron))
     << "The vertices of the polyhedron are correctly sorted, however the Sanity Check came to the wrong conclusion!";
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(polyhedron));
 }
 

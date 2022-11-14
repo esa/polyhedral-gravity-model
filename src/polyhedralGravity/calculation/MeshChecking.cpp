@@ -26,6 +26,16 @@ namespace polyhedralGravity::MeshChecking {
                 }, true, thrust::logical_and<bool>());
     }
 
+    bool checkTrianglesNotDegenerated(const Polyhedron &polyhedron) {
+        auto it = GravityModel::transformPolyhedron(polyhedron);
+        // All triangles surface area needs to be greater than zero
+        return thrust::transform_reduce(
+                thrust::device,
+                it.first, it.second, [](const Array3Triplet &face) {
+                    return util::surfaceArea(face) > 0.0;
+                }, true, thrust::logical_and<bool>());
+    }
+
     size_t
     detail::countRayPolyhedronIntersections(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
         auto it = GravityModel::transformPolyhedron(polyhedron);
