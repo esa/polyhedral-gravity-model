@@ -31,6 +31,8 @@ int main(int argc, char *argv[]) {
                 throw std::runtime_error{
                         "The plane unit normals are not pointing outwards! Please check the order "
                         "of the vertices in the polyhedral input source!"};
+            } else {
+                SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The mesh is fine.");
             }
         }
 
