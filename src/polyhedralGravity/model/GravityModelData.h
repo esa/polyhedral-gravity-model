@@ -10,6 +10,18 @@
 namespace polyhedralGravity {
 
     /**
+     * Alias for an array of size 3
+     * @example for x, y, z coordinates.
+     */
+    using Array3 = std::array<double, 3>;
+
+    /**
+     * Alias for a triplet of arrays of size 3
+     * @example for the segment of a triangular face
+     */
+    using Array3Triplet = std::array<Array3, 3>;
+
+    /**
      * Contains the 3D distances l1_pq and l2_pq between P and the endpoints of segment pq and
      * the 1D distances s1_pq and s2_pq between P'' and the segment endpoints.
      * @note This struct is basically a named tuple

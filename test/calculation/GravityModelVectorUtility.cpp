@@ -2,6 +2,8 @@
 
 namespace polyhedralGravity {
 
+    using namespace GravityModel::detail;
+
     std::vector<Array3Triplet> GravityModel::calculateSegmentVectors(const Polyhedron &polyhedron) {
         std::vector<Array3Triplet> segmentVectors{polyhedron.countFaces()};
         //Calculate G_ij for every plane given as input the three vertices of every face

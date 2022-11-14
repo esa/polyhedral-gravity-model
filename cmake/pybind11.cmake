@@ -10,6 +10,8 @@ if (${pybind11_FOUND})
 
 else()
 
+    message(STATUS "Using pybind11 from git repository")
+
     #Fetches the version 2.9.2 from the official github of pybind11
     FetchContent_Declare(pybind11
             GIT_REPOSITORY https://github.com/pybind/pybind11

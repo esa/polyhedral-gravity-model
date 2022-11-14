@@ -32,14 +32,15 @@ Further one must specify the name of the .csv output file.
     ---
     gravityModel:
       input:
-        polyhedron:                                 # polyhedron source-file(s)
+        polyhedron: #polyhedron source-file(s)
           - "../example-config/data/tsoulis.node"   # .node contains the vertices
           - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
         density: 2670.0                             # constant density in [kg/m^3]
-        points:                                     # Location of the computation point(s) P
-          - [0, 0, 0]                               # Here it is situated at the origin
+        points: # Location of the computation point(s) P
+          - [ 0, 0, 0 ]                             # Here it is situated at the origin
+        check_mesh: true                            # Fully optional, enables input checking (not given: false)
       output:
-        filename: "gravity_result.csv"              #The name of the output file
+        filename: "gravity_result.csv"              # The name of the output file
 
 
 Have a look at :ref:`supported-polyhedron-source-files` to view the available
@@ -100,3 +101,22 @@ from a .yaml file.
         // Main method, notice that the last argument can also be a
         // vector of points
         GravityResult result = GravityModel::evaluate(poly, density, point);
+
+**Example 4:** A guard statement checks that the plane unit
+normals are pointing outwards and no triangle is degenerated.
+Only use this statement if one needs clarification
+about the vertices' ordering due to its quadratic complexity!
+
+.. code-block:: cpp
+
+        // Reading the configuration from a yaml file
+        std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>("config.yaml");
+        Polyhedron poly = config->getDataSource()->getPolyhedron();
+        double density = config->getDensity();
+        std::array<double, 3> point = config->getPointsOfInterest()[0];
+
+        // Guard statement
+        if (MeshChecking::checkTrianglesNotDegenerated(poly) && MeshChecking::checkNormalsOutwardPointing(poly)) {
+            GravityResult result = GravityModel::evaluate(poly, density, point);
+        }
+

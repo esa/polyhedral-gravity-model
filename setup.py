@@ -17,9 +17,7 @@ CMAKE_OPTIONS = {
     # The Build Type (Should be release!)
     "CMAKE_BUILD_TYPE": "Release",
     # Modify to change the parallelization (Default value: CPP)
-    "PARALLELIZATION_HOST": "CPP",
-    # Modify to change the parallelization (Default value: CPP)
-    "PARALLELIZATION_DEVICE": "CPP",
+    "POLYHEDRAL_GRAVITY_PARALLELIZATION": "CPP",
     # Default value (INFO=2)
     "LOGGING_LEVEL": 2,
     # Default value (OFF)
@@ -143,7 +141,7 @@ class CMakeBuild(build_ext):
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="1.1.6",
+    version="1.2",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points",

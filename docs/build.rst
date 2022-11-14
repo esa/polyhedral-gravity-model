@@ -1,5 +1,5 @@
-Requirements and Build
-======================
+Requirements, Build, Installation
+=================================
 
 Requirements
 ------------
@@ -31,17 +31,16 @@ repository's root directory:
 
 The available options are the following:
 
-============================================== ===================================================================================================================================
-Name (Default)                                 Options
-============================================== ===================================================================================================================================
-PARALLELIZATION_HOST (:code:`CPP`)             :code:`CPP` = Serial Execution on Host/ :code:`OMP`/ :code:`TBB`  = Parallel Execution on Host with OpenMP or Intel's TBB
-PARALLELIZATION_DEVICE (:code:`CPP`)           :code:`CPP` = Serial Execution on Device/ :code:`OMP`/ :code:`TBB`  = Parallel Execution on Device with OpenMP or Intel's TBB
-LOGGING_LEVEL (:code:`2`)                      :code:`0` = TRACE/ :code:`1` = DEBUG/ :code:`2` = INFO / :code:`3` = WARN/ :code:`4` = ERROR/ :code:`5` = CRITICAL/ :code:`6` = OFF
-USE_LOCAL_TBB (:code:`OFF`)                    Use a local installation of :code:`TBB` instead of setting it up via :code:`CMake`
-BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)    Build this documentation
-BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)    Build the Tests
-BUILD_POLYHEDRAL_PYTHON_INTERFACE (:code:`ON`) Build the Python interface
-============================================== ===================================================================================================================================
+================================================ ===================================================================================================================================
+Name (Default)                                   Options
+================================================ ===================================================================================================================================
+POLYHEDRAL_GRAVITY_PARALLELIZATION (:code:`CPP`) :code:`CPP` = Serial Execution / :code:`OMP` or :code:`TBB`  = Parallel Execution with OpenMP or Intel's TBB
+LOGGING_LEVEL (:code:`2`)                        :code:`0` = TRACE/ :code:`1` = DEBUG/ :code:`2` = INFO / :code:`3` = WARN/ :code:`4` = ERROR/ :code:`5` = CRITICAL/ :code:`6` = OFF
+USE_LOCAL_TBB (:code:`OFF`)                      Use a local installation of :code:`TBB` instead of setting it up via :code:`CMake`
+BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)      Build this documentation
+BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)      Build the Tests
+BUILD_POLYHEDRAL_PYTHON_INTERFACE (:code:`ON`)   Build the Python interface
+================================================ ===================================================================================================================================
 
 Build & Installation with pip
 -----------------------------
@@ -59,6 +58,9 @@ at the :code:`setupy.py`.
 Installation with conda
 -----------------------
 
-TODO
+The python interface can be easily installed with `conda <https://anaconda.org/conda-forge/polyhedral-gravity-model>`__:
 
+.. code-block::
+
+    conda install -c conda-forge polyhedral-gravity-model
 

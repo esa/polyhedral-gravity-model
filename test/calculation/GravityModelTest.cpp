@@ -372,8 +372,9 @@ TEST_F(GravityModelTest, SegmentUnitNormals) {
 
 TEST_F(GravityModelTest, PlaneNormalOrientations) {
     using namespace testing;
+    using namespace polyhedralGravity;
 
-    auto actualPlaneNormalOrientations = polyhedralGravity::GravityModel::calculatePlaneNormalOrientations(
+    auto actualPlaneNormalOrientations = GravityModel::calculatePlaneNormalOrientations(
             _computationPoint, _polyhedron, expectedPlaneUnitNormals);
 
     ASSERT_THAT(actualPlaneNormalOrientations, ContainerEq(expectedPlaneNormalOrientations));
@@ -385,7 +386,7 @@ TEST_F(GravityModelTest, SimpleHessianPlane) {
 
     HessianPlane expectedHessian{2, -8, 5, -18};
 
-    auto actualHessianPlane = polyhedralGravity::GravityModel::computeHessianPlane({1, -2, 0}, {3, 1, 4}, {0, -1, 2});
+    auto actualHessianPlane = GravityModel::detail::computeHessianPlane({1, -2, 0}, {3, 1, 4}, {0, -1, 2});
 
     ASSERT_DOUBLE_EQ(actualHessianPlane.a, expectedHessian.a);
     ASSERT_DOUBLE_EQ(actualHessianPlane.b, expectedHessian.b);

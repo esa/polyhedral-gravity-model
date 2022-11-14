@@ -239,6 +239,21 @@ namespace polyhedralGravity::util {
     }
 
     /**
+     * Calculates the normal N as (first * second) / |first * second| with * being the cross product and first, second
+     * as cartesian vectors.
+     * @tparam T - numerical type
+     * @param first - first cartesian vector
+     * @param second - second cartesian vector
+     * @return the normal (normed)
+     */
+    template<typename T>
+    std::array<T, 3> normal(const std::array<T, 3> &first, const std::array<T, 3> &second) {
+        const std::array<T, 3> crossProduct = cross(first, second);
+        const double norm = euclideanNorm(crossProduct);
+        return crossProduct / norm;
+    }
+
+    /**
     * Returns the dot product of two cartesian vectors.
     * @tparam T - a number
     * @param lhs - left vector
@@ -272,16 +287,26 @@ namespace polyhedralGravity::util {
      * @return a new array of size M+N with type T
      */
     template<typename T, size_t M, size_t N>
-    std::array<T, M+N> concat(const std::array<T, M> &first, const std::array<T, N> &second) {
-        std::array<T, M+N> result{};
+    std::array<T, M + N> concat(const std::array<T, M> &first, const std::array<T, N> &second) {
+        std::array<T, M + N> result{};
         size_t index = 0;
-        for (const auto &el : first) {
+        for (const auto &el: first) {
             result[index++] = el;
         }
-        for (const auto &el : second) {
+        for (const auto &el: second) {
             result[index++] = el;
         }
         return result;
+    }
+
+    /**
+     * Calculates the surface area of a triangle consisting of three cartesian vertices.
+     * @tparam T - numerical type
+     * @return surface area
+     */
+    template<typename T>
+    T surfaceArea(const Matrix<T, 3, 3> &triangle) {
+        return 0.5 * euclideanNorm(cross(triangle[1] - triangle[0], triangle[2] - triangle[0]));
     }
 
     /**

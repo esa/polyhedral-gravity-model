@@ -5,6 +5,7 @@ namespace polyhedralGravity {
     GravityModelResult GravityModel::evaluate(
             const Polyhedron &polyhedron, double density, const Array3 &computationPoint) {
         using namespace util;
+        using namespace detail;
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
                             computationPoint[0], computationPoint[1], computationPoint[2], density);
@@ -17,11 +18,12 @@ namespace polyhedralGravity {
                             "Starting to iterate over the planes...");
         GravityModelResult result{};
         result = thrust::transform_reduce(
-#ifdef DEVICE
                 thrust::device,
-#endif
-                polyhedronIterator.first, polyhedronIterator.second, [](const Array3Triplet &face) {
+                polyhedronIterator.first,
+                polyhedronIterator.second,
+                [](const Array3Triplet &face) {
                     using namespace util;
+                    using namespace detail;
                     SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                                         "Evaluating the plane with vertices: v1 = [{}, {}, {}], v2 = [{}, {}, {}], "
                                         "v3 = [{}, {}, {}]",
@@ -30,36 +32,32 @@ namespace polyhedralGravity {
                                         face[2][0], face[2][1], face[2][2]);
                     //1. Step: Compute ingredients for current plane
                     //1-01 Step: Compute Segment Vectors G_pq which describe each one the edge between two vertices
-                    Array3Triplet segmentVectors = buildVectorsOfSegments(face[0],
-                                                                          face[1],
-                                                                          face[2]);
+                    Array3Triplet segmentVectors = buildVectorsOfSegments(face[0], face[1], face[2]);
                     //1-02 Step: Compute the Plane Unit Normals N_p (pointing outside the polyhedron)
-                    Array3 planeUnitNormal = buildUnitNormalOfPlane(segmentVectors[0],
-                                                                    segmentVectors[1]);
+                    Array3 planeUnitNormal = buildUnitNormalOfPlane(segmentVectors[0], segmentVectors[1]);
                     //1-03 Step: Compute Segment Unit Normals n_pq (normal pointing away from each segment)
-                    Array3Triplet segmentUnitNormals = buildUnitNormalOfSegments(
-                            segmentVectors,
-                            planeUnitNormal);
+                    Array3Triplet segmentUnitNormals = buildUnitNormalOfSegments(segmentVectors, planeUnitNormal);
                     //1-04 Step: Compute Plane Normal Orientation sigma_p (direction of N_p in relation to P)
-                    double planeNormalOrientation = computeUnitNormalOfPlaneDirection(
-                            planeUnitNormal, face[0]);
+                    double planeNormalOrientation = computeUnitNormalOfPlaneDirection(planeUnitNormal, face[0]);
                     //1-05 Step: Compute Hessian Normal Plane Representation
-                    HessianPlane hessianPlane = computeHessianPlane(face[0], face[1],
-                                                                    face[2]);
+                    HessianPlane hessianPlane = computeHessianPlane(face[0], face[1], face[2]);
                     //1-06 Step: Compute distance h_p between P and P'
                     double planeDistance = distanceBetweenOriginAndPlane(hessianPlane);
                     //1-07 Step: Compute the actual position of P' (projection of P on the plane)
-                    Array3 orthogonalProjectionPointOnPlane =
-                            projectPointOrthogonallyOntoPlane(
-                                    planeUnitNormal, planeDistance, hessianPlane);
+                    Array3 orthogonalProjectionPointOnPlane = projectPointOrthogonallyOntoPlane(
+                            planeUnitNormal,
+                            planeDistance,
+                            hessianPlane);
                     //1-08 Step: Compute the segment normal orientation sigma_pq (direction of n_pq in relation to P')
                     Array3 segmentNormalOrientations = computeUnitNormalOfSegmentsDirections(
-                            face, orthogonalProjectionPointOnPlane, segmentUnitNormals);
+                            face,
+                            orthogonalProjectionPointOnPlane,
+                            segmentUnitNormals);
                     //1-09 Step: Compute the orthogonal projection point P'' of P' on each segment
-                    Array3Triplet orthogonalProjectionPointsOnSegmentsForPlane =
-                            projectPointOrthogonallyOntoSegments(
-                                    orthogonalProjectionPointOnPlane,
-                                    segmentNormalOrientations, face);
+                    Array3Triplet orthogonalProjectionPointsOnSegmentsForPlane = projectPointOrthogonallyOntoSegments(
+                            orthogonalProjectionPointOnPlane,
+                            segmentNormalOrientations,
+                            face);
                     //1-10 Step: Compute the segment distances h_pq between P'' and P'
                     Array3 segmentDistances = distancesBetweenProjectionPoints(
                             orthogonalProjectionPointOnPlane,
@@ -67,65 +65,68 @@ namespace polyhedralGravity {
                     //1-11 Step: Compute the 3D distances l1, l2 (between P and vertices)
                     // and 1D distances s1, s2 (between P'' and vertices)
                     std::array<Distance, 3> distances = distancesToSegmentEndpoints(
-                            segmentVectors, orthogonalProjectionPointsOnSegmentsForPlane,
+                            segmentVectors,
+                            orthogonalProjectionPointsOnSegmentsForPlane,
                             face);
                     //1-12 Step: Compute the euclidian Norms of the vectors consisting of P and the vertices
                     // they are later used for determining the position of P in relation to the plane
                     Array3 projectionPointVertexNorms = computeNormsOfProjectionPointAndVertices(
-                            orthogonalProjectionPointOnPlane, face);
+                            orthogonalProjectionPointOnPlane,
+                            face);
                     //1-13 Step: Compute the transcendental Expressions LN_pq and AN_pq
-                    std::array<TranscendentalExpression, 3> transcendentalExpressions =
-                            computeTranscendentalExpressions(distances, planeDistance,
-                                                             segmentDistances, segmentNormalOrientations,
-                                                             projectionPointVertexNorms);
+                    std::array<TranscendentalExpression, 3> transcendentalExpressions = computeTranscendentalExpressions(
+                            distances,
+                            planeDistance,
+                            segmentDistances,
+                            segmentNormalOrientations,
+                            projectionPointVertexNorms);
                     //1-14 Step: Compute the singularities sing A and sing B if P' is located in the plane,
                     // on any vertex, or on one segment (G_pq)
-                    std::pair<double, Array3> singularities =
-                            computeSingularityTerms(segmentVectors,
-                                                    segmentNormalOrientations,
-                                                    projectionPointVertexNorms,
-                                                    planeUnitNormal, planeDistance,
-                                                    planeNormalOrientation);
+                    std::pair<double, Array3> singularities = computeSingularityTerms(
+                            segmentVectors,
+                            segmentNormalOrientations,
+                            projectionPointVertexNorms,
+                            planeUnitNormal, planeDistance,
+                            planeNormalOrientation);
                     //2. Step: Compute Sum 1 used for potential and acceleration (first derivative)
                     // sum over: sigma_pq * h_pq * LN_pq
                     // --> Equation 11/12 the first summation in the brackets
-                    auto zipIteratorSum1PotentialAcceleration = util::zipPair(segmentNormalOrientations,
-                                                                              segmentDistances,
-                                                                              transcendentalExpressions);
-                    const double sum1PotentialAcceleration = std::accumulate(zipIteratorSum1PotentialAcceleration.first,
-                                                                             zipIteratorSum1PotentialAcceleration.second,
-                                                                             0.0, [](double acc,
-                                                                                     const auto &tuple) {
+                    auto zipIteratorSum1PotentialAcceleration =
+                            util::zipPair(segmentNormalOrientations, segmentDistances, transcendentalExpressions);
+                    const double sum1PotentialAcceleration = std::accumulate(
+                            zipIteratorSum1PotentialAcceleration.first,
+                            zipIteratorSum1PotentialAcceleration.second,
+                            0.0,
+                            [](double acc, const auto &tuple) {
                                 const double &segmentOrientation = thrust::get<0>(tuple);
                                 const double &segmentDistance = thrust::get<1>(tuple);
-                                const TranscendentalExpression &transcendentalExpressions = thrust::get<2>(
-                                        tuple);
-                                return acc + segmentOrientation * segmentDistance *
-                                             transcendentalExpressions.ln;
+                                const TranscendentalExpression &transcendentalExpressions = thrust::get<2>(tuple);
+                                return acc + segmentOrientation * segmentDistance * transcendentalExpressions.ln;
                             });
 
                     //3. Step: Compute Sum 1 used for the gradiometric tensor (second derivative)
                     // sum over: n_pq * LN_pq
                     // --> Equation 13 the first summation in the brackets
-                    auto zipIteratorSum1Tensor = util::zipPair(segmentUnitNormals,
-                                                          transcendentalExpressions);
+                    auto zipIteratorSum1Tensor = util::zipPair(segmentUnitNormals, transcendentalExpressions);
                     const Array3 sum1Tensor = std::accumulate(
-                            zipIteratorSum1Tensor.first, zipIteratorSum1Tensor.second,
+                            zipIteratorSum1Tensor.first,
+                            zipIteratorSum1Tensor.second,
                             Array3{0.0, 0.0, 0.0},
                             [](const Array3 &acc, const auto &tuple) {
                                 const Array3 &segmentNormal = thrust::get<0>(tuple);
-                                const TranscendentalExpression &transcendentalExpressions = thrust::get<1>(
-                                        tuple);
+                                const TranscendentalExpression &transcendentalExpressions = thrust::get<1>(tuple);
                                 return acc + (segmentNormal * transcendentalExpressions.ln);
                             });
 
                     //4. Step: Compute Sum 2 which is the same for every result parameter
                     // sum over: sigma_pq * AN_pq
                     // --> Equation 11/12/13 the second summation in the brackets
-                    auto zipIteratorSum2 = util::zipPair(segmentNormalOrientations,
-                                                         transcendentalExpressions);
-                    const double sum2 = std::accumulate(zipIteratorSum2.first, zipIteratorSum2.second,
-                                                        0.0, [](double acc, const auto &tuple) {
+                    auto zipIteratorSum2 = util::zipPair(segmentNormalOrientations, transcendentalExpressions);
+                    const double sum2 = std::accumulate(
+                            zipIteratorSum2.first,
+                            zipIteratorSum2.second,
+                            0.0,
+                            [](double acc, const auto &tuple) {
                                 const double &segmentOrientation = thrust::get<0>(tuple);
                                 const TranscendentalExpression &transcendentalExpressions = thrust::get<1>(tuple);
                                 return acc + segmentOrientation * transcendentalExpressions.an;
@@ -140,16 +141,13 @@ namespace polyhedralGravity {
                     //6. Step: Sum for tensor
                     // consisting of: sum1 + sigma_p * N_p * sum2 + sing B
                     // --> Equation 13 the total sum of the brackets
-                    const Array3 subSum =
-                            (sum1Tensor + (planeUnitNormal * (planeNormalOrientation * sum2))) +
-                            singularities.second;
+                    const Array3 subSum = (sum1Tensor + (planeUnitNormal * (planeNormalOrientation * sum2))) + singularities.second;
                     // first component: trivial case Vxx, Vyy, Vzz --> just N_p * subSum
                     // 00, 11, 22 --> xx, yy, zz with x as 0, y as 1, z as 2
                     const Array3 first = planeUnitNormal * subSum;
                     // second component: reordering required to build Vxy, Vxz, Vyz
                     // 01, 02, 12 --> xy, xz, yz with x as 0, y as 1, z as 2
-                    const Array3 reorderedNp = {planeUnitNormal[0], planeUnitNormal[0],
-                                                planeUnitNormal[1]};
+                    const Array3 reorderedNp = {planeUnitNormal[0], planeUnitNormal[0], planeUnitNormal[1]};
                     const Array3 reorderedSubSum = {subSum[1], subSum[2], subSum[2]};
                     const Array3 second = reorderedNp * reorderedSubSum;
 
@@ -162,7 +160,9 @@ namespace polyhedralGravity {
                             planeUnitNormal * planeSumPotentialAcceleration,
                             concat(first, second)
                     };
-                }, result, [](const GravityModelResult &a, const GravityModelResult &b) {
+                },
+                result,
+                [](const GravityModelResult &a, const GravityModelResult &b) {
                     //8. Step: Accumulate the partial sums
                     return GravityModelResult{
                             a.gravitationalPotential + b.gravitationalPotential,
@@ -197,36 +197,31 @@ namespace polyhedralGravity {
         return result;
     }
 
-    Array3Triplet GravityModel::buildVectorsOfSegments(
+    Array3Triplet GravityModel::detail::buildVectorsOfSegments(
             const Array3 &vertex0, const Array3 &vertex1, const Array3 &vertex2) {
         using util::operator-;
         //Calculate G_ij
         return {vertex1 - vertex0, vertex2 - vertex1, vertex0 - vertex2};
     }
 
-    Array3 GravityModel::buildUnitNormalOfPlane(const Array3 &segmentVector1, const Array3 &segmentVector2) {
-        using namespace util;
+    Array3 GravityModel::detail::buildUnitNormalOfPlane(const Array3 &segmentVector1, const Array3 &segmentVector2) {
         //Calculate N_i as (G_i1 * G_i2) / |G_i1 * G_i2| with * being the cross product
-        const Array3 crossProduct = cross(segmentVector1, segmentVector2);
-        const double norm = euclideanNorm(crossProduct);
-        return crossProduct / norm;
+        return util::normal(segmentVector1, segmentVector2);
     }
 
-    Array3Triplet GravityModel::buildUnitNormalOfSegments(
+    Array3Triplet GravityModel::detail::buildUnitNormalOfSegments(
             const Array3Triplet &segmentVectors, const Array3 &planeUnitNormal) {
         Array3Triplet segmentUnitNormal{};
         //Calculate n_ij as (G_ij * N_i) / |G_ig * N_i| with * being the cross product
         std::transform(segmentVectors.cbegin(), segmentVectors.end(), segmentUnitNormal.begin(),
                        [&planeUnitNormal](const Array3 &segmentVector) -> Array3 {
-                           using namespace util;
-                           const Array3 crossProduct = cross(segmentVector, planeUnitNormal);
-                           const double norm = euclideanNorm(crossProduct);
-                           return crossProduct / norm;
+                           return util::normal(segmentVector, planeUnitNormal);
                        });
         return segmentUnitNormal;
     }
 
-    double GravityModel::computeUnitNormalOfPlaneDirection(const Array3 &planeUnitNormal, const Array3 &vertex0) {
+    double
+    GravityModel::detail::computeUnitNormalOfPlaneDirection(const Array3 &planeUnitNormal, const Array3 &vertex0) {
         using namespace util;
         //Calculate N_i * -G_i1 where * is the dot product and then use the inverted sgn
         //We abstain on the double multiplication with -1 in the line above and beyond since two
@@ -234,7 +229,7 @@ namespace polyhedralGravity {
         return sgn(dot(planeUnitNormal, vertex0), util::EPSILON);
     }
 
-    HessianPlane GravityModel::computeHessianPlane(const Array3 &p, const Array3 &q, const Array3 &r) {
+    HessianPlane GravityModel::detail::computeHessianPlane(const Array3 &p, const Array3 &q, const Array3 &r) {
         using namespace util;
         constexpr Array3 origin{0.0, 0.0, 0.0};
         const auto crossProduct = cross(p - q, p - r);
@@ -244,7 +239,7 @@ namespace polyhedralGravity {
         return {crossProduct[0], crossProduct[1], crossProduct[2], d};
     }
 
-    double GravityModel::distanceBetweenOriginAndPlane(const HessianPlane &hessianPlane) {
+    double GravityModel::detail::distanceBetweenOriginAndPlane(const HessianPlane &hessianPlane) {
         //Compute h_p as D/sqrt(A^2 + B^2 + C^2)
         return std::abs(hessianPlane.d / std::sqrt(
                 hessianPlane.a * hessianPlane.a +
@@ -252,7 +247,7 @@ namespace polyhedralGravity {
                 hessianPlane.c * hessianPlane.c));
     }
 
-    Array3 GravityModel::projectPointOrthogonallyOntoPlane(
+    Array3 GravityModel::detail::projectPointOrthogonallyOntoPlane(
             const Array3 &planeUnitNormal,
             double planeDistance,
             const HessianPlane &hessianPlane) {
@@ -289,7 +284,7 @@ namespace polyhedralGravity {
         return orthogonalProjectionPoint;
     }
 
-    Array3 GravityModel::computeUnitNormalOfSegmentsDirections(
+    Array3 GravityModel::detail::computeUnitNormalOfSegmentsDirections(
             const Array3Triplet &vertices,
             const Array3 &projectionPointOnPlane,
             const Array3Triplet &segmentUnitNormalsForPlane) {
@@ -310,7 +305,7 @@ namespace polyhedralGravity {
         return segmentNormalOrientations;
     }
 
-    Array3Triplet GravityModel::projectPointOrthogonallyOntoSegments(
+    Array3Triplet GravityModel::detail::projectPointOrthogonallyOntoSegments(
             const Array3 &projectionPointOnPlane,
             const Array3 &segmentNormalOrientations,
             const Array3Triplet &face) {
@@ -337,8 +332,8 @@ namespace polyhedralGravity {
         return orthogonalProjectionPointOnSegmentPerPlane;
     }
 
-    Array3 GravityModel::projectPointOrthogonallyOntoSegment(const Array3 &vertex1, const Array3 &vertex2,
-                                                             const Array3 &orthogonalProjectionPointOnPlane) {
+    Array3 GravityModel::detail::projectPointOrthogonallyOntoSegment(const Array3 &vertex1, const Array3 &vertex2,
+                                                                     const Array3 &orthogonalProjectionPointOnPlane) {
         using namespace util;
         //Preparing our the planes/ equations in matrix form
         const Array3 matrixRow1 = vertex2 - vertex1;
@@ -357,8 +352,8 @@ namespace polyhedralGravity {
         } / determinant;
     }
 
-    Array3 GravityModel::distancesBetweenProjectionPoints(const Array3 &orthogonalProjectionPointOnPlane,
-                                                          const Array3Triplet &orthogonalProjectionPointOnSegments) {
+    Array3 GravityModel::detail::distancesBetweenProjectionPoints(const Array3 &orthogonalProjectionPointOnPlane,
+                                                                  const Array3Triplet &orthogonalProjectionPointOnSegments) {
         std::array<double, 3> segmentDistances{};
         //The inner loop with the running j --> iterating over the segments
         //Using the values P'_i and P''_ij for the calculation of the distance
@@ -370,7 +365,7 @@ namespace polyhedralGravity {
         return segmentDistances;
     }
 
-    std::array<Distance, 3> GravityModel::distancesToSegmentEndpoints(
+    std::array<Distance, 3> GravityModel::detail::distancesToSegmentEndpoints(
             const Array3Triplet &segmentVectorsForPlane,
             const Array3Triplet &orthogonalProjectionPointsOnSegmentForPlane,
             const Array3Triplet &face) {
@@ -448,7 +443,7 @@ namespace polyhedralGravity {
     }
 
     std::array<TranscendentalExpression, 3>
-    GravityModel::computeTranscendentalExpressions(
+    GravityModel::detail::computeTranscendentalExpressions(
             const std::array<Distance, 3> &distancesForPlane,
             double planeDistance, const Array3 &segmentDistancesForPlane,
             const Array3 &segmentNormalOrientationsForPlane,
@@ -504,7 +499,7 @@ namespace polyhedralGravity {
                         //The last subtraction is implemented via -distance.l1 (the minus/ inversion
                         // is sustained through all operations, even the atan(..)
                         xsimd::batch<double> reg1({distance.s2, distance.s1});
-                        xsimd::batch<double> reg2({distance.l2, - distance.l1});
+                        xsimd::batch<double> reg2({distance.l2, -distance.l1});
 
                         reg1 = xsimd::mul(reg1, planeDistance);
                         reg2 = xsimd::mul(reg2, segmentDistance);
@@ -521,7 +516,7 @@ namespace polyhedralGravity {
         return transcendentalExpressionsForPlane;
     }
 
-    std::pair<double, Array3> GravityModel::computeSingularityTerms(
+    std::pair<double, Array3> GravityModel::detail::computeSingularityTerms(
             const Array3Triplet &segmentVectorsForPlane,
             const Array3 &segmentNormalOrientationForPlane,
             const Array3 &projectionPointVertexNorms,
@@ -605,7 +600,7 @@ namespace polyhedralGravity {
                 Array3{0.0, 0.0, 0.0});                                         //sing beta  = 0
     }
 
-    Array3 GravityModel::computeNormsOfProjectionPointAndVertices(
+    Array3 GravityModel::detail::computeNormsOfProjectionPointAndVertices(
             const Array3 &orthogonalProjectionPointOnPlane,
             const Array3Triplet &face) {
         using namespace util;

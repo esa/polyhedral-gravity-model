@@ -7,9 +7,11 @@ find_package(xsimd 8.1.0 QUIET)
 
 if (${xsimd_FOUND})
 
-    message(STATUS "Using local xsimd installation")
+    message(STATUS "Using existing xsimd installation")
 
 else()
+
+    message(STATUS "Using xsimd from git repository")
 
     #Fetches the version 8.1.0 from the official github of tbb
     FetchContent_Declare(xsimd

@@ -6,7 +6,7 @@ find_package(yaml-cpp 0.7.0 QUIET)
 
 if (${yaml-cpp_FOUND})
 
-    message(STATUS "Using local yaml-cpp installation")
+    message(STATUS "Using existing yaml-cpp installation")
 
 else()
 

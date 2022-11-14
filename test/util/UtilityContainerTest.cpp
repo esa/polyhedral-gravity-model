@@ -62,3 +62,30 @@ TEST(UtilityContainer, Determinant_2) {
     double actualDeterminant = det(matrix);
     ASSERT_DOUBLE_EQ(actualDeterminant, expectedDeterminant);
 }
+
+TEST(UtilityContainer, TrianlgeSurface_1) {
+    using namespace ::polyhedralGravity::util;
+    Matrix<int, 3, 3> triangle{{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}};
+
+    double expectedSurface = 0.0;
+    double actualSurface = surfaceArea(triangle);
+    ASSERT_DOUBLE_EQ(actualSurface, expectedSurface);
+}
+
+TEST(UtilityContainer, TrianlgeSurface_2) {
+    using namespace ::polyhedralGravity::util;
+    Matrix<double, 3, 3> triangle{{{0.0, 0.0, 0.0}, {1.0, 1.0, 2.0}, {-1.0, -1.0, 0.0}}};
+
+    double expectedSurface = 1.41421;
+    double actualSurface = surfaceArea(triangle);
+    ASSERT_NEAR(actualSurface, expectedSurface, 1e-4);
+}
+
+TEST(UtilityContainer, TrianlgeSurface_3) {
+    using namespace ::polyhedralGravity::util;
+    Matrix<double, 3, 3> triangle{{ {0.0, 10.0, 5.0}, {1.0, 1.0, 2.0}, {-1.0, -1.0, 0.0}}};
+
+    double expectedSurface = 12.3288;
+    double actualSurface = surfaceArea(triangle);
+    ASSERT_NEAR(actualSurface, expectedSurface, 1e-4);
+}

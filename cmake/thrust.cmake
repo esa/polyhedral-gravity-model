@@ -15,7 +15,7 @@ find_package(Thrust 1.16.0 QUIET)
 
 if (${Thrust_FOUND})
 
-    message(STATUS "Using local thrust installation")
+    message(STATUS "Using existing thrust installation")
 
 else()
     message(STATUS "Using thrust from git repository")

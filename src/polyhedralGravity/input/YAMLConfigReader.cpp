@@ -33,6 +33,16 @@ namespace polyhedralGravity {
         }
     }
 
+    bool YAMLConfigReader::getMeshInputCheckStatus() {
+        SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger() ,
+                            "Reading the activation of the input mesh sanity check from the configuration file.");
+        if (_file[ROOT][INPUT] && _file[ROOT][INPUT][INPUT_CHECK]) {
+            return _file[ROOT][INPUT][INPUT_CHECK].as<bool>();
+        } else {
+            return false;
+        }
+    }
+
     std::shared_ptr<DataSource> YAMLConfigReader::getDataSource() {
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger() ,
                             "Reading the data sources (file names) from the configuration file.");
