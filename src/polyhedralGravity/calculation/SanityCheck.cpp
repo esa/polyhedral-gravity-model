@@ -20,7 +20,7 @@ namespace polyhedralGravity::SanityCheck {
                     // The origin of the array has a slight offset in direction of the normal
                     const Array3 rayOrigin = centroid + (normal * EPSILON);
 
-                    // If the ray intersects the polyhedron even-times than the normal points outwards
+                    // If the ray intersects the polyhedron an even number of times then the normal points outwards
                     const size_t intersects = detail::rayIntersectsPolyhedron(rayOrigin, normal, polyhedron);
                     return intersects % 2 == 0;
                 }, true, thrust::logical_and<bool>());
