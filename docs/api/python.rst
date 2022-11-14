@@ -5,7 +5,7 @@ polyhedral_gravity
 ------------------
 
 Computes the full gravity tensor for a given constant density polyhedron which consists of some
-vertices and triangular faces at a given computation points
+vertices and triangular faces at given computation points
 
 .. py::module:: polyhedral_gravity
 
