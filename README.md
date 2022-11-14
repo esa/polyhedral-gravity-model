@@ -111,7 +111,7 @@ gravityModel:
     density: 2670.0                             # constant density in [kg/m^3]
     points: # Location of the computation point(s) P
       - [ 0, 0, 0 ]                             # Here it is situated at the origin
-    check: true                                 # Fully optional, enables input checking (not given: false)
+    mesh_check: true                            # Fully optional, enables input checking (not given: false)
   output:
     filename: "gravity_result.csv"              # The name of the output file 
 

@@ -5,7 +5,7 @@
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/calculation/GravityModel.h"
-#include "polyhedralGravity/calculation/SanityCheck.h"
+#include "polyhedralGravity/calculation/MeshChecking.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
 
 
@@ -150,7 +150,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
     utility.def("check_input",
                 [](const std::vector<std::array<double, 3>> &vertices,
                    const std::vector<std::array<size_t, 3>> &faces) {
-                    return SanityCheck::checkNormalsOutwardPointing({vertices, faces});
+                    return MeshChecking::checkNormalsOutwardPointing({vertices, faces});
                 }, R"mydelimiter(
                 Checks if all the polyhedrons plane unit normals are pointing outwards.
                 Reads a polyhedron from a mesh file.
@@ -167,7 +167,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
     utility.def("check_input",
                 [](const std::vector<std::string> &filenames) {
                     TetgenAdapter tetgen{filenames};
-                    return SanityCheck::checkNormalsOutwardPointing(tetgen.getPolyhedron());
+                    return MeshChecking::checkNormalsOutwardPointing(tetgen.getPolyhedron());
                 }, R"mydelimiter(
                 Checks if all the polyhedrons plane unit normals are pointing outwards.
                 Reads a polyhedron from a mesh file. The vertices and faces are read from input

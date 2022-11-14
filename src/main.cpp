@@ -2,7 +2,7 @@
 #include "polyhedralGravity/input/ConfigSource.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/calculation/GravityModel.h"
-#include "polyhedralGravity/calculation/SanityCheck.h"
+#include "polyhedralGravity/calculation/MeshChecking.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/output/CSVWriter.h"
 
@@ -22,12 +22,12 @@ int main(int argc, char *argv[]) {
         auto density = config->getDensity();
         auto computationPoints = config->getPointsOfInterest();
         auto outputFileName = config->getOutputFileName();
-        bool checkPolyhedralInput = config->getInputCheckEnablement();
+        bool checkPolyhedralInput = config->getMeshInputCheckStatus();
 
         // Checking that the vertices are correctly set-up in the input if activated
         if (checkPolyhedralInput) {
             SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Checking mesh...");
-            if (!SanityCheck::checkNormalsOutwardPointing(poly)) {
+            if (!MeshChecking::checkNormalsOutwardPointing(poly)) {
                 throw std::runtime_error{
                         "The plane unit normals are not pointing outwards! Please check the order "
                         "of the vertices in the polyhedral input source!"};

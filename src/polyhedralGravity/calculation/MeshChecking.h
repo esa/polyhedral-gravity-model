@@ -10,7 +10,7 @@
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/calculation/GravityModel.h"
 
-namespace polyhedralGravity::SanityCheck {
+namespace polyhedralGravity::MeshChecking {
 
     /**
      * Checks if the vertices are in such a order that the unit normals of each plane point outwards the polyhedron

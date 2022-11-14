@@ -33,9 +33,9 @@ namespace polyhedralGravity {
         }
     }
 
-    bool YAMLConfigReader::getInputCheckEnablement() {
+    bool YAMLConfigReader::getMeshInputCheckStatus() {
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger() ,
-                            "Reading the enablement of the input sanity check from the configuration file.");
+                            "Reading the activation of the input mesh sanity check from the configuration file.");
         if (_file[ROOT][INPUT] && _file[ROOT][INPUT][INPUT_CHECK]) {
             return _file[ROOT][INPUT][INPUT_CHECK].as<bool>();
         } else {

@@ -3,7 +3,7 @@
 #include <array>
 #include <utility>
 #include <tuple>
-#include "polyhedralGravity/calculation/SanityCheck.h"
+#include "polyhedralGravity/calculation/MeshChecking.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
 
@@ -139,41 +139,47 @@ protected:
 
 TEST_F(SanityCheckTest, CorrectCube) {
     using namespace testing;
-    ASSERT_TRUE(polyhedralGravity::SanityCheck::checkNormalsOutwardPointing(_correctCube))
+    // All normals are pointing outwards
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_correctCube))
     << "The vertices of the cube are correctly sorted, however the Sanity Check came to the wrong conclusion!";
 }
 
 TEST_F(SanityCheckTest, WrongCube) {
     using namespace testing;
-    ASSERT_FALSE(polyhedralGravity::SanityCheck::checkNormalsOutwardPointing(_wrongCube))
+    // All normals are pointing inwards (reversed order)
+    ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongCube))
     << "The vertices of the cube are incorrectly sorted, however the Sanity Check failed to notice that!";
 }
 
 TEST_F(SanityCheckTest, WrongCube2) {
     using namespace testing;
-    ASSERT_FALSE(polyhedralGravity::SanityCheck::checkNormalsOutwardPointing(_wrongCube2))
+    // All normals are pointing outwards expect one which points inwards (and has a reversed order)
+    ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongCube2))
     << "The vertices of the cube are incorrectly sorted, however the Sanity Check failed to notice that!";
 }
 
 TEST_F(SanityCheckTest, CorrectPrism) {
     using namespace testing;
-    ASSERT_TRUE(polyhedralGravity::SanityCheck::checkNormalsOutwardPointing(_correctPrism))
+    // All normals are pointing outwards
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_correctPrism))
     << "The vertices of the prism are correctly sorted, however the Sanity Check came to the wrong conclusion!";
 }
 
 TEST_F(SanityCheckTest, WrongPrism) {
     using namespace testing;
-    ASSERT_FALSE(polyhedralGravity::SanityCheck::checkNormalsOutwardPointing(_wrongPrism))
+    // All normals are pointing inwards (reversed order)
+    ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongPrism))
     << "The vertices of the prism are incorrectly sorted, however the Sanity Check failed to notice that!";
 }
 
 TEST_F(SanityCheckTest, CorrectBigPolyhedron) {
     using namespace testing;
     using namespace polyhedralGravity;
+    // All normals are pointing outwards, extensive Eros example
     Polyhedron polyhedron{
             TetgenAdapter{
                     {"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}}.getPolyhedron()};
-    ASSERT_TRUE(polyhedralGravity::SanityCheck::checkNormalsOutwardPointing(polyhedron))
+    ASSERT_TRUE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(polyhedron))
     << "The vertices of the polyhedron are correctly sorted, however the Sanity Check came to the wrong conclusion!";
 }
 

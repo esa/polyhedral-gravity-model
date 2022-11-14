@@ -1,6 +1,6 @@
-#include "SanityCheck.h"
+#include "MeshChecking.h"
 
-namespace polyhedralGravity::SanityCheck {
+namespace polyhedralGravity::MeshChecking {
 
     bool checkNormalsOutwardPointing(const Polyhedron &polyhedron) {
         using namespace util;

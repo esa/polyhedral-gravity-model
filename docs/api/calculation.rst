@@ -19,7 +19,7 @@ GravityModel
 .. doxygennamespace:: polyhedralGravity::GravityModel
 
 
-SanityCheck
+MeshChecking
 -----------
 
-.. doxygennamespace:: polyhedralGravity::SanityCheck
+.. doxygennamespace:: polyhedralGravity::MeshChecking
