@@ -14,6 +14,13 @@ paper [TSOULIS, Dimitrios; GAVRIILIDOU, Georgia. A computational review of the l
 and its corresponding [implementation in MATLAB](https://github.com/Gavriilidou/GPolyhedron),
 which is strongly based on the former implementation in FORTRAN.
 
+### Results and Plots
+
+Some worth seeing results and plots are stored in the
+[jupyter notebook](https://github.com/esa/polyhedral-gravity-model/blob/vertices-checking/script/polyhedral-gravity.ipynb).
+It also provides a good introduction to the application of
+the python interface.
+
 ## Documentation (readthedocs)
 
 The full extensive documentation can be found
