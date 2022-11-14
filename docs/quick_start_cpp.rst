@@ -38,7 +38,7 @@ Further one must specify the name of the .csv output file.
         density: 2670.0                             # constant density in [kg/m^3]
         points: # Location of the computation point(s) P
           - [ 0, 0, 0 ]                             # Here it is situated at the origin
-        mesh_check: true                            # Fully optional, enables input checking (not given: false)
+        check_mesh: true                            # Fully optional, enables input checking (not given: false)
       output:
         filename: "gravity_result.csv"              # The name of the output file
 
@@ -103,7 +103,8 @@ from a .yaml file.
         GravityResult result = GravityModel::evaluate(poly, density, point);
 
 **Example 4:** A guard statement checks that the plane unit
-normals are pointing outwards. Only use this statement if one needs clarification
+normals are pointing outwards and no triangle is degenerated.
+Only use this statement if one needs clarification
 about the vertices' ordering due to its quadratic complexity!
 
 .. code-block:: cpp
@@ -115,7 +116,7 @@ about the vertices' ordering due to its quadratic complexity!
         std::array<double, 3> point = config->getPointsOfInterest()[0];
 
         // Guard statement
-        if (!MeshChecking::checkNormalsOutwardPointing(poly)) {
+        if (MeshChecking::checkTrianglesNotDegenerated(poly) && MeshChecking::checkNormalsOutwardPointing(poly)) {
             GravityResult result = GravityModel::evaluate(poly, density, point);
         }
 

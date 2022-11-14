@@ -10,5 +10,6 @@ gravityModel:
       - [1, 1, 1]
       - [1, 0, 0]
       - [0, 0, 1]
+    check_mesh: true
   output:
     filename: "gravity_result_cube.csv"

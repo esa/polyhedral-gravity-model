@@ -64,13 +64,14 @@ For example 2a and 2b, refer to :ref:`supported-polyhedron-source-files` to view
 options for polyhedral input.
 
 **Example 3:** A guard statement checks that the plane unit
-normals are pointing outwards. Only use this statement if one needs clarification
+normals are pointing outwards and no triangular surface is degenerated.
+Only use this statement if one needs clarification
 about the vertices' ordering due to its quadratic complexity!
 
 .. code-block:: python
 
     import polyhedral_gravity as model
-    import polyhedral_gravity.utility as model_sanity
+    import polyhedral_gravity.utility as mesh_sanity
 
     # Defining every input parameter in the source code
     vertices = ...              # [] of [] or np.array of length 3 and type float
@@ -83,6 +84,6 @@ about the vertices' ordering due to its quadratic complexity!
     # Returns (list of) tuple of potential, acceleration and tensor
 
     # Additional guard statement
-    if model_sanity.check_input(vertices, faces):
+    if mesh_sanity.check_mesh(vertices, faces):
         potential, acceleration, tensor = model.evaluate(vertices, faces, density, computation_point)
 

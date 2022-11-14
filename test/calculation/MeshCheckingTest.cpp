@@ -11,7 +11,7 @@
 /**
  * Contains Tests if the sanity checks works
  */
-class SanityCheckTest : public ::testing::Test {
+class MeshCheckingTest : public ::testing::Test {
 
 protected:
 
@@ -87,6 +87,30 @@ protected:
                                                            {4, 6, 7}}
     };
 
+    const polyhedralGravity::Polyhedron _degeneratedCube{{
+                                                                 {-1.0, -1.0, -1.0},
+                                                                 {1.0, -1.0, -1.0},
+                                                                 {1.0, 1.0, -1.0},
+                                                                 {-1.0, 1.0, -1.0},
+                                                                 {-1.0, -1.0, 1.0},
+                                                                 {1.0, -1.0, 1.0},
+                                                                 {1.0, 1.0, 1.0},
+                                                                 {-1.0, 1.0, 1.0}},
+                                                         {
+                                                                 {1,    3,    2},
+                                                                 {0,   3,    1},
+                                                                 {0,   1,   5},
+                                                                 {0,    5,   4},
+                                                                 {7,    7,    3},
+                                                                 {0,   4,    7},
+                                                                 {1,   2,   6},
+                                                                 {1,    6,   5},
+                                                                 {2, 3, 6},
+                                                                 {3, 7, 6},
+                                                                 {4, 5, 6},
+                                                                 {4, 6, 7}}
+    };
+
 
     const polyhedralGravity::Polyhedron _correctPrism{{
                                                               {-20.0, 0.0, 25.0},
@@ -137,7 +161,7 @@ protected:
                                                     }};
 };
 
-TEST_F(SanityCheckTest, CorrectCube) {
+TEST_F(MeshCheckingTest, CorrectCube) {
     using namespace testing;
     // All normals are pointing outwards
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_correctCube))
@@ -145,7 +169,7 @@ TEST_F(SanityCheckTest, CorrectCube) {
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_correctCube));
 }
 
-TEST_F(SanityCheckTest, WrongCube) {
+TEST_F(MeshCheckingTest, WrongCube) {
     using namespace testing;
     // All normals are pointing inwards (reversed order)
     ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongCube))
@@ -153,7 +177,7 @@ TEST_F(SanityCheckTest, WrongCube) {
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_wrongCube));
 }
 
-TEST_F(SanityCheckTest, WrongCube2) {
+TEST_F(MeshCheckingTest, WrongCube2) {
     using namespace testing;
     // All normals are pointing outwards expect one which points inwards (and has a reversed order)
     ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongCube2))
@@ -161,7 +185,13 @@ TEST_F(SanityCheckTest, WrongCube2) {
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_wrongCube2));
 }
 
-TEST_F(SanityCheckTest, CorrectPrism) {
+TEST_F(MeshCheckingTest, DegeneratedCube) {
+    using namespace testing;
+    // One surface has the same point twice as vertex
+    ASSERT_FALSE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_degeneratedCube));
+}
+
+TEST_F(MeshCheckingTest, CorrectPrism) {
     using namespace testing;
     // All normals are pointing outwards
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_correctPrism))
@@ -169,7 +199,7 @@ TEST_F(SanityCheckTest, CorrectPrism) {
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_correctPrism));
 }
 
-TEST_F(SanityCheckTest, WrongPrism) {
+TEST_F(MeshCheckingTest, WrongPrism) {
     using namespace testing;
     // All normals are pointing inwards (reversed order)
     ASSERT_FALSE(polyhedralGravity::MeshChecking::checkNormalsOutwardPointing(_wrongPrism))
@@ -177,7 +207,7 @@ TEST_F(SanityCheckTest, WrongPrism) {
     ASSERT_TRUE(polyhedralGravity::MeshChecking::checkTrianglesNotDegenerated(_wrongPrism));
 }
 
-TEST_F(SanityCheckTest, CorrectBigPolyhedron) {
+TEST_F(MeshCheckingTest, CorrectBigPolyhedron) {
     using namespace testing;
     using namespace polyhedralGravity;
     // All normals are pointing outwards, extensive Eros example

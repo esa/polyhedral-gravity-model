@@ -24,7 +24,7 @@ namespace polyhedralGravity {
         static constexpr char INPUT_POLYHEDRON[] = "polyhedron";
         static constexpr char INPUT_DENSITY[] = "density";
         static constexpr char INPUT_POINTS[] = "points";
-        static constexpr char INPUT_CHECK[] = "mesh_check";
+        static constexpr char INPUT_CHECK[] = "check_mesh";
         static constexpr char OUTPUT[] = "output";
         static constexpr char OUTPUT_FILENAME[] = "filename";
 
