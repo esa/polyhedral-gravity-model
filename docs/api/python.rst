@@ -92,7 +92,7 @@ like it is required by the polyhedral-gravity model.
 
     :param List[List[float[3]]] vertices: vertices of the polyhedron
     :param List[List[int[3]]] faces: faces of the polyhedron
-    :return: True if no triangle is degenerated and the polyhedron's plane unit normals are all pointing outwards.
+    :return: True if no triangle is degenerate and the polyhedron's plane unit normals are all pointing outwards.
     :rtype: Bool
 
 .. py:function:: check_mesh(input_files)
