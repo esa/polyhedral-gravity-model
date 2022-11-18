@@ -1,7 +1,7 @@
 #pragma once
 
 #include <set>
-#include <optional>
+#include <memory>
 #include "thrust/transform_reduce.h"
 #include "thrust/execution_policy.h"
 #include "polyhedralGravity/model/Polyhedron.h"
@@ -50,11 +50,11 @@ namespace polyhedralGravity::MeshChecking {
          * @param rayOrigin - the origin of the ray
          * @param rayVector - the vector describing the ray
          * @param triangle - a triangular face
-         * @return true if the ray intersects the triangle
+         * @return intersection point or null
          *
          * @related Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
          */
-        std::optional<Array3>
+        std::unique_ptr<Array3>
         rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
 
     }

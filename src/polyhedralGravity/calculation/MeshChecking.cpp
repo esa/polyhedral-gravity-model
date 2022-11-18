@@ -43,14 +43,14 @@ namespace polyhedralGravity::MeshChecking {
         // Count every triangular face which is intersected by the ray
         std::for_each(it.first, it.second, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &triangle) {
             const auto intersection = rayIntersectsTriangle(rayOrigin, rayVector, triangle);
-            if (intersection.has_value()) {
-                intersections.insert(intersection.value());
+            if (intersection != nullptr) {
+                intersections.insert(*intersection);
             }
         });
         return intersections.size();
     }
 
-    std::optional<Array3>
+    std::unique_ptr<Array3>
     detail::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle) {
         // Adapted Möller–Trumbore intersection algorithm
         // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
@@ -60,27 +60,27 @@ namespace polyhedralGravity::MeshChecking {
         const Array3 h = cross(rayVector, edge2);
         const double a = dot(edge1, h);
         if (a > -EPSILON && a < EPSILON) {
-            return std::nullopt;
+            return nullptr;
         }
 
         const double f = 1.0 / a;
         const Array3 s = rayOrigin - triangle[0];
         const double u = f * dot(s, h);
         if (u < 0.0 || u > 1.0) {
-            return std::nullopt;
+            return nullptr;
         }
 
         const Array3 q = cross(s, edge1);
         const double v = f * dot(rayVector, q);
         if (v < 0.0 || u + v > 1.0) {
-            return std::nullopt;
+            return nullptr;
         }
 
         const double t = f * dot(edge2, q);
         if (t > EPSILON) {
-            return rayOrigin + rayVector * t;
+            return std::make_unique<Array3>(rayOrigin + rayVector * t);
         } else {
-            return std::nullopt;
+            return nullptr;
         }
     }
 }
