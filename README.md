@@ -3,7 +3,14 @@
 ![Build and Test](https://github.com/schuhmaj/polyhedral-gravity-model-cpp/actions/workflows/ctest.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/polyhedral-gravity-model-cpp/badge/?version=latest)](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/?badge=latest)
 
-Implementation of the Polyhedral Gravity Model in C++ 17.
+This code is a validated implementation in C++17 of the Polyhedral Gravity Model
+by Tsoulis et al.. It was created in a collaborative project between
+TU Munich and ESA's Advanced Concepts Team. Please refer to the
+[project report](https://mediatum.ub.tum.de/1695208)
+for extensive information about the theoretical background, related work,
+implementation & design decisions, application, verification,
+and runtime measurements of the presented code.
+
 
 The implementation is based on the
 paper [Tsoulis, D., 2012. Analytical computation of the full gravity tensor of a homogeneous arbitrarily shaped polyhedral source using line integrals. Geophysics, 77(2), pp.F1-F11.](http://dx.doi.org/10.1190/geo2010-0334.1)
