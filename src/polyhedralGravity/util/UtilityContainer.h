@@ -310,6 +310,20 @@ namespace polyhedralGravity::util {
     }
 
     /**
+     * Calculates the magnitude between two values
+     * @tparam T - numerical type
+     * @param first - first number
+     * @param second - second number
+     * @return magnitude between the two numbers
+     */
+    template<typename T>
+    T magnitudeDifference(const T &first, const T &second) {
+        const T &max = std::max(first, second);
+        const T &min = std::min(first, second);
+        return std::abs(min / max);
+    }
+
+    /**
      * Operator << for an array of any size.
      * @tparam T - type of the array, must have an << operator overload
      * @tparam N - size of the array
