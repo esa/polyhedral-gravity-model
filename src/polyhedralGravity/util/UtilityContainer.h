@@ -310,14 +310,15 @@ namespace polyhedralGravity::util {
     }
 
     /**
-     * Calculates the magnitude between two values
+     * Calculates the magnitude between two values and return true if the magnitude
+     * between the exponents in greater than 17.
      * @tparam T - numerical type
      * @param first - first number
      * @param second - second number
      * @return true if the difference is too be huge, so that floating point absorption will happen
      */
     template<typename T>
-    bool magnitudeDifference(const T &first, const T &second) {
+    bool isCriticalDifference(const T &first, const T &second) {
         // 57 is the (log2) exponent of the floating point (1 / 1e-17)
         constexpr int maxExponentDifference = 57;
         int x, y;
