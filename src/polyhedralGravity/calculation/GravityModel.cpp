@@ -138,7 +138,7 @@ namespace polyhedralGravity {
                     const double planeSumPotentialAcceleration =
                             sum1PotentialAcceleration + planeDistance * sum2 + singularities.first;
 
-                    if (magnitudeDifference(planeDistance, sum2)) {
+                    if (isCriticalDifference(planeDistance, sum2)) {
                         // The multiplication planeDistance * sum2 is not the root cause, but both numbers are good
                         // indicators for numerical magnitudes appearing during the calculation:
                         // planeDistance gets very big when far away, sum2 remains independently very small
