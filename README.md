@@ -55,7 +55,7 @@ The python interface can be easily installed with
     conda install -c conda-forge polyhedral-gravity-model
 
 This is currently only supported for `x86-64` systems since
-one of the dependencies is not available on `aarch64`.
+one of the dependencies is not available on conda for `aarch64`.
 However, building from source with `pip` can also be done
 on `aarch64` as shown below.
 
