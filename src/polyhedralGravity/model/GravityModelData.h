@@ -15,6 +15,8 @@ namespace polyhedralGravity {
      */
     using Array3 = std::array<double, 3>;
 
+    using Array2 = std::array<double, 2>;
+
     /**
      * Alias for a triplet of arrays of size 3
      * @example for the segment of a triangular face

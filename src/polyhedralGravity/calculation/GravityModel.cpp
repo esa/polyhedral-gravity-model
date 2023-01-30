@@ -138,9 +138,10 @@ namespace polyhedralGravity {
                     const double planeSumPotentialAcceleration =
                             sum1PotentialAcceleration + planeDistance * sum2 + singularities.first;
 
-                    if (magnitudeDifference(planeDistance, sum2) < EPSILON) {
-                        // If this is true the difference between planeDistance and sum2 is so high that the float
-                        // will neglect the important term sum2 since it's too small when compared to planeDistance
+                    if (magnitudeDifference(planeDistance, sum2)) {
+                        // The multiplication planeDistance * sum2 is not the root cause, but both numbers are good
+                        // indicators for numerical magnitudes appearing during the calculation:
+                        // planeDistance gets very big when far away, sum2 remains independently very small
                         SPDLOG_LOGGER_WARN(
                                 PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                                 "The results of point [{}, {}, {}] may be wrong due to floating point arithmetic",

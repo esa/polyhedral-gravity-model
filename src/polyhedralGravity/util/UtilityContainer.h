@@ -314,13 +314,16 @@ namespace polyhedralGravity::util {
      * @tparam T - numerical type
      * @param first - first number
      * @param second - second number
-     * @return magnitude between the two numbers
+     * @return true if the difference is too be huge, so that floating point absorption will happen
      */
     template<typename T>
-    T magnitudeDifference(const T &first, const T &second) {
-        const T &max = std::max(first, second);
-        const T &min = std::min(first, second);
-        return std::abs(min / max);
+    bool magnitudeDifference(const T &first, const T &second) {
+        // 57 is the (log2) exponent of the floating point (1 / 1e-17)
+        constexpr int maxExponentDifference = 57;
+        int x, y;
+        std::frexp(first, &x);
+        std::frexp(second, &y);
+        return std::abs(x - y) > maxExponentDifference;
     }
 
     /**
