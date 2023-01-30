@@ -54,6 +54,11 @@ The python interface can be easily installed with
 
     conda install -c conda-forge polyhedral-gravity-model
 
+This is currently only supported for `x86-64` systems since
+one of the dependencies is not available on `aarch64`.
+However, building from source with `pip` can also be done
+on `aarch64` as shown below.
+
 ### pip
 
 Use pip to install the python interface in your local python runtime.
@@ -64,6 +69,9 @@ requirements. Just execute in repository root:
 
 To modify the build options (like parallelization) have a look
 at the `setupy.py` and the [next paragraph](#build-c).
+(Optional: For a faster build you can install all dependencies available
+for your system in your local python environment. That way, they
+won't be fetched from GitHub.)
 
 ## Build C++
 
