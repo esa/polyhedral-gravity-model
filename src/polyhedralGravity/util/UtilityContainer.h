@@ -319,8 +319,8 @@ namespace polyhedralGravity::util {
      */
     template<typename T>
     bool isCriticalDifference(const T &first, const T &second) {
-        // 57 is the (log2) exponent of the floating point (1 / 1e-17)
-        constexpr int maxExponentDifference = 57;
+        // 50 is the (log2) exponent of the floating point (1 / 1e-15)
+        constexpr int maxExponentDifference = 50;
         int x, y;
         std::frexp(first, &x);
         std::frexp(second, &y);
