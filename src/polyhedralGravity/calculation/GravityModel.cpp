@@ -21,7 +21,7 @@ namespace polyhedralGravity {
                 thrust::device,
                 polyhedronIterator.first,
                 polyhedronIterator.second,
-                [](const Array3Triplet &face) {
+                [&computationPoint](const Array3Triplet &face) {
                     using namespace util;
                     using namespace detail;
                     SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
@@ -137,6 +137,16 @@ namespace polyhedralGravity {
                     // --> Equation 11/12 the total sum of the brackets
                     const double planeSumPotentialAcceleration =
                             sum1PotentialAcceleration + planeDistance * sum2 + singularities.first;
+
+                    if (isCriticalDifference(planeDistance, sum2)) {
+                        // The multiplication planeDistance * sum2 is not the root cause, but both numbers are good
+                        // indicators for numerical magnitudes appearing during the calculation:
+                        // planeDistance gets very big when far away, sum2 remains independently very small
+                        SPDLOG_LOGGER_WARN(
+                                PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
+                                "The results of point [{}, {}, {}] may be wrong due to floating point arithmetic",
+                                computationPoint[0], computationPoint[1], computationPoint[2]);
+                    }
 
                     //6. Step: Sum for tensor
                     // consisting of: sum1 + sigma_p * N_p * sum2 + sing B

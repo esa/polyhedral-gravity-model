@@ -310,6 +310,24 @@ namespace polyhedralGravity::util {
     }
 
     /**
+     * Calculates the magnitude between two values and return true if the magnitude
+     * between the exponents in greater than 17.
+     * @tparam T - numerical type
+     * @param first - first number
+     * @param second - second number
+     * @return true if the difference is too be huge, so that floating point absorption will happen
+     */
+    template<typename T>
+    bool isCriticalDifference(const T &first, const T &second) {
+        // 50 is the (log2) exponent of the floating point (1 / 1e-15)
+        constexpr int maxExponentDifference = 50;
+        int x, y;
+        std::frexp(first, &x);
+        std::frexp(second, &y);
+        return std::abs(x - y) > maxExponentDifference;
+    }
+
+    /**
      * Operator << for an array of any size.
      * @tparam T - type of the array, must have an << operator overload
      * @tparam N - size of the array

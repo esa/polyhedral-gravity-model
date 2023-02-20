@@ -6,10 +6,17 @@ gravityModel:
       - "../example-config/data/cube.face"
     density: 1.0
     points:
-      - [0, 0, 0]
       - [1, 1, 1]
-      - [1, 0, 0]
-      - [0, 0, 1]
+      - [1e1, 1e1, 1e1]
+      - [1e2, 1e2, 1e2]
+      - [1e3, 1e3, 1e3]
+      - [1e4, 1e4, 1e4]
+      - [1e5, 1e5, 1e5]
+      - [1e6, 1e6, 1e6]
+      - [1e7, 1e7, 1e7]
+      - [1e8, 1e8, 1e8]
+      - [1e9, 1e9, 1e9]
+      - [1e10, 1e10, 1e10]
     check_mesh: true
   output:
     filename: "gravity_result_cube.csv"

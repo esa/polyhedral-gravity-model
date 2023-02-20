@@ -3,7 +3,14 @@
 ![Build and Test](https://github.com/schuhmaj/polyhedral-gravity-model-cpp/actions/workflows/ctest.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/polyhedral-gravity-model-cpp/badge/?version=latest)](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/?badge=latest)
 
-Implementation of the Polyhedral Gravity Model in C++ 17.
+This code is a validated implementation in C++17 of the Polyhedral Gravity Model
+by Tsoulis et al.. It was created in a collaborative project between
+TU Munich and ESA's Advanced Concepts Team. Please refer to the
+[project report](https://mediatum.ub.tum.de/1695208)
+for extensive information about the theoretical background, related work,
+implementation & design decisions, application, verification,
+and runtime measurements of the presented code.
+
 
 The implementation is based on the
 paper [Tsoulis, D., 2012. Analytical computation of the full gravity tensor of a homogeneous arbitrarily shaped polyhedral source using line integrals. Geophysics, 77(2), pp.F1-F11.](http://dx.doi.org/10.1190/geo2010-0334.1)
@@ -32,11 +39,12 @@ The project uses the following dependencies,
 all of them are **automatically** set-up via CMake:
 
 - GoogleTest 1.11.0 (only required for testing)
-- spdlog 1.9.2 (required for logging)
+- spdlog 1.11.0 (required for logging)
 - tetgen 1.6 (required for I/O)
 - yaml-cpp 0.7.0 (required for I/O)
 - thrust 1.16.0 (required for parallelization and utility)
 - xsimd 8.1.0 (required for vectorization of the `atan(..)`)
+- pybind11 2.10.3 (required for the Python interface, but not the C++ standalone)
 
 ## Python interface
 
@@ -46,6 +54,11 @@ The python interface can be easily installed with
 [conda](https://anaconda.org/conda-forge/polyhedral-gravity-model):
 
     conda install -c conda-forge polyhedral-gravity-model
+
+This is currently only supported for `x86-64` systems since
+one of the dependencies is not available on conda for `aarch64`.
+However, building from source with `pip` can also be done
+on `aarch64` as shown below.
 
 ### pip
 
@@ -57,6 +70,9 @@ requirements. Just execute in repository root:
 
 To modify the build options (like parallelization) have a look
 at the `setupy.py` and the [next paragraph](#build-c).
+(Optional: For a faster build you can install all dependencies available
+for your system in your local python environment. That way, they
+won't be fetched from GitHub.)
 
 ## Build C++
 
