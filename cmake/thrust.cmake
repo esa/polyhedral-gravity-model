@@ -11,7 +11,7 @@ set(THRUST_ENABLE_EXAMPLES "OFF")
 # Set standard CPP Dialect to 17 (default of thrust would be 14)
 set(THRUST_CPP_DIALECT 17)
 
-find_package(Thrust 1.16.0 QUIET)
+find_package(Thrust 2.1.0 QUIET)
 
 if (${Thrust_FOUND})
 
@@ -19,10 +19,10 @@ if (${Thrust_FOUND})
 
 else()
     message(STATUS "Using thrust from git repository")
-    # Fetches the version 1.16.0 of the official NVIDIA Thrust repository
+    # Fetches the version 2.1.0 of the official NVIDIA Thrust repository
     FetchContent_Declare(thrust
             GIT_REPOSITORY https://github.com/NVIDIA/thrust.git
-            GIT_TAG 1.16.0
+            GIT_TAG 2.1.0
             )
     FetchContent_MakeAvailable(thrust)
 endif()
