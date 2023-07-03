@@ -22,8 +22,7 @@ authors:
 affiliations:
  - name: Technische Universität München, Arcisstraße 21, 80333 München, Germany 
    index: 1
- - name: Advanced Concepts Team, European Space Agency, European Space Research and Technology
-Centre (ESTEC), Keplerlaan 1, 2201 AZ Noordwijk, The Netherlands
+ - name: Advanced Concepts Team, European Space Agency, European Space Research and Technology Centre (ESTEC), Keplerlaan 1, 2201 AZ Noordwijk, The Netherlands
    index: 2
 date: 03 July 2023
 bibliography: paper.bib
