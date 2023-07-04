@@ -11,7 +11,7 @@ tags:
   - polyhedral model
 authors:
   - name: Jonas Schuhmacher
-    orcid: 0000-0000-0000-0000
+    orcid: 0009-0005-9693-4530
     affiliation: 1
   - name: Fabio Gratl
     orcid: 0000-0001-5195-7919
