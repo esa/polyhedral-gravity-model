@@ -55,11 +55,11 @@ Extensive tests using GoogleTest are used via GitHub Actions to ensure the (cont
 
 The library is available on GitHub \footnote{\url{https://github.com/esa/polyhedral-gravity-model}} and can be installed with *pip* or from *conda* \footnote{\url{https://anaconda.org/conda-forge/polyhedral-gravity-model}}. Build instructions using *CMake* are provided in the repository. The library is licensed under a GPL license.
 
-The project is open to contributions with instructions on how to contribute provided in the repository \footnote{\url{https://github.com/esa/polyhedral-gravity-model#contribute}}.
+The project is open to contributions via pull requests with instructions on how to contribute provided in the repository.
 
 # Usage Instructions
 
-We provide detailed usage instructions in the technical documentation on ReadTheDocs \footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository \footnote{\url{https://github.com/esa/polyhedral-gravity-model#example}} and as a *Jupyter* notebook \footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
+We provide detailed usage instructions in the technical documentation on ReadTheDocs \footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository readme and more extensive examples as a *Jupyter* notebook \footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
 
 
 # Acknowledgements
