@@ -1,5 +1,10 @@
 # Exclude the YAML files from the python interface
 set(PYTHON_INTERFACE_SRC ${SRC})
+
+file(GLOB_RECURSE PYTHON_INTERFACE_SRC
+    "${PROJECT_SOURCE_DIR}/src/polyhedralGravity/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/polyhedralGravity/*.h"
+    )
 list(FILTER PYTHON_INTERFACE_SRC EXCLUDE REGEX ".*YAML.*")
 
 pybind11_add_module(polyhedral_gravity ${PYTHON_INTERFACE_SRC} python-interface.cpp)
@@ -19,10 +24,3 @@ if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         --no-whole-file
         )
 endif()
-
-# Place the python interface in the top level directory
-set_target_properties(polyhedral_gravity PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
-        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
-        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
-        )
