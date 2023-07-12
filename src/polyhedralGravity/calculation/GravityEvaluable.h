@@ -7,6 +7,7 @@
 
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/Polyhedron.h"
+#include "thrust/execution_policy.h"
 
 
 namespace polyhedralGravity {
@@ -35,6 +36,10 @@ namespace polyhedralGravity {
             return this->evaluate(position);
         }
 
+        inline std::vector<GravityModelResult> operator()(const std::vector<Array3> &computationPoints) const {
+            return this->evaluate(computationPoints);
+        }
+
         void prepare() const;
 
         /**
@@ -47,6 +52,8 @@ namespace polyhedralGravity {
         * at computation Point P
         */
         GravityModelResult evaluate(const Array3 &computationPoint) const;
+
+        std::vector<GravityModelResult> evaluate(const std::vector<Array3> &computationPoints) const;
 
 
         /**
@@ -76,7 +83,8 @@ namespace polyhedralGravity {
          * @param planeUnitNormal - the plane unit normal N_p
          * @return segment unit normals n_pq for plane p with q = {0, 1, 2}
          */
-        Array3Triplet buildUnitNormalOfSegments(const Array3Triplet &segmentVectors, const Array3 &planeUnitNormal) const;
+        Array3Triplet
+        buildUnitNormalOfSegments(const Array3Triplet &segmentVectors, const Array3 &planeUnitNormal) const;
 
         /**
          * Computes the plane unit normal orientation/ direction sigma_p for one plane p of the polyhedron

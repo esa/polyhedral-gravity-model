@@ -192,6 +192,15 @@ namespace polyhedralGravity {
         return result;
     }
 
+    std::vector<GravityModelResult> GravityEvaluable::evaluate(const std::vector<Array3> &computationPoints) const {
+        std::vector<GravityModelResult> result{computationPoints.size()};
+        thrust::transform(thrust::device, computationPoints.begin(), computationPoints.end(), result.begin(),
+                          [this](const Array3 &computationPoint) {
+                              return this->evaluate(computationPoint);
+                          });
+        return result;
+    }
+
     Array3Triplet GravityEvaluable::buildVectorsOfSegments(const Array3 &vertex0, const Array3 &vertex1,
                                                            const Array3 &vertex2) const {
         using util::operator-;
