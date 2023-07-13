@@ -2,6 +2,7 @@
 
 #include <array>
 #include <numeric>
+#include <utility>
 #include <algorithm>
 #include <functional>
 #include <cmath>
@@ -325,6 +326,20 @@ namespace polyhedralGravity::util {
         std::frexp(first, &x);
         std::frexp(second, &y);
         return std::abs(x - y) > maxExponentDifference;
+    }
+
+    namespace detail {
+
+        template<typename... Ts, size_t... Is>
+        auto tuple_add(const std::tuple<Ts...> &t1, const std::tuple<Ts...> &t2, std::index_sequence<Is...>) {
+            return std::make_tuple(std::get<Is>(t1) + std::get<Is>(t2)...);
+        }
+
+    }
+
+    template<typename... Ts>
+    auto operator+(const std::tuple<Ts...>& t1, const std::tuple<Ts...>& t2) {
+        return detail::tuple_add(t1, t2, std::index_sequence_for<Ts...>{});
     }
 
     /**

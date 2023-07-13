@@ -45,6 +45,7 @@ namespace polyhedralGravity {
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Starting to iterate over the planes...");
         GravityModelResult result{};
+        auto&[potential, acceleration, gradiometricTensor] = result;
         result = thrust::transform_reduce(thrust::device, zip1, zip2, [&computationPoint, this](const auto &tuple) {
             using namespace util;
             const auto &face = thrust::get<0>(tuple);
@@ -168,27 +169,26 @@ namespace polyhedralGravity {
             // Equation (11): sigma_p * h_p * sum
             // Equation (12): N_p * sum
             // Equation (13): already done above, just concat the two components for later summation
-            return GravityModelResult{planeNormalOrientation * planeDistance * planeSumPotentialAcceleration,
-                                      planeUnitNormal * planeSumPotentialAcceleration, concat(first, second)};
+            return std::make_tuple(planeNormalOrientation * planeDistance * planeSumPotentialAcceleration,
+                                      planeUnitNormal * planeSumPotentialAcceleration, concat(first, second));
         }, result, [](const GravityModelResult &a, const GravityModelResult &b) {
             //8. Step: Accumulate the partial sums
-            return GravityModelResult{a.gravitationalPotential + b.gravitationalPotential,
-                                      a.acceleration + b.acceleration, a.gradiometricTensor + b.gradiometricTensor};
+            return a + b;
         });
 
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Finished the sums. Applying final prefix and eliminating rounding errors.");
 
         //9. Step: Eliminate rounding errors in the result and set those tiny values to "really" zero
-        result.eliminateRoundingErrors();
+        // TODO: Check if this is really necessary
 
         //10. Step: Compute prefix consisting of GRAVITATIONAL_CONSTANT * density
         const double prefix = util::GRAVITATIONAL_CONSTANT * _density;
 
         //11. Step: Final expressions after application of the prefix (and a division by 2 for the potential)
-        result.gravitationalPotential = (result.gravitationalPotential * prefix) / 2.0;
-        result.acceleration = result.acceleration * prefix;
-        result.gradiometricTensor = result.gradiometricTensor * prefix;
+        potential = (potential * prefix) / 2.0;
+        acceleration = acceleration * prefix;
+        gradiometricTensor = gradiometricTensor * prefix;
         return result;
     }
 

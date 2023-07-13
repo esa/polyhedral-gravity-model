@@ -28,7 +28,16 @@ namespace polyhedralGravity {
 
     public:
 
-        GravityEvaluable(const Polyhedron &polyhedron, double density) : _polyhedron{polyhedron}, _density{density} {
+        GravityEvaluable(const Polyhedron &polyhedron, double density)
+                : _polyhedron{polyhedron}
+                , _density{density} {
+            this->prepare();
+        }
+
+        GravityEvaluable(const std::vector<std::array<double, 3>> &vertices,
+                         const std::vector<std::array<size_t, 3>> &faces, double density)
+                : _polyhedron{vertices, faces}
+                , _density{density} {
             this->prepare();
         }
 
