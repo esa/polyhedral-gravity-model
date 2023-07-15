@@ -35,7 +35,7 @@ namespace polyhedralGravity {
         using namespace util;
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
-                            computationPoint[0], computationPoint[1], computationPoint[2], density);
+                            computationPoint[0], computationPoint[1], computationPoint[2], _density);
         /*
          * Calculate V and Vx, Vy, Vz and Vxx, Vyy, Vzz, Vxy, Vxz, Vyz
          */
@@ -48,18 +48,14 @@ namespace polyhedralGravity {
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Starting to iterate over the planes...");
         GravityModelResult result{};
-        auto&[potential, acceleration, gradiometricTensor] = result;
+        auto &[potential, acceleration, gradiometricTensor] = result;
 
         if constexpr (Parallelization) {
             result = thrust::transform_reduce(thrust::device, zip1, zip2, &GravityEvaluable::evaluateFace, result,
-                                              [](const GravityModelResult &a, const GravityModelResult &b) {
-                                                  return a + b;
-                                              });
+                                              util::operator+<double, Array3, Array6>);
         } else {
-            result = thrust::transform_reduce(zip1, zip2, &GravityEvaluable::evaluateFace, result,
-                                              [](const GravityModelResult &a, const GravityModelResult &b) {
-                                                  return a + b;
-                                              });
+            result = thrust::transform_reduce(thrust::host, zip1, zip2, &GravityEvaluable::evaluateFace, result,
+                                              util::operator+<double, Array3, Array6>);
         }
 
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
@@ -77,7 +73,32 @@ namespace polyhedralGravity {
 
     // Explicit template instantiation of the single point evaluate method
     template GravityModelResult GravityEvaluable::evaluate<true>(const Array3 &computationPoints) const;
+
     template GravityModelResult GravityEvaluable::evaluate<false>(const Array3 &computationPoints) const;
+
+    template<bool Parallelization>
+    std::vector<GravityModelResult> GravityEvaluable::evaluate(const std::vector<Array3> &computationPoints) const {
+        std::vector<GravityModelResult> result{computationPoints.size()};
+        if constexpr (Parallelization) {
+            thrust::transform(thrust::device, computationPoints.begin(), computationPoints.end(), result.begin(),
+                              [this](const Array3 &computationPoint) {
+                                  return this->evaluate<false>(computationPoint);
+                              });
+        } else {
+            thrust::transform(thrust::host, computationPoints.begin(), computationPoints.end(), result.begin(),
+                              [this](const Array3 &computationPoint) {
+                                  return this->evaluate<false>(computationPoint);
+                              });
+        }
+        return result;
+    }
+
+    // Explicit template instantiation of the multipoint evaluate method
+    template std::vector<GravityModelResult>
+    GravityEvaluable::evaluate<true>(const std::vector<Array3> &computationPoints) const;
+
+    template std::vector<GravityModelResult>
+    GravityEvaluable::evaluate<false>(const std::vector<Array3> &computationPoints) const;
 
     GravityModelResult
     GravityEvaluable::evaluateFace(const thrust::tuple<Array3Triplet, Array3Triplet, Array3, Array3Triplet> &tuple) {
@@ -89,8 +110,8 @@ namespace polyhedralGravity {
         const auto &segmentUnitNormals = thrust::get<3>(tuple);
         SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Evaluating the plane with vertices: v1 = [{}, {}, {}], v2 = [{}, {}, {}], "
-                            "v3 = [{}, {}, {}]", face[0][0], face[0][1], face[0][2], face[1][0], face[1][1],
-                            face[1][2], face[2][0], face[2][1], face[2][2]);
+                            "v3 = [{}, {}, {}]", face[0][0], face[0][1], face[0][2], face[1][0], face[1][1], face[1][2],
+                            face[2][0], face[2][1], face[2][2]);
         //1. Step: Compute ingredients for current plane which were not computed before
         //1-04 Step: Compute Plane Normal Orientation sigma_p (direction of N_p in relation to P)
         double planeNormalOrientation = computeUnitNormalOfPlaneDirection(planeUnitNormal, face[0]);
@@ -102,8 +123,7 @@ namespace polyhedralGravity {
         Array3 orthogonalProjectionPointOnPlane = projectPointOrthogonallyOntoPlane(planeUnitNormal, planeDistance,
                                                                                     hessianPlane);
         //1-08 Step: Compute the segment normal orientation sigma_pq (direction of n_pq in relation to P')
-        Array3 segmentNormalOrientations = computeUnitNormalOfSegmentsDirections(face,
-                                                                                 orthogonalProjectionPointOnPlane,
+        Array3 segmentNormalOrientations = computeUnitNormalOfSegmentsDirections(face, orthogonalProjectionPointOnPlane,
                                                                                  segmentUnitNormals);
         //1-09 Step: Compute the orthogonal projection point P'' of P' on each segment
         Array3Triplet orthogonalProjectionPointsOnSegmentsForPlane = projectPointOrthogonallyOntoSegments(
@@ -118,17 +138,19 @@ namespace polyhedralGravity {
                                                                         face);
         //1-12 Step: Compute the euclidian Norms of the vectors consisting of P and the vertices
         // they are later used for determining the position of P in relation to the plane
-        Array3 projectionPointVertexNorms = computeNormsOfProjectionPointAndVertices(
-                orthogonalProjectionPointOnPlane, face);
+        Array3 projectionPointVertexNorms = computeNormsOfProjectionPointAndVertices(orthogonalProjectionPointOnPlane,
+                                                                                     face);
         //1-13 Step: Compute the transcendental Expressions LN_pq and AN_pq
-        std::array<TranscendentalExpression, 3> transcendentalExpressions = computeTranscendentalExpressions(
-                distances, planeDistance, segmentDistances, segmentNormalOrientations, projectionPointVertexNorms);
+        std::array<TranscendentalExpression, 3> transcendentalExpressions = computeTranscendentalExpressions(distances,
+                                                                                                             planeDistance,
+                                                                                                             segmentDistances,
+                                                                                                             segmentNormalOrientations,
+                                                                                                             projectionPointVertexNorms);
         //1-14 Step: Compute the singularities sing A and sing B if P' is located in the plane,
         // on any vertex, or on one segment (G_pq)
         std::pair<double, Array3> singularities = computeSingularityTerms(segmentVectors, segmentNormalOrientations,
-                                                                          projectionPointVertexNorms,
-                                                                          planeUnitNormal, planeDistance,
-                                                                          planeNormalOrientation);
+                                                                          projectionPointVertexNorms, planeUnitNormal,
+                                                                          planeDistance, planeNormalOrientation);
         //2. Step: Compute Sum 1 used for potential and acceleration (first derivative)
         // sum over: sigma_pq * h_pq * LN_pq
         // --> Equation 11/12 the first summation in the brackets
@@ -143,9 +165,8 @@ namespace polyhedralGravity {
                                                                              tuple);
                                                                      const TranscendentalExpression &transcendentalExpressions = thrust::get<2>(
                                                                              tuple);
-                                                                     return acc +
-                                                                            segmentOrientation * segmentDistance *
-                                                                            transcendentalExpressions.ln;
+                                                                     return acc + segmentOrientation * segmentDistance *
+                                                                                  transcendentalExpressions.ln;
                                                                  });
 
         //3. Step: Compute Sum 1 used for the gradiometric tensor (second derivative)
@@ -188,8 +209,7 @@ namespace polyhedralGravity {
         //6. Step: Sum for tensor
         // consisting of: sum1 + sigma_p * N_p * sum2 + sing B
         // --> Equation 13 the total sum of the brackets
-        const Array3 subSum =
-                (sum1Tensor + (planeUnitNormal * (planeNormalOrientation * sum2))) + singularities.second;
+        const Array3 subSum = (sum1Tensor + (planeUnitNormal * (planeNormalOrientation * sum2))) + singularities.second;
         // first component: trivial case Vxx, Vyy, Vzz --> just N_p * subSum
         // 00, 11, 22 --> xx, yy, zz with x as 0, y as 1, z as 2
         const Array3 first = planeUnitNormal * subSum;
@@ -206,26 +226,5 @@ namespace polyhedralGravity {
         return std::make_tuple(planeNormalOrientation * planeDistance * planeSumPotentialAcceleration,
                                planeUnitNormal * planeSumPotentialAcceleration, concat(first, second));
     }
-
-    template<bool Parallelization>
-    std::vector<GravityModelResult> GravityEvaluable::evaluate(const std::vector<Array3> &computationPoints) const {
-        std::vector<GravityModelResult> result{computationPoints.size()};
-        if constexpr (Parallelization) {
-            thrust::transform(thrust::device, computationPoints.begin(), computationPoints.end(), result.begin(),
-                              [this](const Array3 &computationPoint) {
-                                  return this->evaluate<false>(computationPoint);
-                              });
-        } else {
-            thrust::transform(thrust::host, computationPoints.begin(), computationPoints.end(), result.begin(),
-                              [this](const Array3 &computationPoint) {
-                                  return this->evaluate<false>(computationPoint);
-                              });
-        }
-        return result;
-    }
-
-    // Explicit template instantiation of the multipoint evaluate method
-    template std::vector<GravityModelResult> GravityEvaluable::evaluate<true>(const std::vector<Array3> &computationPoints) const;
-    template std::vector<GravityModelResult> GravityEvaluable::evaluate<false>(const std::vector<Array3> &computationPoints) const;
 
 }
