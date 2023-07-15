@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <exception>
 #include <stdexcept>
+#include "GravityModelData.h"
 
 namespace polyhedralGravity {
 
@@ -19,7 +20,7 @@ namespace polyhedralGravity {
          * A vector containing the vertices of the polyhedron.
          * Each node is an array of size three containing the xyz coordinates.
          */
-        const std::vector<std::array<double, 3>> _vertices;
+        const std::vector<Array3> _vertices;
 
         /**
          * A vector containing the faces (triangles) of the polyhedron.
@@ -48,7 +49,7 @@ namespace polyhedralGravity {
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws runtime_error if no face contains the node zero indicating mathematical index
          */
-        Polyhedron(std::vector<std::array<double, 3>> nodes, std::vector<std::array<size_t, 3>> faces)
+        Polyhedron(std::vector<Array3> nodes, std::vector<std::array<size_t, 3>> faces)
                 : _vertices{std::move(nodes)},
                   _faces{std::move(faces)} {
             //Checks that the node with index zero is actually used
@@ -70,7 +71,7 @@ namespace polyhedralGravity {
          * Returns the vertices of this polyhedron
          * @return vector of cartesian coordinates
          */
-        [[nodiscard]] const std::vector<std::array<double, 3>> &getVertices() const {
+        [[nodiscard]] const std::vector<Array3> &getVertices() const {
             return _vertices;
         }
 
@@ -79,7 +80,7 @@ namespace polyhedralGravity {
          * @param index - size_t
          * @return cartesian coordinates of the vertex at index
          */
-        [[nodiscard]] const std::array<double, 3> &getVertex(size_t index) const {
+        [[nodiscard]] const Array3 &getVertex(size_t index) const {
             return _vertices[index];
         }
 
@@ -105,6 +106,15 @@ namespace polyhedralGravity {
          */
         [[nodiscard]] const std::vector<std::array<size_t, 3>> &getFaces() const {
             return _faces;
+        }
+
+        /**
+         * Returns the resolved face with its concrete cartesian coordinates at the given index.
+         * @param index - size_t
+         * @return triplet of vertices' cartesian coordinates
+         */
+        [[nodiscard]] Array3Triplet getFace(size_t index) const {
+            return {_vertices[_faces[index][0]], _vertices[_faces[index][1]], _vertices[_faces[index][2]]};
         }
 
     };
