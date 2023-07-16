@@ -6,13 +6,13 @@ Requirements
 
 Requirements (all of them are automatically set-up via :code:`CMake`):
 
-- GoogleTest 1.11.0 (only required for testing)
+- GoogleTest 1.13.0 (only required for testing)
 - spdlog 1.11.0 (required for logging)
 - tetgen 1.6 (required for I/O)
 - yaml-cpp 0.7.0 (required for I/O)
-- thrust 1.16.0 (required for parallelization and utility)
-- xsimd 8.1.0 (required for vectorization of the `atan(..)`)
-- pybind11 2.10.3 (required for the Python interface, but not the C++ standalone)
+- thrust 2.1.0 (required for parallelization and utility)
+- xsimd 11.1.0 (required for vectorization of the `atan(..)`)
+- pybind11 2.10.4 (required for the Python interface, but not the C++ standalone)
 
 
 Build with CMake
@@ -54,7 +54,12 @@ The module will be build using CMake. Just execute in repository root:
     pip install .
 
 To modify the build options (like parallelization) have a look
-at the :code:`setupy.py`.
+at the :code:`setupy.py`. As simple example, to modify the parallelization,
+just set the environment variable like below:
+
+.. code-block::
+
+    export POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
 
 Installation with conda
 -----------------------

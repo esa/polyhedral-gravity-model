@@ -38,13 +38,13 @@ on [readthedocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/)
 The project uses the following dependencies,
 all of them are **automatically** set-up via CMake:
 
-- GoogleTest 1.11.0 (only required for testing)
+- GoogleTest 1.13.0 (only required for testing)
 - spdlog 1.11.0 (required for logging)
 - tetgen 1.6 (required for I/O)
 - yaml-cpp 0.7.0 (required for I/O)
-- thrust 1.16.0 (required for parallelization and utility)
-- xsimd 8.1.0 (required for vectorization of the `atan(..)`)
-- pybind11 2.10.3 (required for the Python interface, but not the C++ standalone)
+- thrust 2.1.0 (required for parallelization and utility)
+- xsimd 11.1.0 (required for vectorization of the `atan(..)`)
+- pybind11 2.10.4 (required for the Python interface, but not the C++ standalone)
 
 ## Python interface
 
