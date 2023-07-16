@@ -47,7 +47,11 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
         )mydelimiter", py::arg("polyhedral_source"), py::arg("density"), py::arg("computation_points"),
           py::arg("parallel") = true);
 
-    pybind11::class_<GravityEvaluable>(m, "GravityEvaluable")
+    pybind11::class_<GravityEvaluable>(m, "GravityEvaluable", R"mydelimiter(
+                A class to evaluate the polyhedral gravity model for a given constant density polyhedron at a given computation point.
+                It provides a __call__ method to evaluate the polyhedral gravity model for computation points while
+                also caching the polyhedron data over the lifetime of the object.
+            )mydelimiter")
             .def(pybind11::init<const PolyhedralSource &, double>(),
                  R"mydelimiter(
                     Creates a new GravityEvaluable for a given constant density polyhedron.
