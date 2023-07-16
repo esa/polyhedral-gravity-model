@@ -18,7 +18,7 @@ DENSITY = 1.0
 ########################################################################################################################
 start_time = timeit.default_timer()
 for i in range(N):
-    polyhedral_gravity.evaluate(vertices, faces, DENSITY, computation_points[i])
+    polyhedral_gravity.evaluate((vertices, faces), DENSITY, computation_points[i])
 end_time = timeit.default_timer()
 
 delta = (end_time - start_time) / N * 1e6
@@ -28,7 +28,7 @@ print(f"--> {N} times 1 point with old interface")
 print(f"--> Time taken: {delta:.3f} microseconds per point")
 
 start_time = timeit.default_timer()
-polyhedral_gravity.evaluate(vertices, faces, DENSITY, computation_points)
+polyhedral_gravity.evaluate((vertices, faces), DENSITY, computation_points)
 end_time = timeit.default_timer()
 
 delta = (end_time - start_time) / N * 1e6
