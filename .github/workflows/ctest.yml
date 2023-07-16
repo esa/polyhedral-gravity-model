@@ -45,13 +45,10 @@ jobs:
       - uses: actions/checkout@v2
 
       # Enables Long Paths on Windows (newer thrust versions require this)
-      - name: Set LongPathsEnabled
-        run: Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -value 1
-      - name: Check LongPathsEnabled
-        run: (Get-ItemProperty 'HKLM:System\CurrentControlSet\Control\FileSystem').LongPathsEnabled
-
       - name: Build
         run: |
+          Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -value 1
+          (Get-ItemProperty 'HKLM:System\CurrentControlSet\Control\FileSystem').LongPathsEnabled
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
