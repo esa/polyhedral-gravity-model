@@ -17,7 +17,7 @@ namespace polyhedralGravity {
      */
     inline auto transformPolyhedron(const Polyhedron &polyhedron, const Array3 &offset = {0.0, 0.0, 0.0}) {
         //The offset is captured by value to ensure its lifetime!
-        const auto lambdaOffsetApplication = [&polyhedron, offset](const std::array<size_t, 3> &face) -> Array3Triplet {
+        const auto lambdaOffsetApplication = [&polyhedron, offset](const IndexArray3 &face) -> Array3Triplet {
             using namespace util;
             return {polyhedron.getVertex(face[0]) - offset, polyhedron.getVertex(face[1]) - offset,
                     polyhedron.getVertex(face[2]) - offset};

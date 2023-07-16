@@ -4,6 +4,9 @@
 #include <array>
 #include <vector>
 #include <algorithm>
+#include <variant>
+
+#include "polyhedralGravity/input/TetgenAdapter.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/calculation/GravityEvaluable.h"
@@ -29,7 +32,6 @@
  */
 namespace polyhedralGravity::GravityModel {
 
-
     /**
      * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
      * point P.
@@ -40,7 +42,7 @@ namespace polyhedralGravity::GravityModel {
      * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration
      * at computation Point P
      */
-    GravityModelResult evaluate(const Polyhedron &polyhedron, double density, const Array3 &computationPoint, bool parallel = true);
+    GravityModelResult evaluate(const PolyhedronOrSource &polyhedron, double density, const Array3 &computationPoint, bool parallel = true);
 
     /**
      * Evaluates the polyhedral gravity model for a given constant density polyhedron at multiple computation
@@ -53,7 +55,7 @@ namespace polyhedralGravity::GravityModel {
      * foreach computation Point P
      */
     std::vector<GravityModelResult>
-    evaluate(const Polyhedron &polyhedron, double density, const std::vector<Array3> &computationPoints, bool parallel = true);
+    evaluate(const PolyhedronOrSource &polyhedron, double density, const std::vector<Array3> &computationPoints, bool parallel = true);
 
     namespace detail {
 

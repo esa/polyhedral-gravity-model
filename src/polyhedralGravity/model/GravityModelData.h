@@ -11,10 +11,16 @@
 namespace polyhedralGravity {
 
     /**
-     * Alias for an array of size 3
+     * Alias for an array of size 3 (double)
      * @example for x, y, z coordinates.
      */
     using Array3 = std::array<double, 3>;
+
+    /**
+     * Alias for an array of size 3 (size_t)
+     * @example for the vertex indices in a triangular face.
+     */
+    using IndexArray3 = std::array<size_t, 3>;
 
     /**
      * Alias for an array of size 6

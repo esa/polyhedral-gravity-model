@@ -6,9 +6,27 @@
 #include <algorithm>
 #include <exception>
 #include <stdexcept>
+#include <tuple>
+#include <variant>
+#include <string>
 #include "GravityModelData.h"
 
 namespace polyhedralGravity {
+
+    /* Forward declaration of Polyhedron */
+    class Polyhedron;
+
+    /**
+     * Variant of possible polyhedron sources (composed of members, read from file), but not the polyhedron itself
+     * @example Utilized in the Python interface which does not expose the Polyhedron class
+     */
+    using PolyhedralSource = std::variant<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>, std::vector<std::string>>;
+
+    /**
+     * Variant of possible polyhedral sources (direct, composed of members, read from file), including the polyhedron
+     * @example Utilized in the C++ implementation of the polyhedral-gravity model
+     */
+    using PolyhedronOrSource = std::variant<Polyhedron, std::tuple<std::vector<Array3>, std::vector<IndexArray3>>, std::vector<std::string>>;
 
     /**
      * Data structure containing the model data of one polyhedron. This includes nodes, edges (faces) and elements.
@@ -29,7 +47,7 @@ namespace polyhedralGravity {
          * two nodes.
          * @example face consisting of {1, 2, 3} --> segments: {1, 2}, {2, 3}, {3, 1}
          */
-        const std::vector<std::array<size_t, 3>> _faces;
+        const std::vector<IndexArray3> _faces;
 
 
     public:
@@ -49,7 +67,7 @@ namespace polyhedralGravity {
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws runtime_error if no face contains the node zero indicating mathematical index
          */
-        Polyhedron(std::vector<Array3> nodes, std::vector<std::array<size_t, 3>> faces)
+        Polyhedron(std::vector<Array3> nodes, std::vector<IndexArray3> faces)
                 : _vertices{std::move(nodes)},
                   _faces{std::move(faces)} {
             //Checks that the node with index zero is actually used
@@ -61,6 +79,17 @@ namespace polyhedralGravity {
                                          "the polyhedron at one (1).");
             }
         }
+
+        /**
+         * Creates a polyhedron from a tuple of nodes and faces.
+         * @param data - tuple of nodes and faces
+         *
+         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
+         * @throws runtime_error if no face contains the node zero indicating mathematical index
+         */
+        explicit Polyhedron(std::tuple<std::vector<Array3>, std::vector<IndexArray3>> data)
+                : Polyhedron(std::get<std::vector<Array3>>(data), std::get<std::vector<IndexArray3>>(data)) {}
+
 
         /**
          * Default destructor
@@ -104,7 +133,7 @@ namespace polyhedralGravity {
          * Returns the triangular faces of this polyhedron
          * @return vector of triangular faces, where each element size_t references a vertex in the vertices vector
          */
-        [[nodiscard]] const std::vector<std::array<size_t, 3>> &getFaces() const {
+        [[nodiscard]] const std::vector<IndexArray3> &getFaces() const {
             return _faces;
         }
 

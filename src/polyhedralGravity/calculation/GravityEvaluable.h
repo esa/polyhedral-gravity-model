@@ -1,10 +1,14 @@
 #pragma once
 
 #include <tuple>
+#include <variant>
+#include <string>
+#include <sstream>
 
 #include "thrust/transform.h"
 #include "polyhedralGravity/calculation/GravityModel.h"
 
+#include "polyhedralGravity/input/TetgenAdapter.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "thrust/execution_policy.h"
@@ -42,55 +46,59 @@ namespace polyhedralGravity {
          * Instantiates a GravityEvaluable with a given constant density polyhedron.
          * @param polyhedron - the polyhedron
          * @param density - the constant density in [kg/m^3]
+         *
+         * @note This is a separate constructor since the polyhedron as a class it not exposed to the user via
+         * the Python Interface. Thus, this constructor is only available via the C++ interface.
          */
-        GravityEvaluable(const Polyhedron &polyhedron, double density)
-                : _polyhedron{polyhedron}
-                , _density{density} {
+        GravityEvaluable(const Polyhedron &polyhedron, double density) : _polyhedron{polyhedron}, _density{density} {
             this->prepare();
         }
 
         /**
          * Instantiates a GravityEvaluable with a given constant density polyhedron.
-         * @param vertices - the vertices of the polyhedron
-         * @param faces - the triangular faces of the polyhedron
+         * @param polyhedralSource - the vertices & faces of the polyhedron as tuple or the filenames of the files
          * @param density - the constant density in [kg/m^3]
          */
-        GravityEvaluable(const std::vector<std::array<double, 3>> &vertices,
-                         const std::vector<std::array<size_t, 3>> &faces, double density)
-                : _polyhedron{vertices, faces}
-                , _density{density} {
+        GravityEvaluable(
+                const PolyhedralSource &polyhedralSource,
+                double density) : _polyhedron{
+                std::holds_alternative<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>>(polyhedralSource)
+                ? Polyhedron{std::get<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>>(polyhedralSource)}
+                : TetgenAdapter(std::get<std::vector<std::string>>(polyhedralSource)).getPolyhedron()
+        }, _density{density} {
             this->prepare();
         }
 
         /**
          * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
          * point P. Wrapper for evaluate<parallelization>.
-         * @param position - the computation point P
+         * @param computationPoints - the computation point P or multiple computation points in a vector
          * @param parallelization - if true, the calculation is parallelized
          * @return the GravityModelResult containing the potential, acceleration and second derivative
          */
-        inline GravityModelResult operator()(const Array3 &position, bool parallelization = true) const {
+        inline std::variant<GravityModelResult, std::vector<GravityModelResult>>
+        operator()(const std::variant<Array3, std::vector<Array3>> &computationPoints,
+                   bool parallelization = true) const {
             if (parallelization) {
-                return this->evaluate<true>(position);
+                if (std::holds_alternative<Array3>(computationPoints)) {
+                    return this->evaluate<true>(std::get<Array3>(computationPoints));
+                } else {
+                    return this->evaluate<true>(std::get<std::vector<Array3>>(computationPoints));
+                }
             } else {
-                return this->evaluate<false>(position);
+                if (std::holds_alternative<Array3>(computationPoints)) {
+                    return this->evaluate<false>(std::get<Array3>(computationPoints));
+                } else {
+                    return this->evaluate<false>(std::get<std::vector<Array3>>(computationPoints));
+                }
             }
         }
 
         /**
-         * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
-         * points P. Wrapper for evaluate<parallelization>.
-         * @param computationPoints - the computation points P
-         * @param parallelization - if true, the calculation is parallelized
-         * @return vector of the GravityModelResults containing the potential, acceleration and second derivative
+         * Returns a string representation of the GravityEvaluable.
+         * @return string representation of the GravityEvaluable
          */
-        inline std::vector<GravityModelResult> operator()(const std::vector<Array3> &computationPoints, bool parallelization = true) const {
-            if (parallelization) {
-                return this->evaluate<true>(computationPoints);
-            } else {
-                return this->evaluate<false>(computationPoints);
-            }
-        }
+        std::string toString() const;
 
     private:
 
@@ -129,7 +137,8 @@ namespace polyhedralGravity {
          * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration which
          * this face contributes to the computation point
          */
-        static GravityModelResult evaluateFace(const thrust::tuple<Array3Triplet, Array3Triplet , Array3, Array3Triplet> &tuple);
+        static GravityModelResult
+        evaluateFace(const thrust::tuple<Array3Triplet, Array3Triplet, Array3, Array3Triplet> &tuple);
 
     };
 

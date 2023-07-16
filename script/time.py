@@ -40,11 +40,11 @@ print(f"--> Time taken: {delta:.3f} microseconds per point")
 ########################################################################################################################
 # NEW
 ########################################################################################################################
-evaluable = polyhedral_gravity.GravityEvaluable(vertices, faces, DENSITY)
+evaluable = polyhedral_gravity.GravityEvaluable((vertices, faces), DENSITY)
 
 start_time = timeit.default_timer()
 for i in range(N):
-    evaluable.evaluate(computation_points[i])
+    evaluable(computation_points[i])
 end_time = timeit.default_timer()
 
 delta = (end_time - start_time) / N * 1e6
@@ -53,10 +53,10 @@ print("######## GravityEvaluable (Single-Point) #########")
 print(f"--> {N} times 1 point with GravityEvaluable")
 print(f"--> Time taken: {delta:.3f} microseconds per point")
 
-evaluable = polyhedral_gravity.GravityEvaluable(vertices, faces, DENSITY)
+evaluable = polyhedral_gravity.GravityEvaluable((vertices, faces), DENSITY)
 
 start_time = timeit.default_timer()
-evaluable.evaluate(computation_points)
+evaluable(computation_points)
 end_time = timeit.default_timer()
 
 delta = (end_time - start_time) / N * 1e6

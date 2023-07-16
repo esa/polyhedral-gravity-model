@@ -227,4 +227,12 @@ namespace polyhedralGravity {
                                planeUnitNormal * planeSumPotentialAcceleration, concat(first, second));
     }
 
+    std::string GravityEvaluable::toString() const {
+        std::stringstream ss;
+        ss  << "<polyhedral_gravity.GravityEvaluable, density=" << _density
+            << ", vertices= " << _polyhedron.countVertices()
+            << ", faces= " << _polyhedron.countFaces() << ">";
+        return ss.str();
+    }
+
 }
