@@ -7,66 +7,74 @@ polyhedral_gravity
 Computes the full gravity tensor for a given constant density polyhedron which consists of some
 vertices and triangular faces at given computation points
 
-.. py::module:: polyhedral_gravity
+.. py:module:: polyhedral_gravity
 
-Computes the full gravity tensor for a given constant density polyhedron which consists of some vertices and
-triangular faces at a given computation point :math:`P`
+    .. py:function:: evaluate(polyhedral_source, density, computation_points, parallel=True)
 
-.. py:function:: evaluate(vertices, faces, density, computation_point)
-   :noindex:
+        Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
 
-   Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices and
-   triangular faces at a given computation point P
+        :param Union[Tuple[List[List[float[3]]], List[List[int[3]]]], List[str]] polyhedral_source:
+            The vertices & faces of the polyhedron as tuple or
+            the filenames of the files containing the vertices & faces as list of strings
+            Supports numpy arrays!
+            Supported are .node/.face, mesh, .ply, .off, .stl files.
+        :param float density:
+            The constant density of the polyhedron in :math:`\frac{kg}{m^3}`
+        :param List[float[3]] computation_points:
+            The cartesian computation points as tuple or list of points
+        :param bool parallel:
+            If true, the computation is done in parallel (default: true)
 
-   :param List[List[float[3]]] vertices: vertices of the polyhedron
-   :param List[List[int[3]]] faces: faces of the polyhedron
-   :param float density: constant density in :math:`\frac{kg}{m^3}`
-   :param List[float[3]] computation_point: cartesian computation point :math:`P`
-   :return: tuple of potential, acceleration, and second derivative tensor
-   :rtype: Tuple[float, List[float[3]], List[float[6]]]
+        :rtype: Union[Tuple[float, List[float[3]], List[float[6]]], List[Tuple[float, List[float[3]], List[float[6]]]]]
+        :return:
+            Either a tuple of potential :math:`V`, acceleration (:math:`V_x, V_y, V_z`)
+            and second derivatives (:math:`V_{xx}, V_{yy}, V_{zz}, V_{xy}, V_{xz}, V_{yz}`)
+            at the computation points or if multiple computation points are given, the result is a list of tuples
 
 
-.. py:function:: evaluate(vertices, faces, density, computation_points)
-   :noindex:
+    .. py:class:: GravityEvaluable
 
-   Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices and
-   triangular faces at multiple given computation points
+        A class to evaluate the polyhedral gravity model for a given constant density polyhedron at a given computation point.
+        It provides a :code:`__call__` method to evaluate the polyhedral gravity model for computation points while
+        also caching the polyhedron data over the lifetime of the object.
 
-   :param List[List[float[3]]] vertices: vertices of the polyhedron
-   :param List[List[int[3]]] faces: faces of the polyhedron
-   :param float density: constant density in :math:`\frac{kg}{m^3}`
-   :param List[List[float[3]]] computation_points: multiple cartesian computation points :math:`P`
-   :return: list of tuple of potential, acceleration, and second derivative tensor
-   :rtype: List[Tuple[float, List[float[3]], List[float[6]]]]
+        .. py:method:: __init__(polyhedral_source, density)
 
-.. py:function:: evaluate(input_files, density, computation_point)
-   :noindex:
+            :param Union[Tuple[List[List[float[3]]], List[List[int[3]]]], List[str]] polyhedral_source:
+                The vertices & faces as (N, 3) array-like of the polyhedron as tuple or
+                the filenames of the files containing the vertices & faces as list of strings
+                Supports numpy arrays!
+                Supported are .node/.face, mesh, .ply, .off, .stl files.
+            :param float density:
+                The constant density of the polyhedron in :math:`\frac{kg}{m^3}`
 
-   Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices and
-   triangular faces at a given computation point :math:`P`
+        .. py:method:: __call__(computation_points, parallel=True)
 
-   :param List[str] input_files: polyhedral source files
-   :param float density: constant density in :math:`\frac{kg}{m^3}`
-   :param List[float[3]] computation_point: cartesian computation point :math:`P`
-   :return: tuple of potential, acceleration, and second derivative tensor
-   :rtype: Tuple[float, List[float[3]], List[float[6]]]
+            Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
 
-.. py:function:: evaluate(input_files, density, computation_points)
-   :noindex:
+            :param List[float[3]] computation_points:
+                The cartesian computation point
+            :param bool parallel:
+                If true, the computation is done in parallel (default: true)
 
-    Evaluate the full gravity tensor for a given constant density polyhedron which consists of some vertices and
-    triangular faces at multiple given computation points
+            :rtype: Tuple[float, List[float[3]], List[float[6]]]
+            :return:
+                A tuple of potential :math:`V`, acceleration (:math:`V_x, V_y, V_z`)
+                and second derivatives (:math:`V_{xx}, V_{yy}, V_{zz}, V_{xy}, V_{xz}, V_{yz}`)
+                at the computation point.
 
-   :param List[str] input_files: polyhedral source files
-   :param List[List[int[3]]] faces: faces of the polyhedron
-   :param float density: constant density in :math:`\frac{kg}{m^3}`
-   :param List[List[float[3]]] computation_points: multiple cartesian computation points :math:`P`
-   :return: list of tuple of potential, acceleration, and second derivative tensor
-   :rtype: List[Tuple[float, List[float[3]], List[float[6]]]]
+        .. py:method:: __repr__()
+
+            Returns a string representation of the polyhedral gravity evaluable.
+
+            :rtype: str
+            :return: A string representation of the polyhedron
 
 
 utility
 ~~~~~~~
+
+.. py:module:: polyhedral_gravity.utility
 
 This submodule contains useful utility functions like parsing meshes
 or checking if the polyhedron's mesh plane unit normals point outwards
