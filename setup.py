@@ -152,8 +152,9 @@ setup(
     """,
     ext_modules=[CMakeExtension("polyhedral_gravity")],
     cmdclass={"build_ext": CMakeBuild},
+    license_file="LICENSE",
     zip_safe=False,
     python_requires=">=3.6",
-    include_package_data=True
+    include_package_data=True,
 )
 # --------------------------------------------------------------------------------

@@ -672,3 +672,25 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
+
+##############################################################################
+-- NOTE: Third party dependency used by this software --
+##############################################################################
+This software depends on the following third party software
+and users must comply to its license terms.
+
+- spdlog (MIT License)
+  https://github.com/gabime/spdlog/blob/76dfc7e7c0d3c69d3cdaa3399b63545235ccbb02/LICENSE
+- yaml-cpp (MIT Lucense)
+  https://github.com/jbeder/yaml-cpp/blob/b8882652fcbeba4c00dec019a39da91e702e474e/LICENSE
+- thrust (Apache License Version 2.0)
+  https://github.com/NVIDIA/thrust/blob/24486a169a62a58ef8f824d3dc9613c006b6f5a7/LICENSE
+- oneTBB (Apache License Version 2.0)
+  https://github.com/oneapi-src/oneTBB/blob/37a89d47f2bca3700f9777732c41f08ac44d2d0a/LICENSE.txt
+- xsimd (BSD 3 License)
+  https://github.com/xtensor-stack/xsimd/blob/e6fa5aca6320d6ccaf24c123ab2af9b0f2f09cc1/LICENSE
+- pybind11 (BSD 3 License)
+  https://github.com/pybind/pybind11/blob/8d08dc64ca300342852ceaa7b1d65fe9f69dab06/LICENSE
+- Tetgen (GNU AGPL v3)
+  https://github.com/libigl/tetgen/blob/4f3bfba3997f20aa1f96cfaff604313a8c2c85b6/LICENSE
