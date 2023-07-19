@@ -2,3 +2,4 @@
 cmake-build-*
 build
 polyhedral_gravity.egg-info
+dist

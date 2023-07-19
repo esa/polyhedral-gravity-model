@@ -18,7 +18,12 @@ The method calls follow the same pattern as the C++ interface. Thus it is always
     # Define the density (a float)
     # Define the computation_points which is either a single point or a list of points
     # Define if the computation is parallel or not (the default is parallel, which corresponds to True)
-    results = model.evaluate(polyhedral_source, density, computation_point, parallel)
+    results = model.evaluate(
+        polyhedral_source=polyhedral_source,
+        density=density
+        computation_points=computation_points
+        parallel=True
+    )
 
     #############################################
     # With the evaluable class
@@ -26,8 +31,14 @@ The method calls follow the same pattern as the C++ interface. Thus it is always
     # without the overhead of setting up the normals etc.
     #############################################
     # Parameters are the same as for the free function call
-    evaluable = model.GravityEvaluable(polyhedral_source, density)
-    results = evaluable(computation_point, parallel)
+    evaluable = model.GravityEvaluable(
+        polyhedral_source=polyhedral_source,
+        density=density
+    )
+    results = evaluable(
+        computation_points=computation_points,
+        parallel=True
+    )
 
 
 Free function

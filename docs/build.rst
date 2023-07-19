@@ -6,13 +6,13 @@ Requirements
 
 Requirements (all of them are automatically set-up via :code:`CMake`):
 
-- GoogleTest 1.13.0 (only required for testing)
-- spdlog 1.11.0 (required for logging)
-- tetgen 1.6 (required for I/O)
-- yaml-cpp 0.7.0 (required for I/O)
-- thrust 2.1.0 (required for parallelization and utility)
-- xsimd 11.1.0 (required for vectorization of the `atan(..)`)
-- pybind11 2.10.4 (required for the Python interface, but not the C++ standalone)
+- GoogleTest (1.13.0 or compatible), only required for testing
+- spdlog (1.11.0 or compatible), required for logging
+- tetgen (1.6 or compatible), required for I/O
+- yaml-cpp (0.7.0 or compatible), required for I/O
+- thrust (2.1.0 or compatible), required for parallelization and utility
+- xsimd (11.1.0 or compatible), required for vectorization of the :code:`atan(..)`
+- pybind11 (2.10.4 or compatible), required for the Python interface, but not the C++ standalone
 
 
 Build with CMake

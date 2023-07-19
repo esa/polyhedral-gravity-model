@@ -53,8 +53,8 @@ The following paragraph gives some examples on how to
 use the polyhedral model as library from within source code
 (All examples with :code:`using namespace polyhedralGravity`).
 
-Free function
-~~~~~~~~~~~~~
+Individual Function (without caching)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 **Example 1:** Evaluating the gravity model for a given polyhedron
@@ -129,8 +129,8 @@ about the vertices' ordering due to its quadratic complexity!
 
 
 
-Class-Based method
-~~~~~~~~~~~~~~~~~~
+Evaluation with caching
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Evaluating the gravity model for a given polyhedron
 defined from within source code for a specific point and density.
