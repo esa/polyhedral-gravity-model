@@ -22,6 +22,8 @@ The method calls follow the same pattern as the C++ interface. Thus it is always
 
     #############################################
     # With the evaluable class
+    # This allows multiple evaluations on the same polyhedron
+    # without the overhead of setting up the normals etc.
     #############################################
     # Parameters are the same as for the free function call
     evaluable = model.GravityEvaluable(polyhedral_source, density)
