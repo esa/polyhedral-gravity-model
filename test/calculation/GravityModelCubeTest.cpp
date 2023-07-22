@@ -83,10 +83,10 @@ TEST_P(GravityModelCubeTest, CubePoints) {
     double expectedPotential = std::get<1>(testData);
     std::array<double, 3> expectedAcceleration = std::get<2>(testData);
 
-    GravityModelResult actualResult = GravityModel::evaluate(_cube, _cube_density, computationPoint);
+    const auto[actualPotential, actualAcceleration, x] = GravityModel::evaluate(_cube, _cube_density, computationPoint);
 
-    ASSERT_NEAR(actualResult.gravitationalPotential, expectedPotential, LOCAL_TEST_EPSILON);
-    ASSERT_THAT(actualResult.acceleration, Pointwise(DoubleNear(LOCAL_TEST_EPSILON), expectedAcceleration));
+    ASSERT_NEAR(actualPotential, expectedPotential, LOCAL_TEST_EPSILON);
+    ASSERT_THAT(actualAcceleration, Pointwise(DoubleNear(LOCAL_TEST_EPSILON), expectedAcceleration));
 }
 
 INSTANTIATE_TEST_SUITE_P(CubeGravityModelTest, GravityModelCubeTest,

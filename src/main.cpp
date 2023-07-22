@@ -10,8 +10,8 @@ int main(int argc, char *argv[]) {
     using namespace polyhedralGravity;
     if (argc != 2) {
         SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Wrong program call! "
-                                                                                 "Please use the program like that:\n"
-                                                                                 "./polyhedralGravity [YAML-Configuration-File]\n");
+                                                                                "Please use the program like this:\n"
+                                                                                "./polyhedralGravity [YAML-Configuration-File]\n");
         return 0;
     }
 

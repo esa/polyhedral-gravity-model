@@ -44,8 +44,11 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      # Enables Long Paths on Windows (newer thrust versions require this)
       - name: Build
         run: |
+          New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+          git config --system core.longpaths true
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..

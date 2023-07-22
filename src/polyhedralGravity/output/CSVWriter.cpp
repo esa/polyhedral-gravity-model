@@ -7,9 +7,7 @@ namespace polyhedralGravity {
         _logger->info("Point P,Potential [m^2/s^2],Acceleration [m/s^2],Second Derivative Gravity Tensor [1/s^2]");
         for (size_t i = 0; i < computationPoints.size() && i < gravityResults.size(); ++i) {
             const std::array<double, 3> &computationPoint = computationPoints[i];
-            const double &potential = gravityResults[i].gravitationalPotential;
-            const std::array<double, 3> &acceleration = gravityResults[i].acceleration;
-            const std::array<double, 6> &secondDerivative = gravityResults[i].gradiometricTensor;
+            const auto &[potential, acceleration, secondDerivative] = gravityResults[i];
             //Because of ADL the overload operator<< for arrays (in UtilityContainer) does not work here
             //@related https://en.cppreference.com/w/cpp/language/adl
             _logger->info("[{} {} {}],{},[{} {} {}],[{} {} {} {} {} {}]",
