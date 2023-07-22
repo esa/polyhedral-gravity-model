@@ -1,3 +1,4 @@
+#!python3
 import polyhedral_gravity
 import numpy as np
 import matplotlib.pyplot as plt

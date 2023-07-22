@@ -16,8 +16,8 @@ CMAKE_GENERATOR = "Ninja"
 CMAKE_OPTIONS = {
     # The Build Type (Should be release!)
     "CMAKE_BUILD_TYPE": "Release",
-    # Modify to change the parallelization (Default value: CPP)
-    "POLYHEDRAL_GRAVITY_PARALLELIZATION": "CPP",
+    # Modify to change the parallelization (Default value: TBB)
+    "POLYHEDRAL_GRAVITY_PARALLELIZATION": "TBB",
     # Default value (INFO=2)
     "LOGGING_LEVEL": 2,
     # Default value (OFF)
@@ -32,8 +32,8 @@ CMAKE_OPTIONS = {
     "BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE": "OFF",
     # Should be of course ON!
     "BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE": "ON",
-    # Build shared libs by default
-    "BUILD_SHARED_LIBS": "ON"
+    # Build static libs by default (On conda-forge we build shared libs by setting this to ON)
+    "BUILD_SHARED_LIBS": "OFF"
 }
 # ---------------------------------------------------------------------------------
 
