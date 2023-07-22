@@ -1,5 +1,8 @@
 #include <tuple>
 #include <variant>
+#include <string>
+#include <array>
+#include <vector>
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
