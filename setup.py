@@ -87,6 +87,12 @@ class CMakeBuild(build_ext):
                 f"-D{option_name}={final_value}"
             ]
 
+        # Disable availability of standard libc++ on macOS if requested
+        if os.environ.get("_LIBCPP_DISABLE_AVAILABILITY"):
+            cmake_args += [
+                "-D_LIBCPP_DISABLE_AVAILABILITY=ON"
+            ]
+
         # Sets the CMake Generator if specified (this is separate from the other variables since it is given to
         # CMake vie the -G prefix
         final_generator = os.environ.get("CMAKE_GENERATOR", CMAKE_GENERATOR)

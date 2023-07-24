@@ -46,6 +46,11 @@ option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (D
 message(STATUS "BUILD_POLYHEDRAL_GRAVITY_TESTS = ${BUILD_POLYHEDRAL_GRAVITY_TESTS}")
 
 
+IF(_LIBCPP_DISABLE_AVAILABILITY)
+    message(STATUS "Disabling availability macros for libc++")
+    add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
+endif ()
+
 #######################################################
 # Including dependencies needed across multiple targets
 #######################################################
