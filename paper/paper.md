@@ -13,9 +13,15 @@ authors:
   - name: Jonas Schuhmacher
     orcid: 0009-0005-9693-4530
     affiliation: 1
+  - name: Emmanuel Blazquez
+    orcid: 0000-0001-9697-582X
+    affiliation: 2
   - name: Fabio Gratl
     orcid: 0000-0001-5195-7919
     affiliation: 1
+  - name: Dario Izzo
+    orcid: 0000-0002-9846-8423
+    affiliation: 2
   - name: Pablo Gómez
     orcid: 0000-0002-5631-8240
     affiliation: 2
@@ -60,10 +66,5 @@ The project is open to contributions via pull requests with instructions on how 
 # Usage Instructions
 
 We provide detailed usage instructions in the technical documentation on ReadTheDocs \footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository readme and more extensive examples as a *Jupyter* notebook \footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
-
-
-# Acknowledgements
-
-The authors would like to thank Dario Izzo and Emmanuel Blazquez for their feedback on the original model implementation.
 
 # References
