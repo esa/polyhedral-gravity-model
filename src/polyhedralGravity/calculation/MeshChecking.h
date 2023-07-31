@@ -8,7 +8,7 @@
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
-#include "polyhedralGravity/calculation/GravityModel.h"
+#include "polyhedralGravity/calculation/PolyhedronTransform.h"
 
 namespace polyhedralGravity::MeshChecking {
 

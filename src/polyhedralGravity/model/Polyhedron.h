@@ -9,7 +9,7 @@
 #include <tuple>
 #include <variant>
 #include <string>
-#include "GravityModelData.h"
+#include "polyhedralGravity/model/GravityModelData.h"
 
 namespace polyhedralGravity {
 
