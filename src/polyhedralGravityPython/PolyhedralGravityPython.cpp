@@ -1,5 +1,8 @@
 #include <tuple>
 #include <variant>
+#include <string>
+#include <array>
+#include <vector>
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
@@ -21,12 +24,15 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
     m.def("evaluate", [](const PolyhedralSource &polyhedralSource, double density,
                          const std::variant<Array3, std::vector<Array3>> &computationPoints,
                          bool parallel) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> {
+              using namespace polyhedralGravity;
               if (std::holds_alternative<Array3>(computationPoints)) {
                   return std::visit([&density, &computationPoints, parallel](const auto &source) {
+                      using namespace polyhedralGravity;
                       return GravityModel::evaluate(source, density, std::get<Array3>(computationPoints), parallel);
                   }, polyhedralSource);
               } else {
                   return std::visit([&density, &computationPoints, parallel](const auto &source) {
+                      using namespace polyhedralGravity;
                       return GravityModel::evaluate(source, density, std::get<std::vector<Array3>>(computationPoints),
                                                     parallel);
                   }, polyhedralSource);

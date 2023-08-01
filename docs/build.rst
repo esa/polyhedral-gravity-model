@@ -23,7 +23,7 @@ The requirements (see below) are set-up automatically during
 the build process. Use the instructions below to build the project, from the
 repository's root directory:
 
-.. code-block::
+.. code-block:: bash
 
     mkdir build
     cd build
@@ -43,8 +43,34 @@ BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)      Build the Tests
 BUILD_POLYHEDRAL_PYTHON_INTERFACE (:code:`ON`)   Build the Python interface
 ================================================ ===================================================================================================================================
 
-Build & Installation with pip
------------------------------
+Installation with conda
+-----------------------
+
+The python interface can be easily installed with `conda <https://anaconda.org/conda-forge/polyhedral-gravity-model>`__:
+
+.. code-block:: bash
+
+    conda install -c conda-forge polyhedral-gravity-model
+
+Installation with pip
+---------------------
+
+As a second option, you can also install the python interface with pip from
+`PyPi <https://pypi.org/project/polyhedral-gravity/>`__:
+
+.. code-block:: bash
+
+    pip install polyhedral-gravity
+
+Binaries for the most common platforms are available on PyPI including
+Windows, Linux and macOS. For macOS and Linux, binaries for
+:code:`x86_64` and :code:`aarch64` are provided.
+In case :code:`pip` uses the source distribution, please make sure that
+you have a C++17 capable compiler, CMake and ninja-build installed.
+
+
+Build & Installation from source
+--------------------------------
 
 Use pip to install the python interface in your local python runtime.
 The module will be build using CMake. Just execute in repository root:
@@ -54,19 +80,12 @@ The module will be build using CMake. Just execute in repository root:
     pip install .
 
 To modify the build options (like parallelization) have a look
-at the :code:`setupy.py`. As simple example, to modify the parallelization,
-just set the environment variable like below:
+at the :code:`setupy.py`. The options are modified by setting the
+environment variables before executing the :code:`pip install .` command, e.g.:
 
 .. code-block::
 
     export POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
 
-Installation with conda
------------------------
 
-The python interface can be easily installed with `conda <https://anaconda.org/conda-forge/polyhedral-gravity-model>`__:
-
-.. code-block::
-
-    conda install -c conda-forge polyhedral-gravity-model
 

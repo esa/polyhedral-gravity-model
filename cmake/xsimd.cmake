@@ -3,7 +3,7 @@ include(FetchContent)
 message(STATUS "Setting up xsimd via CMake")
 
 
-find_package(xsimd 11.1.0 QUIET)
+find_package(xsimd 11.1 QUIET)
 
 if (${xsimd_FOUND})
 

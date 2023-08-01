@@ -6,12 +6,12 @@
 #include <sstream>
 
 #include "thrust/transform.h"
-#include "polyhedralGravity/calculation/GravityModel.h"
+#include "thrust/execution_policy.h"
 
+#include "polyhedralGravity/calculation/GravityModelDetail.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/Polyhedron.h"
-#include "thrust/execution_policy.h"
 
 
 namespace polyhedralGravity {
