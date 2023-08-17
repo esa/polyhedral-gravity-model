@@ -1,0 +1,82 @@
+name: Build & Publish Python Package
+
+on:
+  release:
+    types: [created]
+    # Only trigger for regular releases, not pre-releases
+    # See https://docs.github.com/en/actions/reference/events-that-trigger-workflows#release
+    # for more information on the release event
+    prerelease: false
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build wheels (Linux)
+        uses: pypa/cibuildwheel@v2.15.0
+        env:
+          CIBW_BEFORE_BUILD: yum makecache && yum install -y gcc-c++ cmake && pip install ninja
+          CIBW_BUILD: "*manylinux*"
+          CIBW_ARCHS_LINUX: "auto64"
+        with:
+          package-dir: .
+          output-dir: dist
+        if: matrix.os == 'ubuntu-latest'
+      - name: Build wheels (macOS)
+        uses: pypa/cibuildwheel@v2.15.0
+        env:
+          CIBW_BEFORE_BUILD: brew install ninja gcc@12
+          CIBW_ENVIRONMENT: "CC=gcc-12 CXX=g++-12"
+        with:
+          package-dir: .
+          output-dir: dist
+        if: matrix.os == 'macos-latest'
+      - name: Build wheels (Windows)
+        uses: pypa/cibuildwheel@v2.15.0
+        env:
+          CIBW_BEFORE_BUILD: choco install -y ninja cmake mingw
+          CIBW_ARCHS_WINDOWS: "auto64"
+          CIBW_ENVIRONMENT: "CXXFLAGS=-D_hypot=hypot POLYHEDRAL_GRAVITY_PARALLELIZATION=OMP"
+        with:
+          package-dir: .
+          output-dir: dist
+        if: matrix.os == 'windows-latest'
+      - uses: actions/upload-artifact@v3
+        with:
+          path: dist/*.whl
+
+  make_sdist:
+    name: Make SDist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build SDist
+        run: pipx run build --sdist
+      - uses: actions/upload-artifact@v3
+        with:
+          path: dist/*.tar.gz
+
+  upload_all:
+    needs: [build_wheels, make_sdist]
+    environment:
+      name: pypi
+      url: https://pypi.org/p/polyhedral-gravity
+      # name: testpypi
+      # url: https://test.pypi.org/p/polyhedral-gravity
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        # with:
+        #   repository-url: https://test.pypi.org/legacy/
