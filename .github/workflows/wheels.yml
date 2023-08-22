@@ -81,7 +81,7 @@ jobs:
 
   check_testpypi:
     needs: [upload_testpypi]
-    name: Test import on ${{ matrix.os }}
+    name: Test import on ${{ matrix.os }} with ${{ matrix.py }}
     runs-on: ${{ matrix.os }}
     if: always()
     strategy:
