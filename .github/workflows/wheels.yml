@@ -62,13 +62,11 @@ jobs:
         with:
           path: dist/*.tar.gz
 
-  upload_all:
+  upload_testpypi:
     needs: [build_wheels, make_sdist]
     environment:
-      name: pypi
-      url: https://pypi.org/p/polyhedral-gravity
-      # name: testpypi
-      # url: https://test.pypi.org/p/polyhedral-gravity
+      name: testpypi
+      url: https://test.pypi.org/p/polyhedral-gravity
     permissions:
       id-token: write
     runs-on: ubuntu-latest
@@ -78,5 +76,51 @@ jobs:
           name: artifact
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
-        # with:
-        #   repository-url: https://test.pypi.org/legacy/
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  check_testpypi:
+    needs: [upload_testpypi]
+    name: Test import on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    if: always()
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        py:
+          [
+            3.7.x,
+            3.8.x,
+            3.9.x,
+            3.10.x,
+            3.11.x,
+            pypy3.7,
+            pypy3.8,
+            pypy3.9,
+            pypy3.10,
+          ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.py }}
+      - name: Install package from testpypi
+        run: pip install --index-url https://test.pypi.org/simple/ polyhedral-gravity
+      - name: Check import
+        run: python -c "import polyhedral_gravity"
+
+  upload_pypi:
+    needs: [build_wheels, make_sdist, check_testpypi]
+    environment:
+      name: pypi
+      url: https://pypi.org/p/polyhedral-gravity
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
