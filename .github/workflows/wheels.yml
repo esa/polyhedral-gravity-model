@@ -47,6 +47,7 @@ jobs:
           CIBW_BEFORE_BUILD: choco install -y ninja cmake
           CIBW_ARCHS_WINDOWS: "auto64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
+          CIBW_ENVIRONMENT: "CXX_FLAGS='/d2FH4-' POLYHEDRAL_GRAVITY_PARALLELIZATION=OMP"
         with:
           package-dir: .
           output-dir: dist
