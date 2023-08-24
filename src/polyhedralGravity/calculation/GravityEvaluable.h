@@ -59,15 +59,31 @@ namespace polyhedralGravity {
          * @param polyhedralSource - the vertices & faces of the polyhedron as tuple or the filenames of the files
          * @param density - the constant density in [kg/m^3]
          */
-        GravityEvaluable(
-                const PolyhedralSource &polyhedralSource,
-                double density) : _polyhedron{
+        GravityEvaluable(const PolyhedralSource &polyhedralSource, double density) : _polyhedron{
                 std::holds_alternative<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>>(polyhedralSource)
                 ? Polyhedron{std::get<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>>(polyhedralSource)}
-                : TetgenAdapter(std::get<std::vector<std::string>>(polyhedralSource)).getPolyhedron()
-        }, _density{density} {
+                : TetgenAdapter(std::get<std::vector<std::string>>(polyhedralSource)).getPolyhedron()},
+                                                                                     _density{density} {
             this->prepare();
         }
+
+        /**
+         * Instantiates a GravityEvaluable with a given constant density polyhedron and caches.
+         * This is for restoring a GravityEvaluable from a previous state.
+         * @param polyhedron - the polyhedron
+         * @param density - the constant density in [kg/m^3]
+         * @param segmentVectors - the segment vectors
+         * @param planeUnitNormals - the plane unit normals
+         * @param segmentUnitNormals - the segment unit normals
+         */
+        GravityEvaluable(const Polyhedron &polyhedron, double density, const std::vector<Array3Triplet> &segmentVectors,
+                         const std::vector<Array3> &planeUnitNormals,
+                         const std::vector<Array3Triplet> &segmentUnitNormals) : _polyhedron{polyhedron},
+                                                                                 _density{density},
+                                                                                 _segmentVectors{segmentVectors},
+                                                                                 _planeUnitNormals{planeUnitNormals},
+                                                                                 _segmentUnitNormals{
+                                                                                         segmentUnitNormals} {}
 
         /**
          * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
@@ -100,6 +116,14 @@ namespace polyhedralGravity {
          */
         std::string toString() const;
 
+        /**
+         * Returns the polyhedron, the density and the internal caches.
+         *
+         * @return tuple of polyhedron, density, segmentVectors, planeUnitNormals and segmentUnitNormals
+         */
+        std::tuple<Polyhedron, double, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
+        getState() const;
+
     private:
 
         /**
@@ -120,6 +144,7 @@ namespace polyhedralGravity {
         template<bool Parallelization = true>
         GravityModelResult evaluate(const Array3 &computationPoint) const;
 
+
         /**
          * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
          * at multiple computation points.
@@ -129,7 +154,6 @@ namespace polyhedralGravity {
          */
         template<bool Parallelization = true>
         std::vector<GravityModelResult> evaluate(const std::vector<Array3> &computationPoints) const;
-
 
         /**
          * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation a certain face.

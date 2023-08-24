@@ -235,4 +235,9 @@ namespace polyhedralGravity {
         return ss.str();
     }
 
+    std::tuple<Polyhedron, double, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
+    GravityEvaluable::getState() const {
+        return std::make_tuple(_polyhedron, _density, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
+    }
+
 }

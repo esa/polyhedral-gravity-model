@@ -83,7 +83,29 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                     Returns:
                         Either a tuple of potential, acceleration and second derivatives at the computation points or
                         if multiple computation points are given, the result is a list of tuples
-                )mydelimiter", py::arg("computation_points"), py::arg("parallel") = true);
+                )mydelimiter", py::arg("computation_points"), py::arg("parallel") = true)
+            .def(py::pickle(
+                    [](const GravityEvaluable &evaluable) {
+                        const auto&[polyhedron, density, segmentVectors, planeUnitNormals, segmentUnitNormals] =
+                                evaluable.getState();
+                        return py::make_tuple(polyhedron.getVertices(), polyhedron.getFaces(), density, segmentVectors,
+                                              planeUnitNormals, segmentUnitNormals);
+                    },
+                    [](const py::tuple &tuple) {
+                        constexpr size_t tupleSize = 6;
+                        if (tuple.size() != tupleSize) {
+                            throw std::runtime_error("Invalid state!");
+                        }
+                        Polyhedron polyhedron {
+                            tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>()
+                        };
+                        GravityEvaluable evaluable{
+                            polyhedron, tuple[2].cast<double>(), tuple[3].cast<std::vector<Array3Triplet>>(),
+                            tuple[4].cast<std::vector<Array3>>(), tuple[5].cast<std::vector<Array3Triplet>>()
+                        };
+                        return evaluable;
+                    }
+            ));
 
     py::module_ utility = m.def_submodule("utility",
                                           "This submodule contains useful utility functions like parsing meshes "
