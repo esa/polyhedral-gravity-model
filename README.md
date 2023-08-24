@@ -5,7 +5,7 @@
 ![GitHub](https://img.shields.io/github/license/esa/polyhedral-gravity-model)
 
 ![PyPI](https://img.shields.io/pypi/v/polyhedral-gravity)
-![Static Badge](https://img.shields.io/badge/platform-linux--64_%7C_windows--64_%7C_osx--64_%7C_linux--arm64_%7C_osx--arm64-lightgrey)
+![Static Badge](https://img.shields.io/badge/platform-linux--64_%7C_win--64_%7C_osx--64_%7C_linux--arm64_%7C_osx--arm64-lightgrey)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/polyhedral-gravity)
 
 ![Conda](https://img.shields.io/conda/v/conda-forge/polyhedral-gravity-model)
