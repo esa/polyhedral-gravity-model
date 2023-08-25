@@ -204,7 +204,7 @@ namespace polyhedralGravity {
             // planeDistance gets very big when far away, sum2 remains independently very small
             SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                                "While evaluating the plane with coordinates v1 = [{}, {}, {}], v2 = [{}, {}, {}], "
-                               "v3 = [{}, {}, {}] (with computation point P at [0, 0, 0]) a "
+                               "v3 = [{}, {}, {}] (with computation point re-located at the origin) a "
                                "significant difference of magnitudes occurred during the evaluation. "
                                "This may lead to numerically unstable results!", face[0][0], face[0][1], face[0][2],
                                face[1][0], face[1][1], face[1][2], face[2][0], face[2][1], face[2][2]);
