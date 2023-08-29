@@ -9,6 +9,7 @@ on:
     prerelease: false
 
 jobs:
+  # 1.a Buidl the wheels on a matrix of Windows, MacOS, and Linux plattforms usinbg cibuildwheel
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -18,6 +19,8 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
+        # In case of Linux we need to install compiler and build tools before building the wheels
+        # We further only build the manylinux wheels, but not the musllinux wheels
       - name: Build wheels (Linux)
         uses: pypa/cibuildwheel@v2.15.0
         env:
@@ -29,6 +32,8 @@ jobs:
           package-dir: .
           output-dir: dist
         if: matrix.os == 'ubuntu-latest'
+      # Building on macOS requires an installation of gcc since the default clang compiler
+      # lacks certain features required for building the package
       - name: Build wheels (macOS)
         uses: pypa/cibuildwheel@v2.15.0
         env:
@@ -39,6 +44,7 @@ jobs:
           package-dir: .
           output-dir: dist
         if: matrix.os == 'macos-latest'
+      # Set up the Visual Studio environment on Windows (required, so that CNaje finds the compiler)
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Build wheels (Windows)
@@ -55,6 +61,7 @@ jobs:
         with:
           path: dist/*.whl
 
+  # 1.b Build the source distribution by simply running the build command
   make_sdist:
     name: Make SDist
     runs-on: ubuntu-latest
@@ -66,6 +73,8 @@ jobs:
         with:
           path: dist/*.tar.gz
 
+  # 2. Upload the wheels and the source distribution to testpypi
+  #    using trusted publishing
   upload_testpypi:
     needs: [build_wheels, make_sdist]
     environment:
@@ -83,6 +92,9 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
+  # 3. Check if the package can be installed from testpypi
+  #    Notice, that this is more of an install test since the
+  #    import check has already been done in the build_wheels job
   check_testpypi:
     needs: [upload_testpypi]
     name: Test import on ${{ matrix.os }} with ${{ matrix.py }}
@@ -114,6 +126,8 @@ jobs:
       - name: Check import
         run: python -c "import polyhedral_gravity"
 
+  # 4. Upload the wheels to the actualy Python Package Index
+  #    using trusted publishing
   upload_pypi:
     needs: [build_wheels, make_sdist, check_testpypi]
     environment:
