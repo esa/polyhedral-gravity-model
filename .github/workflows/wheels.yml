@@ -9,7 +9,7 @@ on:
     prerelease: false
 
 jobs:
-  # 1.a Buidl the wheels on a matrix of Windows, MacOS, and Linux plattforms usinbg cibuildwheel
+  # 1.a Buidl the wheels on a matrix of Windows, MacOS, and Linux platforms using cibuildwheel
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -44,7 +44,7 @@ jobs:
           package-dir: .
           output-dir: dist
         if: matrix.os == 'macos-latest'
-      # Set up the Visual Studio environment on Windows (required, so that CNaje finds the compiler)
+      # Set up the Visual Studio environment on Windows (required, so that CMake finds the compiler)
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Build wheels (Windows)
@@ -93,7 +93,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   # 3. Check if the package can be installed from testpypi
-  #    Notice, that this is more of an install test since the
+  #    Notice, that this is more of an installation test since the
   #    import check has already been done in the build_wheels job
   check_testpypi:
     needs: [upload_testpypi]
@@ -126,7 +126,7 @@ jobs:
       - name: Check import
         run: python -c "import polyhedral_gravity"
 
-  # 4. Upload the wheels to the actualy Python Package Index
+  # 4. Upload the wheels to the actually Python Package Index
   #    using trusted publishing
   upload_pypi:
     needs: [build_wheels, make_sdist, check_testpypi]
