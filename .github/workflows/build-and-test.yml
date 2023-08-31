@@ -37,7 +37,7 @@ jobs:
           cache-env: true
       - name: Install polyhedral-gravity
         run: |
-          pip install . -vv
+          pip install . -vv --no-build-isolation
       - name: Test with pytest
         shell: bash -l {0}
         run: |
