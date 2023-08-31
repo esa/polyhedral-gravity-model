@@ -5,4 +5,3 @@ dependencies:
   - numpy
   - pytest
   - pytest-xdist
-  - ninja
