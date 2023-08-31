@@ -38,13 +38,12 @@ jobs:
           environment-file: environment.yml
           cache-downloads: true
           cache-env: true
-      - name: Install polyhedral-gravity
-        run: |
-          pip install . -vv --no-build-isolation
-      - name: Test with pytest
+      - name: Install & Test polyhedral-gravity
         shell: bash -l {0}
         run: |
+          pip install . -vv --no-build-isolation
           pytest -n 3
+          
 
   # Builds the polyhedral gravity python interface the interface
   # No testing on Windows since it takes too long
