@@ -52,10 +52,10 @@ namespace polyhedralGravity {
 
         if constexpr (Parallelization) {
             result = thrust::transform_reduce(thrust::device, zip1, zip2, &GravityEvaluable::evaluateFace, result,
-                                              util::operator+<double, Array3, Array6>);
+                                              util::operator+ < double, Array3, Array6 > );
         } else {
             result = thrust::transform_reduce(thrust::host, zip1, zip2, &GravityEvaluable::evaluateFace, result,
-                                              util::operator+<double, Array3, Array6>);
+                                              util::operator+ < double, Array3, Array6 > );
         }
 
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
@@ -203,7 +203,11 @@ namespace polyhedralGravity {
             // indicators for numerical magnitudes appearing during the calculation:
             // planeDistance gets very big when far away, sum2 remains independently very small
             SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                               "The results of point [{}, {}, {}] may be wrong due to floating point arithmetic");
+                               "While evaluating the plane with coordinates v1 = [{}, {}, {}], v2 = [{}, {}, {}], "
+                               "v3 = [{}, {}, {}] (with computation point re-located at the origin) a "
+                               "significant difference of magnitudes occurred during the evaluation. "
+                               "This may lead to numerically unstable results!", face[0][0], face[0][1], face[0][2],
+                               face[1][0], face[1][1], face[1][2], face[2][0], face[2][1], face[2][2]);
         }
 
         //6. Step: Sum for tensor
@@ -229,10 +233,14 @@ namespace polyhedralGravity {
 
     std::string GravityEvaluable::toString() const {
         std::stringstream ss;
-        ss  << "<polyhedral_gravity.GravityEvaluable, density=" << _density
-            << ", vertices= " << _polyhedron.countVertices()
-            << ", faces= " << _polyhedron.countFaces() << ">";
+        ss << "<polyhedral_gravity.GravityEvaluable, density=" << _density << ", vertices= "
+           << _polyhedron.countVertices() << ", faces= " << _polyhedron.countFaces() << ">";
         return ss.str();
+    }
+
+    std::tuple<Polyhedron, double, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
+    GravityEvaluable::getState() const {
+        return std::make_tuple(_polyhedron, _density, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
     }
 
 }
