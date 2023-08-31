@@ -59,12 +59,13 @@ def test_polyhedral_gravity(
     is callable with file/ array inputs.
     """
     points, expected_potential, expected_acceleration = reference_solution
-    sol = np.array(polyhedral_gravity.evaluate(
+    sol = polyhedral_gravity.evaluate(
         polyhedral_source=polyhedral_source,
         density=DENSITY,
         computation_points=points,
         parallel=True
-    ))
+    )
+    sol = np.array([np.array(x) for x in sol])
     actual_potential = sol[:, 0].flatten()
     assert np.testing.assert_array_almost_equal(actual_potential, expected_potential) is None
 
@@ -87,10 +88,11 @@ def test_polyhedral_gravity_evaluable(
         polyhedral_source=polyhedral_source,
         density=DENSITY,
     )
-    sol = np.array(evaluable(
+    sol = evaluable(
         computation_points=points,
         parallel=True
-    ))
+    )
+    sol = np.array([np.array(x) for x in sol])
     actual_potential = sol[:, 0].flatten()
     assert np.testing.assert_array_almost_equal(actual_potential, expected_potential) is None
 
@@ -122,10 +124,11 @@ def test_polyhedral_evaluable_pickle(
     with open(pickle_output, "rb") as f:
         read_evaluable = pickle.load(f)
 
-    sol = np.array(read_evaluable(
+    sol = read_evaluable(
         computation_points=points,
         parallel=True
-    ))
+    )
+    sol = np.array([np.array(x) for x in sol])
     actual_potential = sol[:, 0].flatten()
     assert np.testing.assert_array_almost_equal(actual_potential, expected_potential) is None
 
