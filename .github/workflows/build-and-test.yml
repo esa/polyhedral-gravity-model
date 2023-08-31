@@ -1,60 +1,63 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
-
-# Controls when the action will run. 
+name: Build & Test
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build-and-test"
+  # Build & Test on Linux
   build-and-test-linux:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
+      - uses: actions/checkout@v3
       - name: Build
         run: |
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           cmake --build .
-          
       - name: Test
         run: cd build/test && ./polyhedralGravity_test
 
-  build-windows:
-    # The type of runner that the job will run on
-    runs-on: windows-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  # Install the python interface by building from source and run pytest
+  pytest-linux:
+    runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Install Conda environment from environment.yml
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: environment.yml
+          cache-downloads: true
+          cache-env: true
+      - name: Install polyhedral-gravity
+        run: |
+          pip install . -vv
+      - name: Test with pytest
+        shell: bash -l {0}
+        run: |
+          pytest -n 3
 
-      # Enables Long Paths on Windows (newer thrust versions require this)
+  # Builds the polyhedral gravity python interface the interface
+  # No testing on Windows since it takes too long
+  # Enables the long paths feature on Windows (newer thrust versions require this)
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
         run: |
           New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
           git config --system core.longpaths true
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_POLYHEDRAL_PYTHON_INTERFACE=ON ..
           cmake --build . --config Release
 
-# No testing on Windows GitHub since it takes too long
-#      - name: Test
-#        run: cd build && ctest
       

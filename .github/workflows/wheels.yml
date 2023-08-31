@@ -7,6 +7,8 @@ on:
     # See https://docs.github.com/en/actions/reference/events-that-trigger-workflows#release
     # for more information on the release event
     prerelease: false
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   # 1.a Buidl the wheels on a matrix of Windows, MacOS, and Linux platforms using cibuildwheel

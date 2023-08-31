@@ -1,0 +1,7 @@
+name: polyhedral-gravity-env
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - pytest
+  - pytest-xdist
