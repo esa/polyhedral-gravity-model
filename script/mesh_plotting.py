@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import cm
 
 
-def plot_triangulation(vertices, faces, title, filename):
+def plot_triangulation(vertices, faces, title, filename=None):
     """Plots the triangulation of mesh
 
     Args:
@@ -34,11 +34,14 @@ def plot_triangulation(vertices, faces, title, filename):
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
     ax.set_zlim(-1, 1)
+    
+    fig.set_dpi(300)
 
-    fig.savefig(filename, dpi=300)
+    if filename is not None:
+        fig.savefig(filename, dpi=300)
 
 
-def plot_grid_2d(X, Y, z, title, filename, labels=("$x$", "$y$"), limits=(-2, 2), plot_rectangle=False, vertices=None,
+def plot_grid_2d(X, Y, z, title, filename=None, labels=("$x$", "$y$"), limits=(-2, 2), plot_rectangle=False, vertices=None,
                  coordinate=None):
     """Plots the potential in 2D for a given cross-section.
 
@@ -84,11 +87,14 @@ def plot_grid_2d(X, Y, z, title, filename, labels=("$x$", "$y$"), limits=(-2, 2)
     ax.set_ylabel(yl)
 
     # fig.colorbar(surf, aspect=5, orientation='vertical', shrink=0.5)
+    
+    fig.set_dpi(300)
 
-    fig.savefig(filename, dpi=300)
+    if filename is not None:
+        fig.savefig(filename, dpi=300)
 
 
-def plot_grid_3d(X, Y, z, title, filename, labels=("$x$", "$y$")):
+def plot_grid_3d(X, Y, z, title, filename=None, labels=("$x$", "$y$")):
     """Plots the potential in 3D
 
     Args:
@@ -118,10 +124,13 @@ def plot_grid_3d(X, Y, z, title, filename, labels=("$x$", "$y$")):
 
     # fig.colorbar(surf, aspect=5, orientation='vertical', shrink=0.5)
 
-    fig.savefig(filename, dpi=300)
+    fig.set_dpi(300)
+
+    if filename is not None:
+        fig.savefig(filename, dpi=300)
 
 
-def plot_quiver(X, Y, xy, title, filename, labels=("$x$", "$y$"), limits=(-2, 2), plot_rectangle=False, vertices=None,
+def plot_quiver(X, Y, xy, title, filename=None, labels=("$x$", "$y$"), limits=(-2, 2), plot_rectangle=False, vertices=None,
                 coordinate=None):
     """Plots a quiver plot, given the accelerations.
 
@@ -167,7 +176,10 @@ def plot_quiver(X, Y, xy, title, filename, labels=("$x$", "$y$"), limits=(-2, 2)
     ax.set_xlabel(xl)
     ax.set_ylabel(yl)
 
-    fig.savefig(filename, dpi=300)
+    fig.set_dpi(300)
+
+    if filename is not None:
+        fig.savefig(filename, dpi=300)
 
 
 # Switch to turn plotting the polygon of, if one is to lazy to refactor code
