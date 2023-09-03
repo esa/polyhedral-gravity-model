@@ -43,7 +43,7 @@ Polyhedral gravity models are ubiquitous for modelling the gravitational field o
 
 The complex gravitational fields of irregular bodies, such as asteroids and comets, are often modeled using polyhedral gravity models as they provide an analytic solution for the computation of the gravitational potential, acceleration (and second derivative) given a mesh of the body [@tsoulis2012analytical;@tsoulis2021computational]. The computation of the gravitational potential and acceleration is a computationally expensive task, especially for large meshes, which can however benefit from parallelization either over computed target points for which we seek potential and acceleration or over the mesh. Thus, a high-performance implementation of a polyhedral gravity model is desirable. 
 
-While some research code for these models exists, they are not focused on usability and are limited to FORTRAN \footnote{\url{https://software.seg.org/2012/0001/index.html}} and proprietary software like MATLAB \footnote{\url{https://github.com/Gavriilidou/GPolyhedron}}. There is a lack of well-documented, actively maintained open-source implementations, particularly in modern programming languages, and with a focus on scalability and performance.
+While some research code for these models exists, they are not focused on usability and are limited to FORTRAN\footnote{\url{https://software.seg.org/2012/0001/index.html}} and proprietary software like MATLAB\footnote{\url{https://github.com/Gavriilidou/GPolyhedron}}. There is a lack of well-documented, actively maintained open-source implementations, particularly in modern programming languages, and with a focus on scalability and performance.
 
 The presented software has already seen application in several research works. It has been used to optimize trajectories around the highly irregular comet 67P/Churyumov-Gerasimenko [@marak2023trajectory]. Further, it has been used to study the effectiveness of so-called neural density fields [@izzo2022geodesy], where it can serve as ground truth and to pre-train neural networks [@GeodesyNetsBenchmark]. **TODO_add_more_examples**
 
@@ -59,12 +59,12 @@ Extensive tests using GoogleTest are used via GitHub Actions to ensure the (cont
 
 # Installation \& Contribution
 
-The library is available on GitHub \footnote{\url{https://github.com/esa/polyhedral-gravity-model}} and can be installed with *pip* or from *conda* \footnote{\url{https://anaconda.org/conda-forge/polyhedral-gravity-model}}. Build instructions using *CMake* are provided in the repository. The library is licensed under a GPL license.
+The library is available on GitHub\footnote{\url{https://github.com/esa/polyhedral-gravity-model}} and can be installed with *pip* or from *conda*\footnote{\url{https://anaconda.org/conda-forge/polyhedral-gravity-model}}. Build instructions using *CMake* are provided in the repository. The library is licensed under a GPL license.
 
 The project is open to contributions via pull requests with instructions on how to contribute provided in the repository.
 
 # Usage Instructions
 
-We provide detailed usage instructions in the technical documentation on ReadTheDocs \footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository readme and more extensive examples as a *Jupyter* notebook \footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
+We provide detailed usage instructions in the technical documentation on ReadTheDocs\footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository readme and more extensive examples as a *Jupyter* notebook\footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
 
 # References
