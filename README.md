@@ -12,6 +12,7 @@
 ![Conda](https://img.shields.io/conda/pn/conda-forge/polyhedral-gravity-model)
 ![Conda](https://img.shields.io/conda/dn/conda-forge/polyhedral-gravity-model)
 
+## References
 
 This code is a validated implementation in C++17 of the Polyhedral Gravity Model
 by Tsoulis et al.. It was created in a collaborative project between
@@ -31,41 +32,27 @@ paper [TSOULIS, Dimitrios; GAVRIILIDOU, Georgia. A computational review of the l
 and its corresponding [implementation in MATLAB](https://github.com/Gavriilidou/GPolyhedron),
 which is strongly based on the former implementation in FORTRAN.
 
-### Results and Plots
+## Documentation & Examples
 
 Some exemplary results and plots are stored in the
 [jupyter notebook](script/polyhedral-gravity.ipynb).
 It also provides a good introduction to the application of
 the python interface.
 
-## Documentation (readthedocs)
-
 The full extensive documentation can be found
 on [readthedocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/).
 
-## Requirements
+## Installation
 
-The project uses the following dependencies,
-all of them are **automatically** set-up via CMake:
-
-- GoogleTest (1.13.0 or compatible), only required for testing
-- spdlog (1.11.0 or compatible), required for logging
-- tetgen (1.6 or compatible), required for I/O
-- yaml-cpp (0.7.0 or compatible), required for I/O
-- thrust (2.1.0 or compatible), required for parallelization and utility
-- xsimd (11.1.0 or compatible), required for vectorization of the `atan(..)`
-- pybind11 (2.10.4 or compatible), required for the Python interface, but not the C++ standalone
-
-## Python interface
-
-### conda
+### With conda
 
 The python interface can be easily installed with
 [conda](https://anaconda.org/conda-forge/polyhedral-gravity-model):
 
     conda install -c conda-forge polyhedral-gravity-model
 
-### pip
+
+### With pip
 
 As a second option, you can also install the python interface with pip.
 
@@ -78,6 +65,22 @@ In case `pip` uses the source distribution, please make sure that
 you have a C++17 capable compiler, CMake and ninja-build installed.
 
 ### From source
+
+#### Requirements
+
+The project uses the following dependencies,
+all of them are **automatically** set-up via CMake:
+
+- GoogleTest (1.13.0 or compatible), only required for testing
+- spdlog (1.11.0 or compatible), required for logging
+- tetgen (1.6 or compatible), required for I/O
+- yaml-cpp (0.7.0 or compatible), required for I/O
+- thrust (2.1.0 or compatible), required for parallelization and utility
+- xsimd (11.1.0 or compatible), required for vectorization of the `atan(..)`
+- pybind11 (2.10.4 or compatible), required for the Python interface, but not the C++ standalone
+
+
+#### The Python Interface
 
 The module will be build using a C++17 capable compiler,
 CMake and ninja-build. Just execute the following command in
@@ -98,7 +101,7 @@ the `pip install .` command, e.g.:
 for your system in your local python environment. That way, they
 won't be fetched from GitHub.)
 
-## Build C++
+#### The C++ Library & Executable
 
 The program is build by using CMake. So first make sure that you installed
 CMake and then follow these steps:
