@@ -205,9 +205,15 @@ The calculation outputs the following parameters for every Computation Point _P_
 |          Vx, Vy, Vz          |      m/s^2      | The gravitational accerleration in the three cartesian directions |
 | Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |      1/s^2      |   The spatial rate of change of the gravitational accleration    |
 
-## Testing C++
+## Testing
 
 The project uses GoogleTest for testing. In oder to execute those
 tests just execute the following command in the build directory:
 
     ctest
+
+For the Python test suite, please execute the following command in the repository root folder:
+
+    pytest
+
+  
