@@ -4,7 +4,7 @@ namespace polyhedralGravity::MeshChecking {
 
     bool checkNormalsOutwardPointing(const Polyhedron &polyhedron) {
         using namespace util;
-        auto it = GravityModel::transformPolyhedron(polyhedron);
+        auto it = transformPolyhedron(polyhedron);
         // All normals have to point outwards (intersect the polyhedron even times)
         return thrust::transform_reduce(
                 thrust::device,
@@ -27,7 +27,7 @@ namespace polyhedralGravity::MeshChecking {
     }
 
     bool checkTrianglesNotDegenerated(const Polyhedron &polyhedron) {
-        auto it = GravityModel::transformPolyhedron(polyhedron);
+        auto it = transformPolyhedron(polyhedron);
         // All triangles surface area needs to be greater than zero
         return thrust::transform_reduce(
                 thrust::device,
@@ -38,7 +38,7 @@ namespace polyhedralGravity::MeshChecking {
 
     size_t
     detail::countRayPolyhedronIntersections(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
-        auto it = GravityModel::transformPolyhedron(polyhedron);
+        auto it = transformPolyhedron(polyhedron);
         std::set<Array3> intersections{};
         // Count every triangular face which is intersected by the ray
         std::for_each(it.first, it.second, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &triangle) {

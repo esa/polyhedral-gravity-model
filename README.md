@@ -2,6 +2,16 @@
 
 ![Build and Test](https://github.com/schuhmaj/polyhedral-gravity-model-cpp/actions/workflows/ctest.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/polyhedral-gravity-model-cpp/badge/?version=latest)](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/?badge=latest)
+![GitHub](https://img.shields.io/github/license/esa/polyhedral-gravity-model)
+
+![PyPI](https://img.shields.io/pypi/v/polyhedral-gravity)
+![Static Badge](https://img.shields.io/badge/platform-linux--64_%7C_win--64_%7C_osx--64_%7C_linux--arm64_%7C_osx--arm64-lightgrey)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/polyhedral-gravity)
+
+![Conda](https://img.shields.io/conda/v/conda-forge/polyhedral-gravity-model)
+![Conda](https://img.shields.io/conda/pn/conda-forge/polyhedral-gravity-model)
+![Conda](https://img.shields.io/conda/dn/conda-forge/polyhedral-gravity-model)
+
 
 This code is a validated implementation in C++17 of the Polyhedral Gravity Model
 by Tsoulis et al.. It was created in a collaborative project between
@@ -38,13 +48,13 @@ on [readthedocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/)
 The project uses the following dependencies,
 all of them are **automatically** set-up via CMake:
 
-- GoogleTest 1.11.0 (only required for testing)
-- spdlog 1.11.0 (required for logging)
-- tetgen 1.6 (required for I/O)
-- yaml-cpp 0.7.0 (required for I/O)
-- thrust 1.16.0 (required for parallelization and utility)
-- xsimd 8.1.0 (required for vectorization of the `atan(..)`)
-- pybind11 2.10.3 (required for the Python interface, but not the C++ standalone)
+- GoogleTest (1.13.0 or compatible), only required for testing
+- spdlog (1.11.0 or compatible), required for logging
+- tetgen (1.6 or compatible), required for I/O
+- yaml-cpp (0.7.0 or compatible), required for I/O
+- thrust (2.1.0 or compatible), required for parallelization and utility
+- xsimd (11.1.0 or compatible), required for vectorization of the `atan(..)`
+- pybind11 (2.10.4 or compatible), required for the Python interface, but not the C++ standalone
 
 ## Python interface
 
@@ -55,21 +65,35 @@ The python interface can be easily installed with
 
     conda install -c conda-forge polyhedral-gravity-model
 
-This is currently only supported for `x86-64` systems since
-one of the dependencies is not available on conda for `aarch64`.
-However, building from source with `pip` can also be done
-on `aarch64` as shown below.
-
 ### pip
 
-Use pip to install the python interface in your local python runtime.
-The module will be build using CMake and the using the above
-requirements. Just execute in repository root:
+As a second option, you can also install the python interface with pip.
+
+    pip install polyhedral-gravity
+
+Binaries for the most common platforms are available on PyPI including
+Windows, Linux and macOS. For macOS and Linux, binaries for
+`x86_64` and `aarch64` are provided.
+In case `pip` uses the source distribution, please make sure that
+you have a C++17 capable compiler, CMake and ninja-build installed.
+
+### From source
+
+The module will be build using a C++17 capable compiler,
+CMake and ninja-build. Just execute the following command in
+the repository root folder:
 
     pip install .
 
 To modify the build options (like parallelization) have a look
-at the `setupy.py` and the [next paragraph](#build-c).
+at the `setupy.py` and the [next paragraph](#build-c). The options
+are modified by setting the environment variables before executing
+the `pip install .` command, e.g.:
+
+    export POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
+    pip install .
+
+
 (Optional: For a faster build you can install all dependencies available
 for your system in your local python environment. That way, they
 won't be fetched from GitHub.)

@@ -46,6 +46,11 @@ option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (D
 message(STATUS "BUILD_POLYHEDRAL_GRAVITY_TESTS = ${BUILD_POLYHEDRAL_GRAVITY_TESTS}")
 
 
+IF(_LIBCPP_DISABLE_AVAILABILITY)
+    message(STATUS "Disabling availability macros for libc++")
+    add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
+endif ()
+
 #######################################################
 # Including dependencies needed across multiple targets
 #######################################################
@@ -74,62 +79,10 @@ endif ()
 thrust_create_target(Thrust HOST CPP DEVICE ${POLYHEDRAL_GRAVITY_PARALLELIZATION})
 message(STATUS "Set Parallelization: HOST CPP DEVICE ${POLYHEDRAL_GRAVITY_PARALLELIZATION}")
 
-################################
-# Building the Polyhedral Libray
-################################
-if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
-    # YAML is only required for the library target, but not for e.g. the Python interface
-    include(yaml)
-
-    # Including the actual Polyhedral source files
-    file(GLOB_RECURSE SRC
-        "${PROJECT_SOURCE_DIR}/src/polyhedralGravity/*.h"
-        "${PROJECT_SOURCE_DIR}/src/polyhedralGravity/*.cpp")
-
-    add_library(${PROJECT_NAME}_lib OBJECT ${SRC})
-
-    # Adds the include Path PROJECT_SOURCE_DIR/src to the target polyhedralGravity
-    target_include_directories(${PROJECT_NAME}_lib PUBLIC
-            "${PROJECT_SOURCE_DIR}/src"
-            )
-
-    # Link libaries
-    target_link_libraries(${PROJECT_NAME}_lib
-            spdlog::spdlog
-            tetgen
-            yaml-cpp
-            xsimd
-            )
-
-    # Adds the include Path PROJECT_SOURCE_DIR/src to the target polyhedralGravity
-    target_include_directories(${PROJECT_NAME}_lib PUBLIC
-            "${PROJECT_SOURCE_DIR}/src"
-            )
-
-    # Link libraries needed in all targets
-    target_link_libraries(${PROJECT_NAME}_lib
-            spdlog::spdlog
-            yaml-cpp
-            tetgen
-            xsimd
-            Thrust
-            )
-
-endif()
-
-#####################################
-# Building the Polyhedral Executable
-#####################################
-if (BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE)
-    # Main file, containing the gravity model's driver
-    set(mainFile ${PROJECT_SOURCE_DIR}/src/main.cpp)
-
-    # Building the standalone Executable
-    add_executable(${PROJECT_NAME} ${mainFile})
-
-    # Link executable with library
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_lib)
-endif()
+############################################################
+# Polyhedral Gravity Library & Executable & Python Interface
+############################################################
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)
 
 ##############################
 # Building the Polyhedral Docs
@@ -149,11 +102,3 @@ if (BUILD_POLYHEDRAL_GRAVITY_TESTS)
     # Subdirectory where the tests are located
     add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 endif ()
-
-##########################################
-# Building the Polyhedral Python Interface
-##########################################
-if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
-    message(STATUS "Building the Polyhedral Gravity Python Interface")
-    add_subdirectory(${PROJECT_SOURCE_DIR}/python-binding)
-endif()

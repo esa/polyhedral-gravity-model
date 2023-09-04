@@ -2,6 +2,7 @@
 
 #include <array>
 #include <numeric>
+#include <utility>
 #include <algorithm>
 #include <functional>
 #include <cmath>
@@ -14,8 +15,7 @@ namespace polyhedralGravity::util {
      * Alias for two-dimensional array with size M and N.
      * M is the major size.
      */
-    template<typename T, size_t M, size_t N>
-    using Matrix = std::array<std::array<T, N>, M>;
+    template<typename T, size_t M, size_t N> using Matrix = std::array<std::array<T, N>, M>;
 
     /**
      * Applies a binary function to elements of two containers piece by piece. The objects must
@@ -198,9 +198,9 @@ namespace polyhedralGravity::util {
      */
     template<typename T>
     T det(const Matrix<T, 3, 3> &matrix) {
-        return matrix[0][0] * matrix[1][1] * matrix[2][2] + matrix[0][1] * matrix[1][2] * matrix[2][0]
-               + matrix[0][2] * matrix[1][0] * matrix[2][1] - matrix[0][2] * matrix[1][1] * matrix[2][0]
-               - matrix[0][0] * matrix[1][2] * matrix[2][1] - matrix[0][1] * matrix[1][0] * matrix[2][2];
+        return matrix[0][0] * matrix[1][1] * matrix[2][2] + matrix[0][1] * matrix[1][2] * matrix[2][0] +
+               matrix[0][2] * matrix[1][0] * matrix[2][1] - matrix[0][2] * matrix[1][1] * matrix[2][0] -
+               matrix[0][0] * matrix[1][2] * matrix[2][1] - matrix[0][1] * matrix[1][0] * matrix[2][2];
     }
 
     /**
@@ -325,6 +325,35 @@ namespace polyhedralGravity::util {
         std::frexp(first, &x);
         std::frexp(second, &y);
         return std::abs(x - y) > maxExponentDifference;
+    }
+
+    namespace detail {
+
+        /**
+         * Helper method for the tuple operator+, which expands the tuple into a parameter pack.
+         * @tparam Ts - types of the tuple
+         * @tparam Is - indices of the tuple
+         * @param t1 - first tuple
+         * @param t2 - second tuple
+         * @return a new tuple with the added values
+         */
+        template<typename... Ts, size_t... Is>
+        auto tuple_add(const std::tuple<Ts...> &t1, const std::tuple<Ts...> &t2, std::index_sequence<Is...>) {
+            return std::make_tuple(std::get<Is>(t1) + std::get<Is>(t2)...);
+        }
+
+    }
+
+    /**
+     * Adds the contents of two tuples of the same size and types with the operator +.
+     * @tparam Ts - types of the tuples
+     * @param t1 - first tuple
+     * @param t2 - second tuple
+     * @return a new tuple with the added values
+     */
+    template<typename... Ts>
+    auto operator+(const std::tuple<Ts...> &t1, const std::tuple<Ts...> &t2) {
+        return detail::tuple_add(t1, t2, std::index_sequence_for<Ts...>{});
     }
 
     /**

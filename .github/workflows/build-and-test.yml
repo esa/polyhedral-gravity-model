@@ -1,0 +1,65 @@
+name: Build & Test
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # Build & Test on Linux
+  build-and-test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build .
+      - name: Test
+        run: cd build/test && ./polyhedralGravity_test
+
+  # Install the python interface by building from source and run pytest
+  pytest-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Ninja Build
+        run: |
+          sudo apt-get install ninja-build -y
+      - name: Install Conda environment from environment.yml
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: environment.yml
+          cache-downloads: true
+          cache-env: true
+      - name: Install & Test polyhedral-gravity
+        shell: bash -l {0}
+        run: |
+          pip install . -vv --no-build-isolation
+          pytest -n 3
+          
+
+  # Builds the polyhedral gravity python interface the interface
+  # No testing on Windows since it takes too long
+  # Enables the long paths feature on Windows (newer thrust versions require this)
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Build
+        run: |
+          New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+          git config --system core.longpaths true
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_POLYHEDRAL_PYTHON_INTERFACE=ON ..
+          cmake --build . --config Release
+
+      

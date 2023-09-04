@@ -53,38 +53,44 @@ The following paragraph gives some examples on how to
 use the polyhedral model as library from within source code
 (All examples with :code:`using namespace polyhedralGravity`).
 
+Individual Function (without caching)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 **Example 1:** Evaluating the gravity model for a given polyhedron
 defined from within source code for a specific point and density.
+Further, we disable the parallelization using the optional fourth parameter (which defaults to true).
 
 .. code-block:: cpp
 
         // Defining every input parameter in the source code
         std::vector<std::array<double, 3>> vertices = ...
         std::vector<std::array<size_t, 3>> faces = ...
+        Polyhedron polyhedron{vertices, faces};
         double density = ...
         std::array<double, 3> point = ...
 
-        // Main method, notice that the last argument can also be a
-        // vector of points
-        GravityResult result = GravityModel::evaluate({vertices, faces}, density, point);
+        // Returns either a single of vector of results
+        // Here, we only have one point. Thus we get a single result
+        const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, density, point, false);
 
 
 **Example 2:** Evaluating the gravity model for a given polyhedron
 in some source files for a specific point and density.
+Further, we explicitly enable the parallelization using the optional fourth parameter
+(which defaults to true).
 
 .. code-block:: cpp
 
         // Reading just the polyhedral source from file,
         // whereas the rest is defined within source-code
-        TetgenAdapter input{{"tsoulis.node", "tsoulis.face"}};
-        Polyhedron poly = input.getPolyhedron();
+        auto files = std::vector<std::string>{"tsoulis.node", "tsoulis.face"};
         double density = ...
         std::array<double, 3> point = ...
 
-        // Main method, notice that the last argument can also be a
-        // vector of points
-        GravityResult result = GravityModel::evaluate(poly, density, point);
+        // Returns either a single of vector of results
+        // Here, we only have one point. Thus we get a single result
+        const auto[pot, acc, tensor] = GravityModel::evaluate(files, density, point, true);
 
 
 **Example 3:** Evaluating the gravity model for a given configuration
@@ -96,11 +102,12 @@ from a .yaml file.
         std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>("config.yaml");
         Polyhedron poly = config->getDataSource()->getPolyhedron();
         double density = config->getDensity();
-        std::array<double, 3> point = config->getPointsOfInterest()[0];
+        // This time, we use multiple points
+        std::vector<std::array<double, 3>> points = config->getPointsOfInterest();
 
-        // Main method, notice that the last argument can also be a
-        // vector of points
-        GravityResult result = GravityModel::evaluate(poly, density, point);
+        // Returns either a single of vector of results
+        // Here, we have multiple point. Thus we get a vector of results!
+        const results = GravityModel::evaluate(poly, density, points);
 
 **Example 4:** A guard statement checks that the plane unit
 normals are pointing outwards and no triangle is degenerated.
@@ -120,3 +127,30 @@ about the vertices' ordering due to its quadratic complexity!
             GravityResult result = GravityModel::evaluate(poly, density, point);
         }
 
+
+
+Evaluation with caching
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Evaluating the gravity model for a given polyhedron
+defined from within source code for a specific point and density.
+
+.. code-block:: cpp
+
+        // Defining every input parameter in the source code
+        std::vector<std::array<double, 3>> vertices = ...
+        std::vector<std::array<size_t, 3>> faces = ...
+        Polyhedron polyhedron{vertices, faces};
+        double density = ...
+        std::array<double, 3> point = ...
+        std::vector<std::array<double, 3>> points = ...
+
+        // Instantiation of the GravityEvaluable object
+        GravityEvaluable evaluable{polyhedron, density};
+
+        // From now, we can evaluate the gravity model for any point with
+        const auto[pot, acc, tensor] = evaluable(point);
+        // or for multiple points with
+        const auto results = evaluable(points);
+        // and we can also disable e.g. the parallelization like for the free function
+        const auto singleResultTuple = evaluable(point, false);
