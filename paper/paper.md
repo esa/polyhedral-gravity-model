@@ -37,7 +37,7 @@ bibliography: paper.bib
 
 # Summary
 
-Polyhedral gravity models are ubiquitous for modelling the gravitational field of irregular bodies, such as asteroids and comets. We present an open-source C++ library for the efficient, parallelized computation of a polyhedral gravity model. We also provide a Python interface to the library using *pybind11*. The library is particularly focused on delivering high performance and scalability, which we achieve through vectorization and parallelization with *xsimd* and *thrust*, respectively. The library supports many common formats, such as *.stl*, *.off*, *.ply*, *.mesh* and *tetgen*'s *.node* and *.face*.
+Polyhedral gravity models are essential for modeling the gravitational field of irregular bodies, such as asteroids and comets. We present an open-source C++ library for the efficient, parallelized computation of a polyhedral gravity model following the line integral approach by Tsoulis [@tsoulis2012analytical]. A slim, easy-to-use Python interface using *pybind11* accompanies the library. The library is particularly focused on delivering high performance and scalability, which we achieve through vectorization and parallelization with *xsimd* and *thrust*, respectively. The library supports many common formats, such as *.stl*, *.off*, *.ply*, *.mesh* and *tetgen*'s *.node* and *.face* [@hang2015tetgen].
 
 # Statement of Need
 
@@ -47,24 +47,24 @@ While some research code for these models exists, they are not focused on usabil
 
 The presented software has already seen application in several research works. It has been used to optimize trajectories around the highly irregular comet 67P/Churyumov-Gerasimenko [@marak2023trajectory]. Further, it has been used to study the effectiveness of so-called neural density fields [@izzo2022geodesy], where it can serve as ground truth and to pre-train neural networks [@GeodesyNetsBenchmark]. **TODO_add_more_examples**
 
-Thus, overall this model is highly versatile and can be used in a wide range of applications. We hope it will enable further research in the field, especially related to recent machine learning techniques, which typically rely on Python implementations.
+Thus, overall, this model is highly versatile due to its easy-to-use API and can be used in a wide range of applications. We hope it will enable further research in the field, especially related to recent machine-learning techniques, which typically rely on Python implementations.
 
 # Polyhedral Model
 
-On a mathematical level, the implemented model follows the approach by Petrović [@petrovic1996determination] as refined by Tsoulis and Petrović [@tsoulis2001singularities]. A comprehensive description of the mathematical foundations of the model is given in the associated student report [@jonas_report]. 
+On a mathematical level, the implemented model follows the approach by Petrović [@petrovic1996determination] as refined by Tsoulis and Petrović [@tsoulis2001singularities]. A comprehensive description of the mathematical foundations of the model is given in the associated student report [@schuhmacher2022efficient]. 
 
-Implementation-wise, it makes use of the inherent parallelization opportunity of the approach as it iterates over the mesh. This parallelization is achieved via *thrust*, which allows utilizing *OpenMP* and *Intel TBB*. On a finer scale, individual, costly operations were investigated and, e.g., the \texttt{arctan} operations were vectorized using *xsimd*. On an application side, the user may use the implemented caching mechanism to avoid the recomputation of mesh properties, such as the face normals.
+Implementation-wise, it makes use of the inherent parallelization opportunity of the approach as it iterates over the mesh. This parallelization is achieved via *thrust*, which allows utilizing *OpenMP* and *Intel TBB*. On a finer scale, individual, costly operations have been investigated, and, e.g., the \texttt{arctan} operations have been vectorized using *xsimd*. On the application side, the user can choose between the functional interface for evaluating the full gravity tensor or the object-oriented \texttt{GravityEvaluable}, providing the same functionality while implementing a caching mechanism to avoid recomputing mesh properties that can be shared between multipoint evaluation, such as the face normals.
 
-Extensive tests using GoogleTest are used via GitHub Actions to ensure the (continued) correctness of the implementation.
+Extensive tests using GoogleTest for the C++ side and pytest for the Python interface are employed via GitHub Actions to ensure the (continued) correctness of the implementation.
 
 # Installation \& Contribution
 
-The library is available on GitHub\footnote{\url{https://github.com/esa/polyhedral-gravity-model}} and can be installed with *pip* or from *conda*\footnote{\url{https://anaconda.org/conda-forge/polyhedral-gravity-model}}. Build instructions using *CMake* are provided in the repository. The library is licensed under a GPL license.
+The library is available on GitHub\footnote{\url{https://github.com/esa/polyhedral-gravity-model}} and can be installed with *pip* (PyPi)\footnote{\url{https://pypi.org/project/polyhedral-gravity/}} or from *conda*\footnote{\url{https://anaconda.org/conda-forge/polyhedral-gravity-model}}. Build instructions using *CMake* are provided in the repository. The library is licensed under a GPL license.
 
-The project is open to contributions via pull requests with instructions on how to contribute provided in the repository.
+The project is open to contributions via pull requests, with instructions on how to contribute provided in the repository.
 
 # Usage Instructions
 
-We provide detailed usage instructions in the technical documentation on ReadTheDocs\footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository readme and more extensive examples as a *Jupyter* notebook\footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
+We provide detailed usage instructions in the technical documentation on ReadTheDocs\footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository readme, and more extensive examples, including a walkthrough over the available options as a *Jupyter* notebook\footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
 
 # References
