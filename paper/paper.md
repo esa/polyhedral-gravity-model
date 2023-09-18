@@ -38,21 +38,26 @@ bibliography: paper.bib
 # Summary
 
 Polyhedral gravity models are essential for modeling the gravitational field of irregular bodies, such as asteroids and comets.
-We present an open-source C++ library for the efficient, parallelized computation of a polyhedral gravity model following the line integral approach by Tsoulis [@tsoulis2012analytical]. A slim, easy-to-use Python interface using *pybind11* accompanies the library. The library is particularly focused on delivering high performance and scalability, which we achieve through vectorization and parallelization with *xsimd* and *thrust*, respectively. The library supports many common formats, such as *.stl*, *.off*, *.ply*, *.mesh* and *tetgen*'s *.node* and *.face* [@hang2015tetgen] and is straightforward in its application.
+We present an open-source C++ library for the efficient, parallelized computation of a polyhedral gravity model following the line integral approach by Tsoulis [@tsoulis2012analytical]. A slim, easy-to-use Python interface using *pybind11* accompanies the library. The library is particularly focused on delivering high performance and scalability, which we achieve through vectorization and parallelization with *xsimd* and *thrust*, respectively. For example, the average evaluation of 1 out of 1000 randomly sampled points took 253 microseconds on a M1 Pro chip for the mesh of Eros consisting of 24235 vertices and 14744 faces (see \autoref{fig:mesh}).
+The library supports many common formats, such as *.stl*, *.off*, *.ply*, *.mesh* and *tetgen*'s *.node* and *.face* [@hang2015tetgen]. These properties make the application of this implementation straightforward to (re-)use in an arbitrary context.
+
+![Downscaled mesh of (433) Eros to 10% of its vertices and faces.\label{fig:mesh}](figures/eros.png){ width=50% }
 
 # Statement of Need
 
-The complex gravitational fields of irregular bodies, such as asteroids and comets, are often modeled using polyhedral gravity models as alternative approaches like mascon models or spherical harmonics struggle with these bodies' irregular geometry. The former struggles with convergence close to the surface [@vsprlak2021use], whereas the latter requires a computationally expensive amount of mascons (point masses) to model fine-granular surface geometry [@wittick2017mascon].
+The complex gravitational fields of irregular bodies, such as asteroids and comets, are often modeled using polyhedral gravity models since alternative approaches like mascon models or spherical harmonics struggle with these bodies' irregular geometry. The former struggles with convergence close to the surface [@vsprlak2021use], whereas the latter requires a computationally expensive amount of mascons (point masses of which the target body is composed) to model fine-granular surface geometry [@wittick2017mascon].
 
 In contrast, polyhedral gravity models provide an analytic solution for the computation of the gravitational potential, acceleration (and second derivative) given a mesh of the body [@tsoulis2012analytical;@tsoulis2021computational] with the only assumption of homogeneous density.
-The computation of the gravitational potential and acceleration is a computationally expensive task, especially for large meshes, which can however benefit from parallelization either over computed target points for which we seek potential and acceleration or over the mesh. Thus, a high-performance implementation of a polyhedral gravity model is desirable. 
+The computation of the gravitational potential and acceleration is a computationally expensive task, especially for large meshes, which can however benefit from parallelization either over computed target points for which we seek potential and acceleration or over the mesh. Thus, a high-performance implementation of a polyhedral gravity model is desirable.
 
 While some research code for these models exists, they are not focused on usability and are limited to FORTRAN\footnote{\url{https://software.seg.org/2012/0001/index.html}} and proprietary software like MATLAB\footnote{\url{https://github.com/Gavriilidou/GPolyhedron}}. There is a lack of well-documented, actively maintained open-source implementations, particularly in modern programming languages, and with a focus on scalability and performance.
 
-The presented software has already seen application in several research works. It has been used to optimize trajectories around the highly irregular comet 67P/Churyumov-Gerasimenko with the goal of maximizing the gravity signal using a genetic optimization algorithm of pygmo [@marak2023trajectory]. In the context of that work, the presented solution was extended to enable caching and even serialization to persistent memory.
+The presented software has already seen application in several research works. It has been used to optimize trajectories around the highly irregular comet 67P/Churyumov-Gerasimenko with the goal of maximizing the gravity signal using a genetic optimization algorithm of pygmo [@marak2023trajectory]. In the context of that work, the presented solution was extended to enable caching and even serialization to persistent memory on the C++ side. A change that enables researchers to, e.g., efficiently propagate an orbit since the computation points can be given individually and do not need to be all known from the beginning.
+
 Further, it has been used to study the effectiveness of so-called neural density fields [@izzo2022geodesy], where it served as ground truth to (pre-)train neural networks representing the density distribution of an arbitrarily shaped body [@schuhmacher2023investigation].
 
-Thus, this model is highly versatile overall due to its easy-to-use API and can be used in a wide range of applications. We hope it will enable further research in the field, especially related to recent machine-learning techniques, which typically rely on Python implementations.
+Thus, this model is highly versatile overall due to its easy-to-use API and can be used in a wide range of applications. Especially due to the availability on major platforms like Windows, macOS, and Linux for ARM64 and x86_64.
+We hope it will enable further research in the field, especially related to recent machine-learning techniques, which typically rely on Python implementations.
 
 # Polyhedral Model
 
@@ -60,7 +65,11 @@ On a mathematical level, the implemented model follows the line integral approac
 
 Implementation-wise, it makes use of the inherent parallelization opportunity of the approach as it iterates over the mesh elements. This parallelization is achieved via *thrust*, which allows utilizing *OpenMP* and *Intel TBB*. On a finer scale, individual, costly operations have been investigated, and, e.g., the \texttt{arctan} operations have been vectorized using *xsimd*. On the application side, the user can choose between the functional interface for evaluating the full gravity tensor or the object-oriented \texttt{GravityEvaluable}, providing the same functionality while implementing a caching mechanism to avoid recomputing mesh properties that can be shared between multipoint evaluation, such as the face normals.
 
+![UML Component Diagram of the implementation. External dependencies in blue. Internal component decomposition in grey.\label{fig:implementation}](figures/PolyhedralGravityModel.png)
+
 Extensive tests using GoogleTest for the C++ side and pytest for the Python interface are employed via GitHub Actions to ensure the (continued) correctness of the implementation.
+
+\autoref{fig:implementation} summarizes the modular implementation and its dependencies in a UML component diagram.
 
 # Installation \& Contribution
 
