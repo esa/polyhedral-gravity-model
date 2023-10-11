@@ -42,6 +42,12 @@ the python interface.
 The full extensive documentation can be found
 on [readthedocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/).
 
+## Contributing
+
+We are happy to accept contributions to the project in the form of
+suggestions, bug reports and pull requests. Please have a look at
+the [contributing guidelines](CONTRIBUTING.md) for more information.
+
 ## Installation
 
 ### With conda
