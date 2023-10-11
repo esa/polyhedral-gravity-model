@@ -3,17 +3,19 @@ name: JOSS paper compiler
 on:
   push:
     paths:
-      - 'paper/paper.md'
-      - 'paper/paper.bib'
+      - "paper/paper.md"
+      - "paper/paper.bib"
   workflow_dispatch:
-  
+
 jobs:
   paper:
     runs-on: ubuntu-latest
     name: Paper Draft
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          lfs: true
       - name: Build draft PDF
         uses: openjournals/openjournals-draft-action@master
         with:
