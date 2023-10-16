@@ -163,7 +163,7 @@ conda install -c conda-forge polyhedral-gravity-model
 
 ### With pip
 
-As a second option, you can also install the python interface with pip.
+As a second option, you can also install the python interface with pip from [PyPi](https://pypi.org/project/polyhedral-gravity/).
 
 ```bash
 pip install polyhedral-gravity
