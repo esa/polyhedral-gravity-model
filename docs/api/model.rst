@@ -24,5 +24,3 @@ Named Tuple
 .. doxygenstruct:: polyhedralGravity::TranscendentalExpression
 
 .. doxygenstruct:: polyhedralGravity::HessianPlane
-
-.. doxygenstruct:: polyhedralGravity::GravityModelResult
