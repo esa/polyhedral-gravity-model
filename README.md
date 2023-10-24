@@ -12,6 +12,14 @@
 ![Conda](https://img.shields.io/conda/pn/conda-forge/polyhedral-gravity-model)
 ![Conda](https://img.shields.io/conda/dn/conda-forge/polyhedral-gravity-model)
 
+<p align="center">
+  <img src="paper/figures/eros_010.png" width="50%">
+  <br>
+  <em>
+    <a href="https://github.com/gomezzz/geodesyNets/blob/master/3dmeshes/eros_lp.pk">Mesh of (433) Eros</a> with 739 vertices and 1474 faces
+  </em>
+</p>
+
 ## Table of Contents
 
 - [References](#references)
@@ -314,7 +322,7 @@ gravityModel:
 
 #### Output
 
-The calculation outputs the following parameters for every Computation Point _P_:
+The calculation outputs the following parameters for every Computation Point *P*:
 
 |             Name             |      Unit       |                              Comment                              |
 |:----------------------------:|:---------------:|:-----------------------------------------------------------------:|
