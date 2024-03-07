@@ -111,7 +111,7 @@ evaluations. This is especially useful if you want to compute the gravity
 for multiple computation points, but don't know the "future points" in advance.
 
 ```python
-evaluable = model.GravityEvaluable(
+evaluable = polyhedral_gravity.GravityEvaluable(
     polyhedral_source=(cube_vertices, cube_faces),
     density=cube_density
 )
