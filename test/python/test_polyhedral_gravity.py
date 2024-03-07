@@ -65,12 +65,10 @@ def test_polyhedral_gravity(
         computation_points=points,
         parallel=True
     )
-    sol = np.array([np.array(x) for x in sol])
-    actual_potential = sol[:, 0].flatten()
-    assert np.testing.assert_array_almost_equal(actual_potential, expected_potential) is None
-
-    actual_acceleration = np.array([np.array(x) for x in sol[:, 1]])
-    assert np.testing.assert_array_almost_equal(actual_acceleration, expected_acceleration) is None
+    potential = np.array([result[0] for result in sol])
+    acceleration = np.array([result[1] for result in sol])
+    np.testing.assert_array_almost_equal(potential, expected_potential)
+    np.testing.assert_array_almost_equal(acceleration, expected_acceleration)
 
 
 @pytest.mark.parametrize(
@@ -92,12 +90,10 @@ def test_polyhedral_gravity_evaluable(
         computation_points=points,
         parallel=True
     )
-    sol = np.array([np.array(x) for x in sol])
-    actual_potential = sol[:, 0].flatten()
-    assert np.testing.assert_array_almost_equal(actual_potential, expected_potential) is None
-
-    actual_acceleration = np.array([np.array(x) for x in sol[:, 1]])
-    assert np.testing.assert_array_almost_equal(actual_acceleration, expected_acceleration) is None
+    potential = np.array([result[0] for result in sol])
+    acceleration = np.array([result[1] for result in sol])
+    np.testing.assert_array_almost_equal(potential, expected_potential)
+    np.testing.assert_array_almost_equal(acceleration, expected_acceleration)
 
 
 @pytest.mark.parametrize(
@@ -128,9 +124,7 @@ def test_polyhedral_evaluable_pickle(
         computation_points=points,
         parallel=True
     )
-    sol = np.array([np.array(x) for x in sol])
-    actual_potential = sol[:, 0].flatten()
-    assert np.testing.assert_array_almost_equal(actual_potential, expected_potential) is None
-
-    actual_acceleration = np.array([np.array(x) for x in sol[:, 1]])
-    assert np.testing.assert_array_almost_equal(actual_acceleration, expected_acceleration) is None
+    potential = np.array([result[0] for result in sol])
+    acceleration = np.array([result[1] for result in sol])
+    np.testing.assert_array_almost_equal(potential, expected_potential)
+    np.testing.assert_array_almost_equal(acceleration, expected_acceleration)
