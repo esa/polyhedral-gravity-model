@@ -20,8 +20,8 @@ The method calls follow the same pattern as the C++ interface. Thus it is always
     # Define if the computation is parallel or not (the default is parallel, which corresponds to True)
     results = model.evaluate(
         polyhedral_source=polyhedral_source,
-        density=density
-        computation_points=computation_points
+        density=density,
+        computation_points=computation_points,
         parallel=True
     )
 
@@ -83,7 +83,7 @@ Of course, you can also use keyword arguments for the parameters.
         results = model.evaluate(
             polyhedral_source=[file_vertices, file_nodes],
             density=density,
-            computation_points=computation_points
+            computation_points=computation_points,
             parallel=True
         )
 
