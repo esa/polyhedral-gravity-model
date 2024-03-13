@@ -100,7 +100,7 @@ The simplest way to compute the gravity is to use the `evaluate` function:
 potential, acceleration, tensor = polyhedral_gravity.evaluate(
     polyhedral_source=(cube_vertices, cube_faces),
     density=cube_density,
-    computation_points=computation_point
+    computation_points=computation_point,
     parallel=True
 )
 ```
