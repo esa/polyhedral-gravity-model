@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import shutil
 import sys
 
 from setuptools import Extension, setup
@@ -10,8 +11,6 @@ from setuptools.command.build_ext import build_ext
 # Modify these variables to customize the build of the polyhedral gravity interface
 # All variables can be overwritten by setting equally named env variables
 # ---------------------------------------------------------------------------------
-# The generator used for CMake
-CMAKE_GENERATOR = "Ninja"
 # The other CMake options
 CMAKE_OPTIONS = {
     # The Build Type (Should be release!)
@@ -36,6 +35,24 @@ CMAKE_OPTIONS = {
     "BUILD_SHARED_LIBS": "OFF"
 }
 # ---------------------------------------------------------------------------------
+
+
+def is_ninja_installed():
+    """Returns true if ninja build tool is installed. False otherwise."""
+    return shutil.which("ninja") is not None
+
+
+def get_cmake_generator():
+    """Returns the CMake generator if specified as environment variable.
+    If not, returns "Ninja" if ninja build is installed.
+    Otherwise, none is returned.
+    """
+    if (os_env_generator := os.environ.get("CMAKE_GENERATOR")) is not None:
+        return os_env_generator
+    elif is_ninja_installed():
+        return "Ninja"
+    else:
+        return None
 
 # -----------------------------------------------------------------------------------------
 # The following is adapted from https://github.com/pybind/cmake_example/blob/master/setup.py
@@ -95,15 +112,15 @@ class CMakeBuild(build_ext):
 
         # Sets the CMake Generator if specified (this is separate from the other variables since it is given to
         # CMake vie the -G prefix
-        final_generator = os.environ.get("CMAKE_GENERATOR", CMAKE_GENERATOR)
+        cmake_generator = get_cmake_generator()
         cmake_args += [
-            f"-G{final_generator}"
+            f"-G{cmake_generator}"
         ]
 
         # MSVC special cases
         if self.compiler.compiler_type == "msvc":
             # Single config generators are handled "normally"
-            single_config = any(x in CMAKE_GENERATOR for x in {"NMake", "Ninja"})
+            single_config = any(x in cmake_generator for x in {"NMake", "Ninja"})
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
