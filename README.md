@@ -91,7 +91,7 @@ cube_faces = np.array(
     [1, 2, 6], [1, 6, 5], [2, 3, 6], [3, 7, 6], [4, 5, 6], [4, 6, 7]]
 )
 cube_density = 1.0
-computation_point = np.array([[0, 0, 0]])
+computation_point = np.array([0, 0, 0])
 ```
 
 The simplest way to compute the gravity is to use the `evaluate` function:
@@ -121,6 +121,9 @@ potential, acceleration, tensor = evaluable(computation_point, parallel=True)
 In case you want to hand over the polyhedron via a supported file format,
 just replace the `polyhedral_source` argument with *a list of strings*,
 where each string is the path to a supported file format.
+Note that the `computation_point` could also be (N, 3)-shaped array.
+In this case, the return value of `evaluate(..)` or an `GravityEvaluable` will
+be a list of triplets comprising potential, acceleration, and tensor.
 
 ### Minimal C++ Example
 
