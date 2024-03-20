@@ -12,6 +12,12 @@ get into the use of the polyhedral gravity model.
 And for more details, refer to the **Python API** or **C++ API**.
 
 .. toctree::
+   :caption: STATEMENT OF NEED
+   :maxdepth: 2
+
+   rational
+
+.. toctree::
    :caption: QUICK START
    :maxdepth: 2
 
