@@ -17,5 +17,9 @@ jobs:
       pages: write
       id-token: write
     steps:
+      - id: dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen
       - id: deployment
         uses: sphinx-notes/pages@v3
