@@ -102,6 +102,9 @@ like it is required by the polyhedral-gravity model.
     :return: True if no triangle is degenerate and the polyhedron's plane unit normals are all pointing outwards.
     :rtype: Bool
 
+    .. note::
+        This method has quadratic runtime complexity :math:`O(n^2)`
+
 .. py:function:: check_mesh(input_files)
     :noindex:
 
@@ -114,4 +117,7 @@ like it is required by the polyhedral-gravity model.
     :param List[str] input_files: polyhedral source files
     :return: True if no triangle is degenerate and the polyhedron's plane unit normals are all pointing outwards.
     :rtype: Bool
+
+    .. note::
+        This method has quadratic runtime complexity :math:`O(n^2)`.
 

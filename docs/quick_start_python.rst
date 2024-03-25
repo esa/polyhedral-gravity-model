@@ -3,7 +3,7 @@ Quick Start Python
 
 The use of the Python interface is pretty straight-forward since
 there is only one method: :code:`evaluate(..)` or the alternative
-class :code:`GravityEvaluable` caching the polyhedron data.
+class :code:`GravityEvaluable` caching the polyhedron.
 
 The method calls follow the same pattern as the C++ interface. Thus it is always:
 

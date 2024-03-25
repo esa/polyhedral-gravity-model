@@ -70,6 +70,7 @@ the python interface.
 
 The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
 contain the full extensive documentation.
+It also covers the content of the `polyhedral_gravity.utility` module to check the mesh sanity.
 
 ### Minimal Python Example
 
@@ -81,6 +82,7 @@ import numpy as np
 import polyhedral_gravity
 
 # We define the cube as a polyhedron with 8 vertices and 12 triangular faces
+# The polyhedron's (here: cube) normals need to point outwards (see below for checking this)
 # The density is set to 1.0
 cube_vertices = np.array(
     [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
@@ -125,6 +127,17 @@ Note that the `computation_point` could also be (N, 3)-shaped array.
 In this case, the return value of `evaluate(..)` or an `GravityEvaluable` will
 be a list of triplets comprising potential, acceleration, and tensor.
 
+The gravity model requires that the polyhedron's plane unit normals point outwards
+the polyhedron. In case you are unsure, you can check for this property by using the `utility` module beforehand.
+The method also verifies that all triangles are actually triangles with a non-zero
+surface area.
+
+```python
+print("Valid Mesh?", polyhedral_gravity.utility.check_mesh(cube_vertices, cube_faces))
+```
+
+If the method returns `False`, then you need to revise the vertex-ordering.
+
 ### Minimal C++ Example
 
 The following example shows how to use the C++ library to compute the gravity.
@@ -160,6 +173,9 @@ const auto[potential, acceleration, tensor] = evaluable(point, parallel);
 // or for multiple points with
 const auto results = evaluable(points);
 ```
+
+Similarly to Python, the C++ implementation also provides mesh checking capabilities.
+For reference, have a look at [the main method](./src/main.cpp).
 
 ## Installation
 
