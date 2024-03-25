@@ -113,9 +113,10 @@ class CMakeBuild(build_ext):
         # Sets the CMake Generator if specified (this is separate from the other variables since it is given to
         # CMake vie the -G prefix
         cmake_generator = get_cmake_generator()
-        cmake_args += [
-            f"-G{cmake_generator}"
-        ]
+        if cmake_generator is not None:
+            cmake_args += [
+                f"-G{cmake_generator}"
+            ]
 
         # MSVC special cases
         if self.compiler.compiler_type == "msvc":
