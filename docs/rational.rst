@@ -14,9 +14,9 @@ Downscaled mesh of (433) Eros to 10% of its original vertices and faces.
 The complex gravitational fields of irregular bodies, such as asteroids and comets,
 are often modeled using polyhedral gravity models since alternative approaches like
 mascon models or spherical harmonics struggle with these bodies' irregular geometry.
-The former struggles with convergence close to the surface [1]_, whereas the latter
-requires a computationally expensive amount of mascons (point masses of which the target body is composed)
-to model fine-granular surface geometry [2]_.
+The spherical harmonics approach struggles with convergence close to the surface [1]_,
+whereas mascon models require a computationally expensive amount of mascons
+(point masses of which the target body comprises) to model fine-granular surface geometry [2]_.
 
 In contrast, polyhedral gravity models provide an analytic solution for the computation of the
 gravitational potential, acceleration (and second derivative) given
