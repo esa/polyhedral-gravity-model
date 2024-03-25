@@ -30,12 +30,14 @@ def configure_doxyfile(input_dir, output_dir):
         file.write(filedata)
 
 
+# Check if we're running on Read the Docs' servers or in the GitHub Actions Workflow
 breathe_projects = {}
-input_dir = "../src"
-output_dir = "build"
-configure_doxyfile(input_dir, output_dir)
-subprocess.call("doxygen", shell=True)
-breathe_projects["polyhedral-gravity-model"] = output_dir + "/xml"
+if os.environ.get("READTHEDOCS", None) is not None or os.environ.get("GITHUB_PAGES_BUILD", None) is not None:
+    input_dir = "../src"
+    output_dir = "build"
+    configure_doxyfile(input_dir, output_dir)
+    subprocess.call("doxygen", shell=True)
+    breathe_projects["polyhedral-gravity-model"] = output_dir + "/xml"
 
 # -- Project information -----------------------------------------------------
 
