@@ -68,8 +68,8 @@ Some exemplary results and plots are stored in the
 It also provides a good introduction to the application of
 the python interface.
 
-The full extensive documentation can be found
-on [readthedocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/).
+The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
+contain the full extensive documentation.
 
 ### Minimal Python Example
 
@@ -106,7 +106,7 @@ potential, acceleration, tensor = polyhedral_gravity.evaluate(
 ```
 
 The more advanced way is to use the `GravityEvaluable` class. It caches the
-internal data strcuture and properties which can be reused for multiple
+internal data structure and properties which can be reused for multiple
 evaluations. This is especially useful if you want to compute the gravity
 for multiple computation points, but don't know the "future points" in advance.
 
@@ -200,7 +200,7 @@ all of them are **automatically** set-up via CMake:
 - pybind11 (2.10.4 or compatible), required for the Python interface, but not the C++ standalone
 
 The module will be build using a C++17 capable compiler,
-CMake and ninja-build. Just execute the following command in
+CMake. Just execute the following command in
 the repository root folder:
 
 ```bash

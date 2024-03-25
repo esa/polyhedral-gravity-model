@@ -81,7 +81,7 @@ The project is open to contributions via pull requests, with instructions on how
 
 # Usage Instructions
 
-We provide detailed usage instructions in the technical documentation on ReadTheDocs\footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository readme, and more extensive examples, including a walkthrough over the available options as a *Jupyter* notebook\footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
+We provide detailed usage instructions in the technical documentation on the project's GitHub Pages\footnote{\url{https://esa.github.io/polyhedral-gravity-model}}. Additionally, a minimal working example is given in the repository readme, and more extensive examples, including a walkthrough over the available options as a *Jupyter* notebook\footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
 
 # References
 
