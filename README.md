@@ -1,7 +1,7 @@
 # polyhedral-gravity-model
 
-![Build and Test](https://github.com/schuhmaj/polyhedral-gravity-model-cpp/actions/workflows/ctest.yml/badge.svg)
-[![Documentation Status](https://readthedocs.org/projects/polyhedral-gravity-model-cpp/badge/?version=stable)](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/?badge=stable)
+![Build and Test](https://github.com/esa/polyhedral-gravity-model/actions/workflows/build-test.yml/badge.svg)
+![Documentation Status](https://github.com/esa/polyhedral-gravity-model/actions/workflows/docs.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/esa/polyhedral-gravity-model)
 
 ![PyPI](https://img.shields.io/pypi/v/polyhedral-gravity)
