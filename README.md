@@ -1,6 +1,6 @@
 # polyhedral-gravity-model
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fbuild-and-test.yml?label=Build%20and%20Test)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fbuild-and-test.yml?logo=GitHub%20Actions&label=Build%20and%20Test)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fdocs.yml?logo=GitBook&label=Documentation)
 ![GitHub](https://img.shields.io/github/license/esa/polyhedral-gravity-model)
 

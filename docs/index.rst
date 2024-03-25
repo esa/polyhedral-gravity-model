@@ -6,6 +6,32 @@
 Welcome to Polyhedral Gravity Model's documentation!
 ====================================================
 
+.. image:: https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fbuild-and-test.yml?logo=GitHub%20Actions&label=Build%20and%20Test
+   :alt: GitHub Actions Workflow Status
+.. image:: https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fdocs.yml?logo=gitbook&label=Documentation
+   :alt: GitHub Actions Workflow Status
+.. image:: https://img.shields.io/github/license/esa/polyhedral-gravity-model
+   :alt: GitHub License
+
+..
+
+.. image:: https://img.shields.io/pypi/v/polyhedral-gravity
+   :alt: PyPI - Version
+.. image:: https://img.shields.io/badge/platform-linux--64_%7C_win--64_%7C_osx--64_%7C_linux--arm64_%7C_osx--arm64-lightgrey
+   :alt: Static Badge
+.. image:: https://img.shields.io/pypi/dm/polyhedral-gravity
+   :alt: PyPI - Downloads
+
+..
+
+.. image:: https://img.shields.io/conda/v/conda-forge/polyhedral-gravity-model
+   :alt: Conda Version
+.. image:: https://img.shields.io/conda/pn/conda-forge/polyhedral-gravity-model
+   :alt: Conda Platform
+.. image:: https://img.shields.io/conda/dn/conda-forge/polyhedral-gravity-model
+   :alt: Conda Downloads
+
+
 Have a look at the **Quick Start** section to quickly
 get into the use of the polyhedral gravity model.
 

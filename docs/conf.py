@@ -92,7 +92,7 @@ html_theme_options = {
         {
             "name": "Conda Forge",
             "url": "https://anaconda.org/conda-forge/polyhedral-gravity-model",
-            "icon": "https://img.shields.io/conda/v/conda-forge/polyhedral-gravity-model",
+            "icon": "https://img.shields.io/conda/vn/conda-forge/polyhedral-gravity-model",
             "type": "url",
         },
         {
