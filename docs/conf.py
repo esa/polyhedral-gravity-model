@@ -20,62 +20,96 @@ import subprocess, os
 
 
 def configure_doxyfile(input_dir, output_dir):
-    with open('Doxyfile.in', 'r') as file:
+    with open("Doxyfile.in", "r") as file:
         filedata = file.read()
 
-    filedata = filedata.replace('@DOXYGEN_INPUT_DIR@', input_dir)
-    filedata = filedata.replace('@DOXYGEN_OUTPUT_DIR@', output_dir)
+    filedata = filedata.replace("@DOXYGEN_INPUT_DIR@", input_dir)
+    filedata = filedata.replace("@DOXYGEN_OUTPUT_DIR@", output_dir)
 
-    with open('Doxyfile', 'w') as file:
+    with open("Doxyfile", "w") as file:
         file.write(filedata)
 
 
 # Check if we're running on Read the Docs' servers
-read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+read_the_docs_build = os.environ.get("READTHEDOCS", None) == "True"
 
 breathe_projects = {}
 if read_the_docs_build:
-    input_dir = '../src'
-    output_dir = 'build'
+    input_dir = "../src"
+    output_dir = "build"
     configure_doxyfile(input_dir, output_dir)
-    subprocess.call('doxygen', shell=True)
-    breathe_projects['polyhedral-gravity-model'] = output_dir + '/xml'
+    subprocess.call("doxygen", shell=True)
+    breathe_projects["polyhedral-gravity-model"] = output_dir + "/xml"
 
 # -- Project information -----------------------------------------------------
 
-project = 'Polyhedral Gravity Model'
-copyright = '2022, Jonas Schuhmacher'
-author = 'Jonas Schuhmacher'
+project = "Polyhedral Gravity Model"
+copyright = "2024, Jonas Schuhmacher"
+author = "Jonas Schuhmacher"
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    "breathe"
-]
+extensions = ["breathe"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_book_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Breathe Configuration
 breathe_default_project = "polyhedral-gravity-model"
 breathe_default_members = ("members", "undoc-members")
+
+# -- Options for Theme 'sphinx_book_theme' -----------------------------------
+# https://sphinx-book-theme.readthedocs.io/en/latest/tutorials/get-started.html
+html_theme_options = {
+    "use_edit_page_button": True,
+    "use_source_button": True,
+    "use_issues_button": True,
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/esa/polyhedral-gravity-model",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        },
+        {
+            "name": "Conda Forge",
+            "url": "https://anaconda.org/conda-forge/polyhedral-gravity-model",
+            "icon": "https://img.shields.io/conda/v/conda-forge/polyhedral-gravity-model",
+            "type": "url",
+        },
+        {
+            "name": "PyPi",
+            "url": "https://pypi.org/project/polyhedral-gravity/",
+            "icon": "https://img.shields.io/pypi/v/polyhedral-gravity",
+            "type": "url",
+        },
+    ],
+}
+
+html_context = {
+    "github_url": "https://github.com",
+    "github_user": "esa",
+    "github_repo": "polyhedral-gravity-model",
+    "github_version": "main",
+    "doc_path": "docs",
+}
