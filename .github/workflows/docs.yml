@@ -1,0 +1,25 @@
+name: Deploy Sphinx documentation to Pages
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  GITHUB_PAGES_BUILD: True
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen
+      - id: deployment
+        uses: sphinx-notes/pages@v3
