@@ -41,6 +41,16 @@ if read_the_docs_build:
     subprocess.call("doxygen", shell=True)
     breathe_projects["polyhedral-gravity-model"] = output_dir + "/xml"
 
+
+github_pages_build = os.environ.get("GITHUB_PAGES_BUILD", None) == "True"
+
+if github_pages_build:
+    input_dir = "./src"
+    output_dir = "build"
+    configure_doxyfile(input_dir, output_dir)
+    subprocess.call("doxygen", shell=True)
+    breathe_projects["polyhedral-gravity-model"] = output_dir + "/xml"
+
 # -- Project information -----------------------------------------------------
 
 project = "Polyhedral Gravity Model"
