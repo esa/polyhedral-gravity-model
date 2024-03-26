@@ -330,7 +330,7 @@ gravityModel:
     polyhedron: #polyhedron source-file(s)
       - "../example-config/data/tsoulis.node"   # .node contains the vertices
       - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
-    density: 2670.0                             # constant density in [kg/m^3]
+    density: 2670.0                             # constant density, units must match with the mesh (see section below)
     points: # Location of the computation point(s) P
       - [ 0, 0, 0 ]                             # Here it is situated at the origin
     check_mesh: true                            # Fully optional, enables input checking (not given: false)
@@ -341,13 +341,15 @@ gravityModel:
 
 #### Output
 
-The calculation outputs the following parameters for every Computation Point *P*:
+The calculation outputs the following parameters for every Computation Point *P*.
+The units of the respective output depend on the units of the input parameters (mesh and density)!
+Hence, if e.g. your mesh is in $km$, the density must match. Further, output units will be different accordingly.
 
-|             Name             |      Unit       |                              Comment                              |
-|:----------------------------:|:---------------:|:-----------------------------------------------------------------:|
-|              V               | m^2/s^2 or J/kg |           The potential or also called specific energy            |
-|          Vx, Vy, Vz          |      m/s^2      | The gravitational accerleration in the three cartesian directions |
-| Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |      1/s^2      |   The spatial rate of change of the gravitational accleration    |
+|             Name             | Unit (if mesh in $[m]$ and $\rho$ in $[kg/m^3]$) |                              Comment                              |
+|:----------------------------:|:------------------------------------------------:|:-----------------------------------------------------------------:|
+|              V               |       $\frac{m^2}{s^2}$ or $\frac{J}{kg}$        |           The potential or also called specific energy            |
+|          Vx, Vy, Vz          |                 $\frac{m}{s^2}$                  | The gravitational accerleration in the three cartesian directions |
+| Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |                 $\frac{1}{s^2}$                  |   The spatial rate of change of the gravitational accleration    |
 
 ## Testing
 

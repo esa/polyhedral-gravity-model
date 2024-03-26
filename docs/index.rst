@@ -38,19 +38,20 @@ get into the use of the polyhedral gravity model.
 And for more details, refer to the **Python API** or **C++ API**.
 
 .. toctree::
-   :caption: STATEMENT OF NEED
+   :caption: QUICK START & INSTALLATION
    :maxdepth: 2
 
-   rational
+   quickstart/build
+   quickstart/quick_start_python
+   quickstart/quick_start_cpp
+   quickstart/supported_input
 
 .. toctree::
-   :caption: QUICK START
+   :caption: BACKGROUND
    :maxdepth: 2
 
-   build
-   quick_start_python
-   quick_start_cpp
-   supported_input
+   background/rational
+   background/evaluable_vs_evaluate
 
 .. toctree::
    :caption: PYTHON API REFERENCE
