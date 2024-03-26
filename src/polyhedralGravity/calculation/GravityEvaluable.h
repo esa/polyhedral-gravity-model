@@ -27,7 +27,7 @@ namespace polyhedralGravity {
         /** The constant density polyhedron consisting of vertices and triangular faces */
         const Polyhedron _polyhedron;
 
-        /** The constant density of the polyhedron in @f$[kg/m^3]@f$ */
+        /** The constant density of the polyhedron (the unit must match to the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$) */
         const double _density;
 
         /** Cache for the segment vectors (segments between vertices of a polyhedral face) */
@@ -45,7 +45,8 @@ namespace polyhedralGravity {
         /**
          * Instantiates a GravityEvaluable with a given constant density polyhedron.
          * @param polyhedron the polyhedron
-         * @param density the constant density in @f$[kg/m^3]@f$
+         * @param density the constant density (the unit must match to the mesh,
+         *                e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          *
          * @note This is a separate constructor since the polyhedron as a class it not exposed to the user via
          * the Python Interface. Thus, this constructor is only available via the C++ interface.
@@ -57,7 +58,8 @@ namespace polyhedralGravity {
         /**
          * Instantiates a GravityEvaluable with a given constant density polyhedron.
          * @param polyhedralSource the vertices & faces of the polyhedron as tuple or the filenames of the files
-         * @param density the constant density in @f$[kg/m^3]@f$
+         * @param density the constant density (the unit must match to the mesh,
+         *                e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          */
         GravityEvaluable(const PolyhedralSource &polyhedralSource, double density) : _polyhedron{
                 std::holds_alternative<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>>(polyhedralSource)
@@ -71,7 +73,8 @@ namespace polyhedralGravity {
          * Instantiates a GravityEvaluable with a given constant density polyhedron and caches.
          * This is for restoring a GravityEvaluable from a previous state.
          * @param polyhedron the polyhedron
-         * @param density the constant density in @f$[kg/m^3]@f$
+         * @param density the constant density (the unit must match to the mesh,
+         *                e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param segmentVectors the segment vectors
          * @param planeUnitNormals the plane unit normals
          * @param segmentUnitNormals the segment unit normals
