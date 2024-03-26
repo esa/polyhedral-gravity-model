@@ -61,6 +61,17 @@ Hence, if e.g. your mesh is in :math:`km`, the density must match. Further, outp
 | Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |   :math:`\frac{1}{s^2}`                                                    |The spatial rate of change of the gravitational acceleration     |
 +------------------------------+----------------------------------------------------------------------------+-----------------------------------------------------------------+
 
+
+.. note::
+
+    The plane unit normals of every face of the polyhedral mesh must point **outwards**
+    of the polyhedron!
+    You can check this property via :ref:`mesh-checking-cpp` in C++ or
+    via the :ref:`mesh-checking-python` submodule in Python.
+    If the vertex order of the faces is inverted, i.e. the plane unit normals point
+    inwards, then the sign of the output will be inverted.
+
+
 As Library
 ----------
 

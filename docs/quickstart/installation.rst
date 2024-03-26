@@ -12,6 +12,14 @@ The python interface can be easily installed with `conda <https://anaconda.org/c
 
     conda install -c conda-forge polyhedral-gravity-model
 
+The python package on conda is parallelized with OpenMP.
+It is currently available for all operating systems (macOS, Linux, Windows), but
+only for :code:`x86_64` systems.
+Have a look at the :ref:`installation-pip`. It also provides wheels for :code:`aarch64`.
+
+
+.. _installation-pip:
+
 Installation with pip
 ---------------------
 

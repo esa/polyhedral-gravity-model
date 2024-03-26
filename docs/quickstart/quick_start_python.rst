@@ -8,6 +8,18 @@ Have a look at :ref:`evaluable-vs-eval` for further
 details about the difference.
 If you strive for maximal performance, use the the class :code:`GravityEvaluable`.
 If you quickly want to try out something, use :code:`evaluate(..)`.
+The polyhedral source can either be a tuple of vertices and faces, or
+a list of polyhedral mesh files (see :ref:`supported-polyhedron-source-files`).
+
+.. note::
+
+    The plane unit normals of every face of the polyhedral mesh must point **outwards**
+    of the polyhedron!
+    You can check this property via :ref:`mesh-checking-cpp` in C++ or
+    via the :ref:`mesh-checking-python` submodule in Python.
+    If the vertex order of the faces is inverted, i.e. the plane unit normals point
+    inwards, then the sign of the output will be inverted.
+
 
 The method calls follow the same pattern as the C++ interface. Thus it is always:
 

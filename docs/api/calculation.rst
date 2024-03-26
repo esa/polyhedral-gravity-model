@@ -29,6 +29,8 @@ GravityModel
 .. doxygennamespace:: polyhedralGravity::GravityModel
 
 
+.. _mesh-checking-cpp:
+
 MeshChecking
 ------------
 

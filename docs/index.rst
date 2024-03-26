@@ -41,7 +41,7 @@ And for more details, refer to the **Python API** or **C++ API**.
    :caption: QUICK START & INSTALLATION
    :maxdepth: 2
 
-   quickstart/build
+   quickstart/installation
    quickstart/quick_start_python
    quickstart/quick_start_cpp
    quickstart/supported_input

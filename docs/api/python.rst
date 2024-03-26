@@ -71,6 +71,8 @@ vertices and triangular faces at given computation points
             :return: A string representation of the polyhedron
 
 
+.. _mesh-checking-python:
+
 utility
 ~~~~~~~
 
