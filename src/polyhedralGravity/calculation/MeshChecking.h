@@ -17,7 +17,7 @@ namespace polyhedralGravity::MeshChecking {
      * @param polyhedron - the polyhedron consisting of vertices and triangular faces
      * @return true if all the unit normals are pointing outwards
      *
-     * @note This has quadratic complexity O(n^2)! For bigger problem sizes, K-D trees/ Octrees could improve
+     * @note This has quadratic complexity @f$O(n^2)@f$! For bigger problem sizes, K-D trees/ Octrees could improve
      * the complexity to determine the intersections
      * (see https://stackoverflow.com/questions/45603469/how-to-calculate-the-normals-of-a-box)
      */

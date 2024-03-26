@@ -3,6 +3,7 @@ name: Deploy Sphinx documentation to Pages
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:
 
 env:
   GITHUB_PAGES_BUILD: True
