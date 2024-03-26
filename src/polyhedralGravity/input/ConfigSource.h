@@ -24,7 +24,7 @@ namespace polyhedralGravity {
         virtual std::string getOutputFileName() = 0;
 
         /**
-         * Returns the constant density rho of the given polyhedron in [kg/m^3].
+         * Returns the constant density rho of the given polyhedron in @f$[kg/m^3]@f$.
          * The density is required for the calculation.
          * @return density as double
          */
