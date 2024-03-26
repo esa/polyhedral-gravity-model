@@ -66,7 +66,7 @@ Binaries for the most common platforms are available on PyPI including
 Windows, Linux and macOS. For macOS and Linux, binaries for
 :code:`x86_64` and :code:`aarch64` are provided.
 In case :code:`pip` uses the source distribution, please make sure that
-you have a C++17 capable compiler, CMake and ninja-build installed.
+you have a C++17 capable compiler and CMake installed.
 
 
 Build & Installation from source
