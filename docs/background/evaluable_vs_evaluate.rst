@@ -3,6 +3,10 @@
 GravityEvaluable vs. Evaluate Function
 ======================================
 
+The :code:`GravityEvaluable` was introduced with version :code:`v2.0`.
+Hence, the `project report <https://mediatum.ub.tum.de/doc/1695208/1695208.pdf>`__ does not contain any further details.
+This sections closes the knowledge gap and presents a runtime comparison.
+
 Below is a comparison of the performance of the standalone free function and the evaluable class.
 The benchmark was conducted with a M1 Pro 10-Core CPU (ARM64) using the TBB backend.
 The calculation consisted each of 1000 points for the mesh of Eros (24235 vertices and 14744 faces).
@@ -25,5 +29,5 @@ also caches the normals and the volume of the polyhedron, which is not the case 
 +----------------------------------------+-------------------------------+
 
 As takeaway, one should always use the :code:`GravityEvaluable` due to its caching
-properties. The free function is maily of advantage for few points/ quickly trying
+properties. The free function should only be used for few points/ quickly trying
 out something.

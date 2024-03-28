@@ -52,6 +52,7 @@ And for more details, refer to the **Python API** or **C++ API**.
    :maxdepth: 2
 
    background/rational
+   background/approach
    background/evaluable_vs_evaluate
 
 .. toctree::

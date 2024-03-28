@@ -42,7 +42,7 @@
 This code is a validated implementation in C++17 of the Polyhedral Gravity Model
 by Tsoulis et al.. It was created in a collaborative project between
 TU Munich and ESA's Advanced Concepts Team. Please refer to the
-[project report](https://mediatum.ub.tum.de/1695208)
+[project report](https://mediatum.ub.tum.de/doc/1695208/1695208.pdf)
 for extensive information about the theoretical background, related work,
 implementation & design decisions, application, verification,
 and runtime measurements of the presented code.
