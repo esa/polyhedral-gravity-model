@@ -12,11 +12,11 @@ and runtime measurements of the presented code.
 
 The implementation is based on the
 paper `Tsoulis, D., 2012. Analytical computation of the full gravity tensor of a homogeneous arbitrarily shaped polyhedral source using line integrals. Geophysics, 77(2), pp.F1-F11. <http://dx.doi.org/10.1190/geo2010-0334.1>`__
-and its corresponding implementation in FORTRAN_.
+and its corresponding implementation in FORTRAN_ (last accessed: 12.09.2022).
 
 Supplementary details can be found in the more recent
 paper `TSOULIS, Dimitrios; GAVRIILIDOU, Georgia. A computational review of the line integral analytical formulation of the polyhedral gravity signal. Geophysical Prospecting, 2021, 69. Jg., Nr. 8-9, S. 1745-1760 <https://doi.org/10.1111/1365-2478.13134>`__
-and its corresponding implementation in MATLAB_,
+and its corresponding implementation in MATLAB_ (last accessed: 28.03.2024),
 which is strongly based on the former implementation in FORTRAN.
 
 
