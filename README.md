@@ -24,18 +24,16 @@
 
 - [References](#references)
 - [Documentation & Examples](#documentation--examples)
+  - [Input & Output (C++ and Python)](#input--output-c-and-python)
   - [Minimal Python Example](#minimal-python-example)
   - [Minimal C++ Example](#minimal-c-example)
 - [Installation](#installation)
   - [With conda](#with-conda)
   - [With pip](#with-pip)
   - [From source](#from-source)
-- [Miscellaneous](#miscellaneous)
+- [C++ Library & Executable](#c-library--executable)
   - [Building the C++ Library & Executable](#building-the-c-library--executable)
-  - [Supported Polyhedron Source Files (Python/ C++)](#supported-polyhedron-source-files-python-c)
-  - [The C++ Executable](#the-c-executable)
-    - [Config File](#config-file)
-    - [Output](#output)
+  - [Running the C++ Executable](#running-the-c-executable)
 - [Testing](#testing)
 - [Contributing](#contributing)
 
@@ -65,7 +63,7 @@ which is strongly based on the former implementation in FORTRAN.
 contain the full extensive documentation.
 It also covers the content of the `polyhedral_gravity.utility` module to check the mesh sanity.
 
-## Input & Output
+## Input & Output (C++ and Python)
 
 ### Input
 
@@ -101,7 +99,7 @@ Hence, if e.g. your mesh is in $km$, the density must match. Further, output uni
 
 
 >[!NOTE]
->This model's output obeys to the geodesy and geophysics sign conventions.
+>This gravity model's output obeys to the geodesy and geophysics sign conventions.
 Hence, the potential $V$ for a polyhedron with a mass $m > 0$ is defined as **positive**.
 Accordingly, the accelerations are defined as $\textbf{g} = + \nabla V$.
 
