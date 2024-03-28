@@ -1,5 +1,9 @@
-Quick Start C++
-===============
+.. _examples-cpp:
+
+Examples C++
+============
+
+Details about mesh and input units can be found in :ref:`quick-start-io`.
 
 As Executable
 -------------
@@ -45,31 +49,6 @@ Further one must specify the name of the .csv output file.
 
 Have a look at :ref:`supported-polyhedron-source-files` to view the available
 options for polyhedral input.
-
-
-The calculation outputs the following parameters for every Computation Point *P*.
-The units of the respective output depend on the units of the input parameters (mesh and density)!
-Hence, if e.g. your mesh is in :math:`km`, the density must match. Further, output units will be different accordingly.
-
-+------------------------------+----------------------------------------------------------------------------+-----------------------------------------------------------------+
-|         Name                 | If mesh :math:`[m]` and density :math:`[\frac{kg}{m^3}]`                   |                             Comment                             |
-+==============================+============================================================================+=================================================================+
-|         V                    |  :math:`\frac{m^2}{s^2}` or :math:`\frac{J}{kg}`                           |           The potential or also called specific energy          |
-+------------------------------+----------------------------------------------------------------------------+-----------------------------------------------------------------+
-|     Vx, Vy, Vz               |   :math:`\frac{m}{s^2}`                                                    |The gravitational acceleration in the three cartesian directions |
-+------------------------------+----------------------------------------------------------------------------+-----------------------------------------------------------------+
-| Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |   :math:`\frac{1}{s^2}`                                                    |The spatial rate of change of the gravitational acceleration     |
-+------------------------------+----------------------------------------------------------------------------+-----------------------------------------------------------------+
-
-
-.. note::
-
-    The plane unit normals of every face of the polyhedral mesh must point **outwards**
-    of the polyhedron!
-    You can check this property via :ref:`mesh-checking-cpp` in C++ or
-    via the :ref:`mesh-checking-python` submodule in Python.
-    If the vertex order of the faces is inverted, i.e. the plane unit normals point
-    inwards, then the sign of the output will be inverted.
 
 
 As Library

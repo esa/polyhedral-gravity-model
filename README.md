@@ -296,11 +296,15 @@ ASCII and binary format) are e.g.:
 - [Meshio](https://github.com/nschloe/meshio) for Python
 - [OpenMesh](https://openmesh-python.readthedocs.io/en/latest/readwrite.html) for Python
 
-The vertices in the input mesh file must be ordered so that the plane unit normals point outwards of the polyhedron for
-every face.
-One can use the program input-checking procedure to ensure the correct format. This method is activated via the
-corresponding configuration option and uses the Möller–Trumbore intersection algorithm. Notice that this algorithm is a
-quadratic complexity, so the check should only be utilized in case of uncertainty.
+
+> [!IMPORTANT]  
+> The plane unit normals of every face of the polyhedral mesh must point **outwards**
+of the polyhedron!
+You can check this property via [MeshChecking](https://esa.github.io/polyhedral-gravity-model/api/calculation.html#meshchecking) in C++ or
+via the [utility](https://esa.github.io/polyhedral-gravity-model/api/python.html#module-polyhedral_gravity.utility) submodule in Python.
+If the vertex order of the faces is inverted, i.e. the plane unit normals point
+inwards, then the sign of the output will be inverted.
+
 
 ### The C++ Executable
 
@@ -345,11 +349,11 @@ The calculation outputs the following parameters for every Computation Point *P*
 The units of the respective output depend on the units of the input parameters (mesh and density)!
 Hence, if e.g. your mesh is in $km$, the density must match. Further, output units will be different accordingly.
 
-|             Name             | Unit (if mesh in $[m]$ and $\rho$ in $[kg/m^3]$) |                              Comment                              |
-|:----------------------------:|:------------------------------------------------:|:-----------------------------------------------------------------:|
-|              V               |       $\frac{m^2}{s^2}$ or $\frac{J}{kg}$        |           The potential or also called specific energy            |
-|          Vx, Vy, Vz          |                 $\frac{m}{s^2}$                  | The gravitational accerleration in the three cartesian directions |
-| Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |                 $\frac{1}{s^2}$                  |   The spatial rate of change of the gravitational accleration    |
+|                            Name                            | Unit (if mesh in $[m]$ and $\rho$ in $[kg/m^3]$) |                              Comment                              |
+|:----------------------------------------------------------:|:------------------------------------------------:|:-----------------------------------------------------------------:|
+|                            $V$                             |       $\frac{m^2}{s^2}$ or $\frac{J}{kg}$        |           The potential or also called specific energy            |
+|                    $V_x$, $V_y$, $V_z$                     |                 $\frac{m}{s^2}$                  | The gravitational accerleration in the three cartesian directions |
+| $V_{xx}$, $V_{yy}$, $V_{zz}$, $V_{xy}$, $V_{xz}$, $V_{yz}$ |                 $\frac{1}{s^2}$                  |   The spatial rate of change of the gravitational accleration    |
 
 ## Testing
 

@@ -24,8 +24,3 @@ ASCII and binary format) are e.g.:
 
 - `Meshio <https://github.com/nschloe/meshio>`__ for Python
 - `OpenMesh <https://openmesh-python.readthedocs.io/en/latest/readwrite.html>`__ for Python
-
-**Notice!** The vertices in the input mesh file must be ordered so that the plane unit normals point outwards of the polyhedron for every face.
-One can use the program input-checking procedure to ensure the correct format. This method is activated via the
-corresponding configuration option and uses the Möller–Trumbore intersection algorithm. Notice that this algorithm is a
-quadratic complexity, so the check should only be utilized in case of uncertainty.

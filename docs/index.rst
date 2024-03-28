@@ -32,19 +32,20 @@ Welcome to Polyhedral Gravity Model's documentation!
    :alt: Conda Downloads
 
 
-Have a look at the **Quick Start** section to quickly
+Have a look at the **INSTALLATION & QUICK START** section to quickly
 get into the use of the polyhedral gravity model.
 
 And for more details, refer to the **Python API** or **C++ API**.
 
 .. toctree::
-   :caption: QUICK START & INSTALLATION
+   :caption: INSTALLATION & QUICK START
    :maxdepth: 2
 
    quickstart/installation
-   quickstart/quick_start_python
-   quickstart/quick_start_cpp
+   quickstart/quickstart_overview
    quickstart/supported_input
+   quickstart/examples_python
+   quickstart/examples_cpp
 
 .. toctree::
    :caption: BACKGROUND
