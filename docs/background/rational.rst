@@ -4,7 +4,7 @@ Statement of Need
 The Rational
 ------------
 
-.. image:: figures/eros_010.png
+.. image:: ../../_static/eros_010.png
   :align: center
   :width: 400
   :alt: Downscaled mesh of (433) Eros to 10% of its original vertices and faces.
