@@ -77,7 +77,7 @@ namespace polyhedralGravity {
         /**
          * Checks two Distance structs for equality.
          * @warning This method compares doubles! So only exact copies will evaluate to true.
-         * @param rhs - the other Distance struct
+         * @param rhs the other Distance struct
          * @return true if equal
          *
          * @note Just used for testing purpose
@@ -89,7 +89,7 @@ namespace polyhedralGravity {
         /**
          * Checks two Distance structs for inequality.
          * @warning This method compares doubles! So only exact copies will evaluate to false.
-         * @param rhs - the other Distance struct
+         * @param rhs the other Distance struct
          * @return false if unequal
          *
          * @note Just used for testing purpose
@@ -100,8 +100,8 @@ namespace polyhedralGravity {
 
         /**
          * Pretty prints this struct on the given ostream.
-         * @param os - ostream
-         * @param distance - a Distance struct
+         * @param os ostream
+         * @param distance a Distance struct
          * @return os
          */
         friend std::ostream &operator<<(std::ostream &os, const Distance &distance) {
@@ -131,7 +131,7 @@ namespace polyhedralGravity {
         /**
          * Checks two TranscendentalExpressions for equality.
          * @warning This method compares doubles! So only exact copies will evaluate to true.
-         * @param rhs - the other TranscendentalExpressions
+         * @param rhs the other TranscendentalExpressions
          * @return true if equal
          *
          * @note Just used for testing purpose
@@ -143,7 +143,7 @@ namespace polyhedralGravity {
         /**
          * Checks two TranscendentalExpressions for inequality.
          * @warning This method compares doubles! So only exact copies will evaluate to false.
-         * @param rhs - the other TranscendentalExpressions
+         * @param rhs the other TranscendentalExpressions
          * @return false if unequal
          *
          * @note Just used for testing purpose
@@ -154,8 +154,8 @@ namespace polyhedralGravity {
 
         /**
          * Pretty output of this struct on the given ostream.
-         * @param os - the ostream
-         * @param expression - a TranscendentalExpression
+         * @param os the ostream
+         * @param expression a TranscendentalExpression
          * @return os
          */
         friend std::ostream &operator<<(std::ostream &os, const TranscendentalExpression &expression) {
@@ -192,7 +192,7 @@ namespace polyhedralGravity {
         /**
          * Checking the equality of two this Hessian Plane with another one by comparing their members.
          * @warning This method compares doubles! So only exact copies will evaluate to true.
-         * @param rhs - other HessianPlane
+         * @param rhs other HessianPlane
          * @return true if equal
          *
          * @note Just used for testing purpose
@@ -204,7 +204,7 @@ namespace polyhedralGravity {
         /**
          * Checking the inequality of two this Hessian Plane with another one by comparing their members.
          * @warning This method compares doubles! So only exact copies will evaluate to false.
-         * @param rhs - other HessianPlane
+         * @param rhs other HessianPlane
          * @return true if unequal
          *
          * @note Just used for testing purpose

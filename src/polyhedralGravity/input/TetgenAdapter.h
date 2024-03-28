@@ -57,7 +57,7 @@ namespace polyhedralGravity {
         /**
          * Constructs a new TetgenAdapter from a vector of filenames. These filenames should end on the supported
          * suffixes
-         * @param fileNames - vector of filenames
+         * @param fileNames vector of filenames
          */
         explicit TetgenAdapter(std::vector<std::string> fileNames)
                 : _tetgenio{},
@@ -134,8 +134,8 @@ namespace polyhedralGravity {
 
         /**
          * Checks if the polyhedron is integer and not already defined by other properties
-         * @param filename - string with the current read file, for more detailed exceptions
-         * @param what - what to check: f = faces, v = vertices, a = all
+         * @param filename string with the current read file, for more detailed exceptions
+         * @param what what to check: f = faces, v = vertices, a = all
          * @throws an exception if not
          */
         void checkIntegrity(const std::string &filename, char what) const;

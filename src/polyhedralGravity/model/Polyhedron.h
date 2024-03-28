@@ -61,8 +61,8 @@ namespace polyhedralGravity {
 
         /**
          * Generates a polyhedron from nodes and faces.
-         * @param nodes - vector containing the nodes
-         * @param faces - vector containing the triangle faces.
+         * @param nodes vector containing the nodes
+         * @param faces vector containing the triangle faces.
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws runtime_error if no face contains the node zero indicating mathematical index
@@ -82,7 +82,7 @@ namespace polyhedralGravity {
 
         /**
          * Creates a polyhedron from a tuple of nodes and faces.
-         * @param data - tuple of nodes and faces
+         * @param data tuple of nodes and faces
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws runtime_error if no face contains the node zero indicating mathematical index
@@ -106,7 +106,7 @@ namespace polyhedralGravity {
 
         /**
          * Returns the vertex at a specific index
-         * @param index - size_t
+         * @param index size_t
          * @return cartesian coordinates of the vertex at index
          */
         [[nodiscard]] const Array3 &getVertex(size_t index) const {
@@ -139,7 +139,7 @@ namespace polyhedralGravity {
 
         /**
          * Returns the resolved face with its concrete cartesian coordinates at the given index.
-         * @param index - size_t
+         * @param index size_t
          * @return triplet of vertices' cartesian coordinates
          */
         [[nodiscard]] Array3Triplet getFace(size_t index) const {

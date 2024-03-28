@@ -38,7 +38,7 @@ namespace polyhedralGravity {
 
         /**
          * Creates a new YAML Config Reader.
-         * @param filename - a reference to a string
+         * @param filename a reference to a string
          * @throws an exception if the file is malformed or cannot be loaded or if the ROOT node is not found
          */
         explicit YAMLConfigReader(const std::string &filename)
@@ -50,7 +50,7 @@ namespace polyhedralGravity {
 
         /**
          * Creates a new YAML Config Reader.
-         * @param filename - a movable string
+         * @param filename a movable string
          * @throws an exception if the file is malformed or cannot be loaded or if the ROOT node is not found
          */
         explicit YAMLConfigReader(std::string &&filename)

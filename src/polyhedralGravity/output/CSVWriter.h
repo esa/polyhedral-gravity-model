@@ -35,7 +35,7 @@ namespace polyhedralGravity {
         /**
          * Creates a new CSVWriter.
          * Results are written to file with filename as name.
-         * @param filename - a string
+         * @param filename a string
          */
         explicit CSVWriter(const std::string &filename)
                 : _logger{
@@ -52,8 +52,8 @@ namespace polyhedralGravity {
 
         /**
          * Prints the result to the specified file
-         * @param computationPoints - vector of computation points
-         * @param gravityResults - vector of gravity results
+         * @param computationPoints vector of computation points
+         * @param gravityResults vector of gravity results
          */
         void printResult(const std::vector<std::array<double, 3>> &computationPoints,
                          const std::vector<GravityModelResult> &gravityResults) const;

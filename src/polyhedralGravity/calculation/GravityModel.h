@@ -21,10 +21,11 @@ namespace polyhedralGravity::GravityModel {
     /**
      * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
      * point P.
-     * @param polyhedron - the polyhedron consisting of vertices and triangular faces
-     * @param density - the constant density in [kg/m^3]
-     * @param computationPoint - the computation Point P
-     * @param parallel - whether to evaluate in parallel or serial
+     * @param polyhedron the polyhedron consisting of vertices and triangular faces
+     * @param density the constant density (the unit must match to the mesh,
+     *                e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+     * @param computationPoint the computation Point P
+     * @param parallel whether to evaluate in parallel or serial
      * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration
      * at computation Point P
      */
@@ -33,10 +34,11 @@ namespace polyhedralGravity::GravityModel {
     /**
      * Evaluates the polyhedral gravity model for a given constant density polyhedron at multiple computation
      * points.
-     * @param polyhedron - the polyhedron consisting of vertices and triangular faces
-     * @param density - the constant density in [kg/m^3]
-     * @param computationPoints - vector of computation points
-     * @param parallel - whether to evaluate in parallel or serial
+     * @param polyhedron the polyhedron consisting of vertices and triangular faces
+     * @param density the constant density (the unit must match to the mesh,
+     *                e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+     * @param computationPoints vector of computation points
+     * @param parallel whether to evaluate in parallel or serial
      * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration
      * foreach computation Point P
      */

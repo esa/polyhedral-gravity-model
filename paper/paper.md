@@ -45,12 +45,12 @@ The library supports many common formats, such as *.stl*, *.off*, *.ply*, *.mesh
 
 # Statement of Need
 
-The complex gravitational fields of irregular bodies, such as asteroids and comets, are often modeled using polyhedral gravity models since alternative approaches like mascon models or spherical harmonics struggle with these bodies' irregular geometry. The former struggles with convergence close to the surface [@vsprlak2021use], whereas the latter requires a computationally expensive amount of mascons (point masses of which the target body is composed) to model fine-granular surface geometry [@wittick2017mascon].
+The complex gravitational fields of irregular bodies, such as asteroids and comets, are often modeled using polyhedral gravity models since alternative approaches like mascon models or spherical harmonics struggle with these bodies' irregular geometry. The spherical harmonics approach struggles with convergence close to the surface [@vsprlak2021use], whereas mascon models require a computationally expensive amount of mascons (point masses of which the target body comprises) to model fine-granular surface geometry [@wittick2017mascon].
 
 In contrast, polyhedral gravity models provide an analytic solution for the computation of the gravitational potential, acceleration (and second derivative) given a mesh of the body [@tsoulis2012analytical;@tsoulis2021computational] with the only assumption of homogeneous density.
 The computation of the gravitational potential and acceleration is a computationally expensive task, especially for large meshes, which can however benefit from parallelization either over computed target points for which we seek potential and acceleration or over the mesh. Thus, a high-performance implementation of a polyhedral gravity model is desirable.
 
-While some research code for these models exists, they are not focused on usability and are limited to FORTRAN\footnote{\url{https://software.seg.org/2012/0001/index.html}} and proprietary software like MATLAB\footnote{\url{https://github.com/Gavriilidou/GPolyhedron}}. There is a lack of well-documented, actively maintained open-source implementations, particularly in modern programming languages, and with a focus on scalability and performance.
+While some research code for these models exists, they are not focused on usability and are limited to FORTRAN\footnote{\url{https://software.seg.org/2012/0001/index.html}, last accessed: 12.09.2022} and proprietary software like MATLAB\footnote{\url{https://github.com/Gavriilidou/GPolyhedron}, last accessed: 28.03.2024}. There is a lack of well-documented, actively maintained open-source implementations, particularly in modern programming languages, and with a focus on scalability and performance.
 
 This circumstance and the fact that polyhedral models are often used in studying gravitational fields, e.g., for Eros [@zhang2010modeling], or as a reference for creating new neural models [@martin2023physics] make an easy-to-install implementation necessary.
 
@@ -81,7 +81,7 @@ The project is open to contributions via pull requests, with instructions on how
 
 # Usage Instructions
 
-We provide detailed usage instructions in the technical documentation on ReadTheDocs\footnote{\url{https://polyhedral-gravity-model-cpp.readthedocs.io/en/latest/}}. Additionally, a minimal working example is given in the repository readme, and more extensive examples, including a walkthrough over the available options as a *Jupyter* notebook\footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
+We provide detailed usage instructions in the technical documentation on the project's GitHub Pages\footnote{\url{https://esa.github.io/polyhedral-gravity-model}}. Additionally, a minimal working example is given in the repository readme, and more extensive examples, including a walkthrough over the available options as a *Jupyter* notebook\footnote{\url{https://github.com/esa/polyhedral-gravity-model/blob/main/script/polyhedral-gravity.ipynb}}.
 
 # References
 

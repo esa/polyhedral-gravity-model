@@ -27,7 +27,7 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 
 ## I Have a Question
 
-> If you want to ask a question, we assume that you have read the available [Documentation](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/).
+> If you want to ask a question, we assume that you have read the available [Documentation](https://esa.github.io/polyhedral-gravity-model/).
 
 Before you ask a question, it is best to search for existing [Issues](https://github.com/esa/polyhedral-gravity-model/issues) that might help you. In case you have found a suitable issue and still need clarification, you can write your question in this issue. It is also advisable to search the internet for answers first.
 
@@ -53,7 +53,7 @@ We will then take care of the issue as soon as possible.
 A good bug report shouldn't leave others needing to chase you up for more information. Therefore, we ask you to investigate carefully, collect information and describe the issue in detail in your report. Please complete the following steps in advance to help us fix any potential bug as fast as possible.
 
 - Make sure that you are using the latest version.
-- Determine if your bug is really a bug and not an error on your side e.g. using incompatible environment components/versions (Make sure that you have read the [documentation](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/). If you are looking for support, you might want to check [this section](#i-have-a-question)).
+- Determine if your bug is really a bug and not an error on your side e.g. using incompatible environment components/versions (Make sure that you have read the [documentation](https://esa.github.io/polyhedral-gravity-model/). If you are looking for support, you might want to check [this section](#i-have-a-question)).
 - To see if other users have experienced (and potentially already solved) the same issue you are having, check if there is not already a bug report existing for your bug or error in the [issue board](https://github.com/esa/polyhedral-gravity-modelissues?q=label%3Abug).
 - Collect information about the bug:
   - OS, Platform and Version (Windows, Linux, macOS, x86, ARM)
@@ -89,7 +89,7 @@ This section guides you through submitting an enhancement suggestion for Polyhed
 #### Before Submitting an Enhancement
 
 - Make sure that you are using the latest version.
-- Read the [documentation](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/) carefully and find out if the functionality is already covered, maybe by an individual configuration.
+- Read the [documentation](https://esa.github.io/polyhedral-gravity-model) carefully and find out if the functionality is already covered, maybe by an individual configuration.
 - Perform a [search](https://github.com/esa/polyhedral-gravity-model/issues) to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
 - Find out whether your idea fits with the scope and aims of the project. It's up to you to make a strong case to convince the project's developers of the merits of this feature. Keep in mind that we want features that will be useful to the majority of our users and not just a small subset. If you're just targeting a minority of users, consider writing an add-on/plugin library.
 
@@ -108,7 +108,7 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/esa/po
 Have you found an issue you would like to work on? Or do you have a great idea for a new feature? Here are some tips to get you started.
 
 - Ensure that you work on a new branch for your contribution. The name does not need to follow a specific pattern, but it should be descriptive (e.g. `fix-issue-123` or `fancy-feature-xyz`).
-- Make sure that you are using the latest version from `main`. Instructions on how to set up the project can be found in the [documentation](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/) or in the [README](README.md).
+- Make sure that you are using the latest version from `main`. Instructions on how to set up the project can be found in the [documentation](https://esa.github.io/polyhedral-gravity-model/) or in the [README](README.md).
 - Please try to follow the existing code style and conventions.
 - Please try to follow the best practices and guidelines for your code's quality and documentation. This includes writing tests for your code. We do not enforce a specific coverage, but we expect reasonable tests for new code.
 - Please try to be short and concise with your commit messages. In case you want to provide more information, you can use the commit description.
@@ -117,7 +117,7 @@ If everything is set-up and your happy with your changes feel free to open a Pul
 
 ### Improving The Documentation
 
-Enhancements to the documentation are always welcome (e.g. new examples, guides, improvement of a method's description, etc.). The documentation is located in the [docs](docs) folder. The documentation is built using [Sphinx](https://www.sphinx-doc.org/en/master/). The documentation is hosted on [ReadTheDocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/).
+Enhancements to the documentation are always welcome (e.g. new examples, guides, improvement of a method's description, etc.). The documentation is located in the [docs](docs) folder. The documentation is built using [Sphinx](https://www.sphinx-doc.org/en/master/). The documentation is hosted on [ReadTheDocs](https://esa.github.io/polyhedral-gravity-model/).
 
 -------------
 

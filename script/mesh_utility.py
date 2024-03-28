@@ -2,12 +2,6 @@
 import pickle as pk
 import numpy as np
 
-# meshing
-import pyvista
-import tetgen
-import meshio as mio
-import openmesh as om
-
 """
 General info:
 This script contains methods to transform/ convert between different kinds of mesh files.
@@ -115,17 +109,23 @@ def write_other(path, name, nodes, faces):
     Returns:
         None
     """
+    import openmesh as om
+
     mesh = om.TriMesh()
     mesh.add_vertices(nodes)
     mesh.add_faces(faces)
-    om.write_mesh((path+name), mesh)
+    om.write_mesh((path + name), mesh)
     # Alternative Framework - Code
+
+    # import meshio as mio
     # cells = [("triangle", faces)]
     # mesh = mio.Mesh(nodes, cells)
     # mesh.write((path + name))
 
 
 def main():
+    import tetgen
+
     # TODO Pass file names via terminal?
     # Read the input .pk file
     print("Reading file...")
@@ -153,6 +153,7 @@ def main():
     write_other("../mesh/Eros/", "Eros.ply", nodes, mesh_triangles)
 
     # Plot the tetrahralized mesh
+    # import pyvista
     # print("Showing Plot")
     # # tgen.grid.plot(show_edges=True)
     # pl = pyvista.Plotter()

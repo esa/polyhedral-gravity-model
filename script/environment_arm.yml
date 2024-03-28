@@ -1,0 +1,11 @@
+name: polyhedral-gravity-jupyter-notebook-arm
+channels:
+  - conda-forge
+dependencies:
+  - jupyter
+  - numpy
+  - matplotlib
+  - sympy
+  - pip
+  - pip:
+    - polyhedral-gravity

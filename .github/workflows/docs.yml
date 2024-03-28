@@ -3,6 +3,7 @@ name: Deploy Sphinx documentation to Pages
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:
 
 env:
   GITHUB_PAGES_BUILD: True
@@ -21,5 +22,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y doxygen
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
       - id: deployment
         uses: sphinx-notes/pages@v3
+        with:
+          checkout: false

@@ -20,11 +20,11 @@ namespace polyhedralGravity::util {
     /**
      * Applies a binary function to elements of two containers piece by piece. The objects must
      * be iterable and should have the same size!
-     * @tparam Container - an iterable object like an array or vector
-     * @tparam BinOp - a binary function to apply
-     * @param lhs - the first container
-     * @param rhs - the second container
-     * @param binOp - a binary function like +, -, *, /
+     * @tparam Container an iterable object like an array or vector
+     * @tparam BinOp a binary function to apply
+     * @param lhs the first container
+     * @param rhs the second container
+     * @param binOp a binary function like +, -, *, /
      * @return a container containing the result
      */
     template<typename Container, typename BinOp>
@@ -38,12 +38,12 @@ namespace polyhedralGravity::util {
      * Applies a binary function to elements of one container piece by piece. The objects must
      * be iterable. The resulting container consist of the containers' object after the application
      * of the binary function with the scalar as parameter.
-     * @tparam Container - a iterable object like an array or vector
-     * @tparam Scalar - a scalar to use on each element
-     * @tparam BinOp - a binary function to apply
-     * @param lhs - the first container
-     * @param scalar - a scalar to use on each element
-     * @param binOp - a binary function like +, -, *, /
+     * @tparam Container a iterable object like an array or vector
+     * @tparam Scalar a scalar to use on each element
+     * @tparam BinOp a binary function to apply
+     * @param lhs the first container
+     * @param scalar a scalar to use on each element
+     * @param binOp a binary function like +, -, *, /
      * @return a container containing the result
      */
     template<typename Container, typename Scalar, typename BinOp>
@@ -59,8 +59,8 @@ namespace polyhedralGravity::util {
      * Applies the Operation Minus to two Containers piece by piece.
      * @example {1, 2, 3} - {1, 1, 1} = {0, 1, 2}
      * @tparam Container
-     * @param lhs - minuend
-     * @param rhs - subtrahend
+     * @param lhs minuend
+     * @param rhs subtrahend
      * @return the difference
      */
     template<typename Container>
@@ -72,8 +72,8 @@ namespace polyhedralGravity::util {
     * Applies the Operation Plus to two Containers piece by piece.
     * @example {1, 2, 3} + {1, 1, 1} = {2, 3, 4}
     * @tparam Container
-    * @param lhs - addend
-    * @param rhs - addend
+    * @param lhs addend
+    * @param rhs addend
     * @return the sum
     */
     template<typename Container>
@@ -85,8 +85,8 @@ namespace polyhedralGravity::util {
     * Applies the Operation * to two Containers piece by piece.
     * @example {1, 2, 3} * {2, 2, 2} = {2, 4, 6}
     * @tparam Container
-    * @param lhs - multiplicand
-    * @param rhs - multiplicand
+    * @param lhs multiplicand
+    * @param rhs multiplicand
     * @return the product
     */
     template<typename Container>
@@ -98,8 +98,8 @@ namespace polyhedralGravity::util {
     * Applies the Operation / to two Containers piece by piece.
     * @example {1, 2, 3} * {1, 2, 3} = {1, 1, 1}
     * @tparam Container
-    * @param lhs - multiplicand
-    * @param rhs - multiplicand
+    * @param lhs multiplicand
+    * @param rhs multiplicand
     * @return the product
     */
     template<typename Container>
@@ -112,8 +112,8 @@ namespace polyhedralGravity::util {
     * @example {1, 2, 3} + 2 = {3, 4, 5}
     * @tparam Container
     * @tparam Scalar
-    * @param lhs - addend
-    * @param scalar - addend
+    * @param lhs addend
+    * @param scalar addend
     * @return a Container
     */
     template<typename Container, typename Scalar>
@@ -122,12 +122,12 @@ namespace polyhedralGravity::util {
     }
 
     /**
-    * Applies the Operation - to a Container and a Scalar.
-    * @example {1, 2, 3} - 2 = {-1, 0, 1}
+    * Applies the Operation to a Container and a Scalar.
+    * @example {1, 2, 3} 2 = {-1, 0, 1}
     * @tparam Container
     * @tparam Scalar
-    * @param lhs - minuend
-    * @param scalar - subtrahend
+    * @param lhs minuend
+    * @param scalar subtrahend
     * @return a Container
      * TODO This method causes issues with the MVSC 19.31.31107.0? Although it is never used...
     */
@@ -137,12 +137,12 @@ namespace polyhedralGravity::util {
 //    }
 
     /**
-    * Applies the Operation - to a Container and a Scalar.
+    * Applies the Operation to a Container and a Scalar.
     * @example {1, 2, 3} * 2 = {2, 4, 6}
     * @tparam Container
     * @tparam Scalar
-    * @param lhs - multiplicand
-    * @param scalar - multiplicand
+    * @param lhs multiplicand
+    * @param scalar multiplicand
     * @return a Container
     */
     template<typename Container, typename Scalar>
@@ -155,8 +155,8 @@ namespace polyhedralGravity::util {
      * @example {2, 4, 6} / 2 = {1, 2, 3}
      * @tparam Container
      * @tparam Scalar
-     * @param lhs - the dividend
-     * @param scalar - the divisor
+     * @param lhs the dividend
+     * @param scalar the divisor
      * @return a Container
      */
     template<typename Container, typename Scalar>
@@ -166,8 +166,8 @@ namespace polyhedralGravity::util {
 
     /**
      * Applies the euclidean norm/ L2-norm to a Container (e.g. a vector)
-     * @tparam Container - must be iterable
-     * @param container - e.g. a vector
+     * @tparam Container must be iterable
+     * @param container e.g. a vector
      * @return an double containing the L2 norm
      */
     template<typename Container>
@@ -177,8 +177,8 @@ namespace polyhedralGravity::util {
 
     /**
      * Computes the absolute value for each value in the given container
-     * @tparam Container - a iterable container, containing numerical values
-     * @param container - the container
+     * @tparam Container a iterable container, containing numerical values
+     * @param container the container
      * @return a container with the modified values
      */
     template<typename Container>
@@ -192,8 +192,8 @@ namespace polyhedralGravity::util {
     /**
      * Computes the determinant with the Sarrus rule for a 3x3 matrix.
      * Notice that for square matrices det(A) = det(A^T).
-     * @tparam T - a numerical value
-     * @param matrix - the 3x3 matrix
+     * @tparam T a numerical value
+     * @param matrix the 3x3 matrix
      * @return the determinant
      */
     template<typename T>
@@ -205,10 +205,10 @@ namespace polyhedralGravity::util {
 
     /**
      * Computes the transposed of a mxn matrix.
-     * @tparam T - the type of the matrix elements
-     * @tparam M - the row number
-     * @tparam N - the column number
-     * @param matrix - the matrix to transpose
+     * @tparam T the type of the matrix elements
+     * @tparam M the row number
+     * @tparam N the column number
+     * @param matrix the matrix to transpose
      * @return the transposed
      */
     template<typename T, size_t M, size_t N>
@@ -224,9 +224,9 @@ namespace polyhedralGravity::util {
 
     /**
     * Returns the cross product of two cartesian vectors.
-    * @tparam T - a number
-    * @param lhs - left vector
-    * @param rhs - right vector
+    * @tparam T a number
+    * @param lhs left vector
+    * @param rhs right vector
     * @return cross product
     */
     template<typename T>
@@ -241,9 +241,9 @@ namespace polyhedralGravity::util {
     /**
      * Calculates the normal N as (first * second) / |first * second| with * being the cross product and first, second
      * as cartesian vectors.
-     * @tparam T - numerical type
-     * @param first - first cartesian vector
-     * @param second - second cartesian vector
+     * @tparam T numerical type
+     * @param first first cartesian vector
+     * @param second second cartesian vector
      * @return the normal (normed)
      */
     template<typename T>
@@ -255,9 +255,9 @@ namespace polyhedralGravity::util {
 
     /**
     * Returns the dot product of two cartesian vectors.
-    * @tparam T - a number
-    * @param lhs - left vector
-    * @param rhs - right vector
+    * @tparam T a number
+    * @param lhs left vector
+    * @param rhs right vector
     * @return dot product
     */
     template<typename T>
@@ -267,9 +267,9 @@ namespace polyhedralGravity::util {
 
     /**
      * Implements the signum function with a certain EPSILON to absorb rounding errors.
-     * @tparam T - a numerical (floating point) value
-     * @param val - the value itself
-     * @param cutoffEpsilon - the cut-off radius around zero to return 0
+     * @tparam T a numerical (floating point) value
+     * @param val the value itself
+     * @param cutoffEpsilon the cut-off radius around zero to return 0
      * @return -1, 0, 1 depending on the sign an the given EPSILON
      */
     template<typename T>
@@ -279,11 +279,11 @@ namespace polyhedralGravity::util {
 
     /**
      * Concatenates two std::array of different sizes to one array.
-     * @tparam T - the shared type of the arrays
-     * @tparam M - the size of the first container
-     * @tparam N  - the size of the second container
-     * @param first - the first array
-     * @param second - the second array
+     * @tparam T the shared type of the arrays
+     * @tparam M the size of the first container
+     * @tparam N  the size of the second container
+     * @param first the first array
+     * @param second the second array
      * @return a new array of size M+N with type T
      */
     template<typename T, size_t M, size_t N>
@@ -301,7 +301,7 @@ namespace polyhedralGravity::util {
 
     /**
      * Calculates the surface area of a triangle consisting of three cartesian vertices.
-     * @tparam T - numerical type
+     * @tparam T numerical type
      * @return surface area
      */
     template<typename T>
@@ -312,9 +312,9 @@ namespace polyhedralGravity::util {
     /**
      * Calculates the magnitude between two values and return true if the magnitude
      * between the exponents in greater than 17.
-     * @tparam T - numerical type
-     * @param first - first number
-     * @param second - second number
+     * @tparam T numerical type
+     * @param first first number
+     * @param second second number
      * @return true if the difference is too be huge, so that floating point absorption will happen
      */
     template<typename T>
@@ -331,10 +331,10 @@ namespace polyhedralGravity::util {
 
         /**
          * Helper method for the tuple operator+, which expands the tuple into a parameter pack.
-         * @tparam Ts - types of the tuple
-         * @tparam Is - indices of the tuple
-         * @param t1 - first tuple
-         * @param t2 - second tuple
+         * @tparam Ts types of the tuple
+         * @tparam Is indices of the tuple
+         * @param t1 first tuple
+         * @param t2 second tuple
          * @return a new tuple with the added values
          */
         template<typename... Ts, size_t... Is>
@@ -346,9 +346,9 @@ namespace polyhedralGravity::util {
 
     /**
      * Adds the contents of two tuples of the same size and types with the operator +.
-     * @tparam Ts - types of the tuples
-     * @param t1 - first tuple
-     * @param t2 - second tuple
+     * @tparam Ts types of the tuples
+     * @param t1 first tuple
+     * @param t2 second tuple
      * @return a new tuple with the added values
      */
     template<typename... Ts>
@@ -358,10 +358,10 @@ namespace polyhedralGravity::util {
 
     /**
      * Operator << for an array of any size.
-     * @tparam T - type of the array, must have an << operator overload
-     * @tparam N - size of the array
-     * @param os - the ostream
-     * @param array - the array itself
+     * @tparam T type of the array, must have an << operator overload
+     * @tparam N size of the array
+     * @param os the ostream
+     * @param array the array itself
      * @return ostream
      */
     template<typename T, size_t N>

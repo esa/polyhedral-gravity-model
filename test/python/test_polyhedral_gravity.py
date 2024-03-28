@@ -40,8 +40,8 @@ CUBE_FACE_FILE = Path("test/resources/cube.face")
 @pytest.fixture(scope="session")
 def reference_solution() -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Reads the cube reference solution from a file and returns it as a tuple"""
-    reference_file_path = Path("test/resources/analytic_cube_solution.txt")
-    reference = np.loadtxt(reference_file_path)
+    reference_file_path = Path("test/resources/analytic_cube_solution_density1.txt")
+    reference = np.loadtxt(reference_file_path, skiprows=1)
     points = reference[:, :3]
     expected_potential = reference[:, 3].flatten()
     expected_acceleration = reference[:, 4:]
