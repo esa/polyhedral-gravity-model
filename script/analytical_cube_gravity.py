@@ -82,7 +82,7 @@ def _evaluate_acceleration(X: float, Y: float, Z: float, i: int):
         total_sum = (total_sum_1 - total_sum_2).evalf()
     else:
         total_sum = total_sum.evalf(subs={_x3: 1 - Z}) - total_sum.evalf(subs={_x3: -1 - Z})
-    return total_sum * GRAVITATIONAL_CONSTANT * DENSITY
+    return total_sum * GRAVITATIONAL_CONSTANT * DENSITY * -1.0
 
 
 def evaluate_acceleration(X: float, Y: float, Z: float):
