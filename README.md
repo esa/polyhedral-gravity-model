@@ -63,12 +63,15 @@ which is strongly based on the former implementation in FORTRAN.
 
 ### Overview
 
-Some exemplary results and plots are stored in the
+> [!TIP]
+> Some exemplary results and plots are stored in the
 [jupyter notebook](script/polyhedral-gravity.ipynb).
 It also provides a good introduction to the application of
 the python interface.
 
-The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
+
+> [!TIP]
+> The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
 contain the full extensive documentation.
 It also covers the content of the `polyhedral_gravity.utility` module to check the mesh sanity.
 
