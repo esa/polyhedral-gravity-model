@@ -57,3 +57,14 @@ Hence, if e.g. your mesh is in :math:`km`, the density must match. Further, the 
 +------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------+-----------------------------------------------------------------+
 | :math:`V_{xx}`, :math:`V_{yy}`, :math:`V_{zz}`, :math:`V_{xy}`, :math:`V_{xz}`, :math:`V_{yz}` |   :math:`\frac{1}{s^2}`                                                    |The spatial rate of change of the gravitational acceleration     |
 +------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------+-----------------------------------------------------------------+
+
+This model's output obeys to the geodesy and geophysics sign conventions.
+Hence, the potential :math:`V` for a polyhedron with a mass :math:`m > 0` is defined as **positive**.
+
+The accelerations :math:`V_x`, :math:`V_y`, :math:`V_z` are defined as
+
+.. math::
+
+    \textbf{g} = + \nabla V = \left( \frac{\delta V}{\delta x}, \frac{\delta V}{\delta y}, \frac{\delta V}{\delta z} \right)
+
+Accordingly, the second derivative tensor is defined as the derivative of :math:`\textbf{g}`.

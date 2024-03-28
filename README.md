@@ -60,10 +60,51 @@ which is strongly based on the former implementation in FORTRAN.
 
 ## Documentation & Examples
 
-> [!TIP]
+> [!NOTE]
 > The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
 contain the full extensive documentation.
 It also covers the content of the `polyhedral_gravity.utility` module to check the mesh sanity.
+
+## Input & Output
+
+### Input
+
+The evaluation of the polyhedral gravity model requires the following parameters:
+
+| Name                                                                       |
+|----------------------------------------------------------------------------|
+| Polyhedral Mesh (either as vertices & faces or as polyhedral source files) |
+| Constant Density $\rho$                                                    |
+
+The mesh and the constants density's unit must match.
+Have a look the documentation to view the [supported mesh files](https://esa.github.io/polyhedral-gravity-model/supported_input.html).
+
+> [!IMPORTANT]  
+> The plane unit normals of every face of the polyhedral mesh must point **outwards**
+of the polyhedron!
+You can check this property via [MeshChecking](https://esa.github.io/polyhedral-gravity-model/api/calculation.html#meshchecking) in C++ or
+via the [utility](https://esa.github.io/polyhedral-gravity-model/api/python.html#module-polyhedral_gravity.utility) submodule in Python.
+If the vertex order of the faces is inverted, i.e. the plane unit normals point
+inwards, then the sign of the output will be inverted.
+
+### Output
+
+The calculation outputs the following parameters for every Computation Point *P*.
+The units of the respective output depend on the units of the input parameters (mesh and density)!
+Hence, if e.g. your mesh is in $km$, the density must match. Further, output units will be different accordingly.
+
+|                            Name                            | Unit (if mesh in $[m]$ and $\rho$ in $[kg/m^3]$) |                              Comment                              |
+|:----------------------------------------------------------:|:------------------------------------------------:|:-----------------------------------------------------------------:|
+|                            $V$                             |       $\frac{m^2}{s^2}$ or $\frac{J}{kg}$        |           The potential or also called specific energy            |
+|                    $V_x$, $V_y$, $V_z$                     |                 $\frac{m}{s^2}$                  | The gravitational accerleration in the three cartesian directions |
+| $V_{xx}$, $V_{yy}$, $V_{zz}$, $V_{xy}$, $V_{xz}$, $V_{yz}$ |                 $\frac{1}{s^2}$                  |   The spatial rate of change of the gravitational accleration    |
+
+
+>[!NOTE]
+>This model's output obeys to the geodesy and geophysics sign conventions.
+Hence, the potential $V$ for a polyhedron with a mass $m > 0$ is defined as **positive**.
+Accordingly, the accelerations are defined as $\textbf{g} = + \nabla V$.
+
 
 ### Minimal Python Example
 
@@ -88,15 +129,6 @@ cube_faces = np.array(
 cube_density = 1.0
 computation_point = np.array([0, 0, 0])
 ```
-
-> [!IMPORTANT]  
-> The plane unit normals of every face of the polyhedral mesh must point **outwards**
-of the polyhedron!
-You can check this property via [MeshChecking](https://esa.github.io/polyhedral-gravity-model/api/calculation.html#meshchecking) in C++ or
-via the [utility](https://esa.github.io/polyhedral-gravity-model/api/python.html#module-polyhedral_gravity.utility) submodule in Python.
-If the vertex order of the faces is inverted, i.e. the plane unit normals point
-inwards, then the sign of the output will be inverted.
-
 
 The simplest way to compute the gravity is to use the `evaluate` function:
 
@@ -182,7 +214,9 @@ const auto results = evaluable(points);
 ```
 
 Similarly to Python, the C++ implementation also provides mesh checking capabilities.
-For reference, have a look at [the main method](./src/main.cpp).
+
+> [!TIP]
+> For reference, have a look at [the main method](./src/main.cpp) of the C++ executable.
 
 ## Installation
 
@@ -231,7 +265,7 @@ pip install .
 ```
 
 To modify the build options (like parallelization) have a look
-at the `setupy.py` and the [next paragraph](#building-the-c-library--executable). The options
+at the [next paragraph](#building-the-c-library--executable). The options
 are modified by setting the environment variables before executing
 the `pip install .` command, e.g.:
 
@@ -244,7 +278,7 @@ pip install .
 for your system in your local python environment. That way, they
 won't be fetched from GitHub.)
 
-## Miscellaneous
+## C++ Library & Executable
 
 ### Building the C++ Library & Executable
 
@@ -279,31 +313,7 @@ the defaults of the others are already correctly set):
 cmake .. -POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
 ```
 
-### Supported Polyhedron Source Files (Python/ C++)
-
-The implementation supports multiple common mesh formats for
-the polyhedral source. These fromats are supported by the C++ library
-and the Python interface.
-These include:
-
-|     File Suffix     |                        Name                        | Comment                                                                                                                                          |
-|:-------------------:|:--------------------------------------------------:|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| `.node` and `.face` |                   TetGen's files                   | These two files need to be given as a pair to the input. [Documentation of TetGen's files](https://wias-berlin.de/software/tetgen/fformats.html) |
-|       `.mesh`       |                 Medit's mesh files                 | Single file containing every needed mesh information.                                                                                            |
-|       `.ply`        | The Polygon File format/ Stanfoard Triangle format | Single file containing every needed mesh information. Blender File Format.                                                                       |
-|       `.off`        |                 Object File Format                 | Single file containing every needed mesh information.                                                                                            |
-|       `.stl`        |              Stereolithography format              | Single file containing every needed mesh information. Blender File Format.                                                                       |
-
-**Notice!** Only the ASCII versions of those respective files are supported! This is especially
-important for e.g. the `.ply` files which also can be in binary format.
-
-Good tools to convert your Polyhedron to a supported format (also for interchanging
-ASCII and binary format) are e.g.:
-
-- [Meshio](https://github.com/nschloe/meshio) for Python
-- [OpenMesh](https://openmesh-python.readthedocs.io/en/latest/readwrite.html) for Python
-
-### The C++ Executable
+### Running the C++ Executable
 
 After the build, the gravity model can be run by executing:
 
@@ -315,7 +325,7 @@ where the YAML-Configuration-File contains the required parameters.
 Examples for Configuration Files and Polyhedral Source Files can be
 found in this repository in the folder `/example-config/`.
 
-#### Config File
+#### Input Configuration File
 
 The configuration should look similar to the given example below.
 It is required to specify the source-files of the polyhedron's mesh (more info
@@ -342,15 +352,9 @@ gravityModel:
 
 #### Output
 
-The calculation outputs the following parameters for every Computation Point *P*.
-The units of the respective output depend on the units of the input parameters (mesh and density)!
-Hence, if e.g. your mesh is in $km$, the density must match. Further, output units will be different accordingly.
-
-|                            Name                            | Unit (if mesh in $[m]$ and $\rho$ in $[kg/m^3]$) |                              Comment                              |
-|:----------------------------------------------------------:|:------------------------------------------------:|:-----------------------------------------------------------------:|
-|                            $V$                             |       $\frac{m^2}{s^2}$ or $\frac{J}{kg}$        |           The potential or also called specific energy            |
-|                    $V_x$, $V_y$, $V_z$                     |                 $\frac{m}{s^2}$                  | The gravitational accerleration in the three cartesian directions |
-| $V_{xx}$, $V_{yy}$, $V_{zz}$, $V_{xy}$, $V_{xz}$, $V_{yz}$ |                 $\frac{1}{s^2}$                  |   The spatial rate of change of the gravitational accleration    |
+The executable produces a CSV file containing $V$, $V_x$, $V_y$, $V_z$,
+$V_{xx}$, $V_{yy}$, $V_{zz}$, $V_{xy}$, $V_{xz}$, $V_{yz}$ for every
+computation point *P*.
 
 ## Testing
 

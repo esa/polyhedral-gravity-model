@@ -42,7 +42,7 @@ And for more details, refer to the **Python API** or **C++ API**.
    :maxdepth: 2
 
    quickstart/installation
-   quickstart/quickstart_overview
+   quickstart/overview
    quickstart/supported_input
    quickstart/examples_python
    quickstart/examples_cpp
