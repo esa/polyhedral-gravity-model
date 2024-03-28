@@ -66,7 +66,7 @@ namespace polyhedralGravity {
 
         //10. Step: Final expressions after application of the prefix (and a division by 2 for the potential)
         potential = (potential * prefix) / 2.0;
-        acceleration = acceleration * prefix;
+        acceleration = acceleration * (-1.0 * prefix);
         gradiometricTensor = gradiometricTensor * prefix;
         return result;
     }

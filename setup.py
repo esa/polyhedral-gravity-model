@@ -165,14 +165,15 @@ class CMakeBuild(build_ext):
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="2.1",
+    version="2.2",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points",
     long_description="""
         The package polyhedral_gravity provides a simple to use interface for the evaluation of the full gravity
-        tensor of a constant density polyhedron at given computation points. It is based on a fast, parallelized
-        backbone in C++ capable of evaluating the gravity at thousands of computation points in the fraction of a second.
+        tensor of a constant density polyhedron at given computation points according to the geodetic convention.
+        It is based on a fast, parallelized backbone in C++ capable of evaluating the gravity at thousands of
+        computation points in the fraction of a second.
     """,
     ext_modules=[CMakeExtension("polyhedral_gravity")],
     cmdclass={"build_ext": CMakeBuild},
