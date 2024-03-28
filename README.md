@@ -24,7 +24,6 @@
 
 - [References](#references)
 - [Documentation & Examples](#documentation--examples)
-  - [Overview](#overview)
   - [Minimal Python Example](#minimal-python-example)
   - [Minimal C++ Example](#minimal-c-example)
 - [Installation](#installation)
@@ -61,15 +60,6 @@ which is strongly based on the former implementation in FORTRAN.
 
 ## Documentation & Examples
 
-### Overview
-
-> [!TIP]
-> Some exemplary results and plots are stored in the
-[jupyter notebook](script/polyhedral-gravity.ipynb).
-It also provides a good introduction to the application of
-the python interface.
-
-
 > [!TIP]
 > The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
 contain the full extensive documentation.
@@ -98,6 +88,15 @@ cube_faces = np.array(
 cube_density = 1.0
 computation_point = np.array([0, 0, 0])
 ```
+
+> [!IMPORTANT]  
+> The plane unit normals of every face of the polyhedral mesh must point **outwards**
+of the polyhedron!
+You can check this property via [MeshChecking](https://esa.github.io/polyhedral-gravity-model/api/calculation.html#meshchecking) in C++ or
+via the [utility](https://esa.github.io/polyhedral-gravity-model/api/python.html#module-polyhedral_gravity.utility) submodule in Python.
+If the vertex order of the faces is inverted, i.e. the plane unit normals point
+inwards, then the sign of the output will be inverted.
+
 
 The simplest way to compute the gravity is to use the `evaluate` function:
 
@@ -140,6 +139,11 @@ print("Valid Mesh?", polyhedral_gravity.utility.check_mesh(cube_vertices, cube_f
 ```
 
 If the method returns `False`, then you need to revise the vertex-ordering.
+
+> [!TIP]
+> More examples and plots are depicted in the
+[jupyter notebook](script/polyhedral-gravity.ipynb).
+
 
 ### Minimal C++ Example
 
@@ -298,16 +302,6 @@ ASCII and binary format) are e.g.:
 
 - [Meshio](https://github.com/nschloe/meshio) for Python
 - [OpenMesh](https://openmesh-python.readthedocs.io/en/latest/readwrite.html) for Python
-
-
-> [!IMPORTANT]  
-> The plane unit normals of every face of the polyhedral mesh must point **outwards**
-of the polyhedron!
-You can check this property via [MeshChecking](https://esa.github.io/polyhedral-gravity-model/api/calculation.html#meshchecking) in C++ or
-via the [utility](https://esa.github.io/polyhedral-gravity-model/api/python.html#module-polyhedral_gravity.utility) submodule in Python.
-If the vertex order of the faces is inverted, i.e. the plane unit normals point
-inwards, then the sign of the output will be inverted.
-
 
 ### The C++ Executable
 
