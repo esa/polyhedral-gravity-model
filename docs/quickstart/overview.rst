@@ -1,7 +1,7 @@
 .. _quick-start-io:
 
-Quick Start I/O (C++ & Python)
-==============================
+Quick Start (C++ & Python)
+==========================
 
 
 This section describes the specification of required inputs and output like
