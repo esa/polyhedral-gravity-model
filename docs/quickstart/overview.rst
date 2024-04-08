@@ -65,6 +65,6 @@ The accelerations :math:`V_x`, :math:`V_y`, :math:`V_z` are defined as
 
 .. math::
 
-    \textbf{g} = + \nabla V = \left( \frac{\delta V}{\delta x}, \frac{\delta V}{\delta y}, \frac{\delta V}{\delta z} \right)
+    \textbf{g} = + \nabla V = \left( \frac{\partial V}{\partial x}, \frac{\partial V}{\partial y}, \frac{\partial V}{\partial z} \right)
 
 Accordingly, the second derivative tensor is defined as the derivative of :math:`\textbf{g}`.
