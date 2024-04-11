@@ -1,11 +1,21 @@
-Quick Start Python
-==================
+.. _examples-python:
+
+Examples Python
+===============
+
+Details about mesh and input units can be found in :ref:`quick-start-io`.
 
 The use of the Python interface is pretty straight-forward since
 there is only one method: :code:`evaluate(..)` or the alternative
-class :code:`GravityEvaluable` caching the polyhedron data.
+class :code:`GravityEvaluable` caching the polyhedron.
+Have a look at :ref:`evaluable-vs-eval` for further
+details about the difference.
+If you strive for maximal performance, use the the class :code:`GravityEvaluable`.
+If you quickly want to try out something, use :code:`evaluate(..)`.
+The polyhedral source can either be a tuple of vertices and faces, or
+a list of polyhedral mesh files (see :ref:`supported-polyhedron-source-files`).
 
-The method calls follow the same pattern as the C++ interface. Thus it is always:
+The method calls follow the same pattern as the C++ interface.
 
 .. code-block:: python
 
@@ -20,8 +30,8 @@ The method calls follow the same pattern as the C++ interface. Thus it is always
     # Define if the computation is parallel or not (the default is parallel, which corresponds to True)
     results = model.evaluate(
         polyhedral_source=polyhedral_source,
-        density=density
-        computation_points=computation_points
+        density=density,
+        computation_points=computation_points,
         parallel=True
     )
 
@@ -52,14 +62,15 @@ defined from within source code for a specific point and density.
         import polyhedral_gravity as model
 
         # Defining every input parameter in the source code
-        vertices = ...          # [] of [] or np.array of length 3 and type float
-        faces = ...             # [] of [] or np.array of length 3 and type int
+        vertices = ...          # (N-3)-array-like of type float
+        faces = ...             # (N-3)-array-like of type int
         density = ...           # float
-        computation_point = ... # [] or np.array of length 3
+        computation_point = ... # (3)-array-like
 
         # Evaluate the gravity model
         # Notice that the third argument could also be a list of points
         # Returns a tuple of potential, acceleration and tensor
+        # If computation_point would be a (N,3)-array, the output would be list of triplets!
         potential, acceleration, tensor = model.evaluate((vertices, faces), density, computation_point, parallel=True)
 
 
@@ -75,7 +86,7 @@ Of course, you can also use keyword arguments for the parameters.
         file_vertices = '___.node'      # str, path to file
         file_nodes = '___.face'         # str, path to file
         density = ...                   # float
-        computation_points = ...        # [] or np.array of length 3
+        computation_points = ...        # (N,3)-array-like
 
         # Evaluate the gravity model
         # Notice that the last argument could also be a list of points
@@ -83,7 +94,7 @@ Of course, you can also use keyword arguments for the parameters.
         results = model.evaluate(
             polyhedral_source=[file_vertices, file_nodes],
             density=density,
-            computation_points=computation_points
+            computation_points=computation_points,
             parallel=True
         )
 
@@ -98,11 +109,12 @@ in some source files for a specific point and density.
         # Reading the vertices and files from a single .mesh file
         file = '___.mesh'       # str, path to file
         density = ...           # float
-        computation_point = ... # [] or np.array of length 3
+        computation_point = ... # (3)-array-like
 
         # Evaluate the gravity model
         # Notice that the last argument could also be a list of points
         # Returns a tuple of potential, acceleration and tensor
+        # If computation_point would be a (N,3)-array, the output would be list of triplets!
         potential, acceleration, tensor = model.evaluate([mesh], density, computation_point)
 
 
@@ -120,22 +132,24 @@ about the vertices' ordering due to its quadratic complexity!
     import polyhedral_gravity.utility as mesh_sanity
 
     # Defining every input parameter in the source code
-    vertices = ...              # [] of [] or np.array of length 3 and type float
-    faces = ...                 # [] of [] or np.array of length 3 and type int
-    density = ...               # float
-    computation_point = ...     # [] or np.array of length 3
+    vertices = ...          # (N-3)-array-like of type float
+    faces = ...             # (N-3)-array-like of type int
+    density = ...           # float
+    computation_point = ... # (3)-array-like
 
-    # Evaluate the gravity model
-    # Notice that the last argument could also be a list of points
-    # Returns (list of) tuple of potential, acceleration and tensor
 
-    # Additional guard statement
+
+    # Additional guard statement to check that the plane normals
+    # are outwards pointing
     if mesh_sanity.check_mesh(vertices, faces):
+        # Evaluate the gravity model
+        # Returns a tuple of potential, acceleration and tensor
+        # If computation_point would be a (N,3)-array, the output would be list of triplets!
         potential, acceleration, tensor = model.evaluate((vertices, faces), density, computation_point)
 
 
-Evaluable class
----------------
+GravityEvaluable
+----------------
 
 Use the :code:`GravityEvaluable` class to cache the polyhedron data over multiple calls.
 This drastically improves the performance, as the polyhedral data is "stored" on the C++ side,
@@ -150,35 +164,19 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
         import polyhedral_gravity as model
 
         # Defining every input parameter in the source code
-        vertices = ...           # [] of [] or np.array of length 3 and type float
-        faces = ...              # [] of [] or np.array of length 3 and type int
+        vertices = ...           # (N-3)-array-like of type float
+        faces = ...              # (N-3)-array-like of type int
         density = ...            # float
-        computation_points = ... # [] or np.array of length 3
+        computation_points = ... # (N,3)-array-like
 
         # Create the evaluable object
         evaluable = model.GravityEvaluable(polyhedral_source, density)
 
         for point in computation_points:
-            # Evaluate the gravity model
+            # Evaluate the gravity model for single points (3)-array-like
             potential, acceleration, tensor = evaluable(point, parallel=True)
 
-Below is a comparison of the performance of the standalone free function and the evaluable class.
-The benchmark was conducted with a M1 Pro 10-Core CPU (ARM64) using the TBB backend.
-The calculation consisted each of 1000 points for the mesh of Eros (24235 vertices and 14744 faces).
-The results are shown in the table below (the lower the better/ faster).
-Basically, as soon as you have more than one point to evaluate, the evaluable class is faster and
-thus recommended. This result comes from the fact that the polyhedral data is cached on the C++ side
-and thus does not need to be converted from Python to C++ for every call. Further, the evaluable class
-also caches the normals and the volume of the polyhedron, which is not the case for the standalone function.
-
-+----------------------------------------+-------------------------------+
-| Test                                   | Time Per Point (microseconds) |
-+========================================+===============================+
-| Free Function (1000 times 1 point)     | 7765.073                      |
-+----------------------------------------+-------------------------------+
-| Free Function (1 time 1000 points)     | 275.917                       |
-+----------------------------------------+-------------------------------+
-| GravityEvaluable (1000 times 1 Point)  | 313.408                       |
-+----------------------------------------+-------------------------------+
-| GravityEvaluable (1 time 1000 Points)  | 253.031                       |
-+----------------------------------------+-------------------------------+
+        # Due to the GravityEvaluable's caching the above for-loop is nearly
+        # as fast as the following (find the runtime details below), which returns
+        # a list of triplets comprising potential, acceleration, tensor
+        results = evaluable(computation_points, parallel=True)

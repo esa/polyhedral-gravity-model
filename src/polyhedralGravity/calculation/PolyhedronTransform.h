@@ -11,8 +11,8 @@ namespace polyhedralGravity {
     /**
      * An iterator transforming the polyhedron's coordinates on demand by a given offset.
      * This function returns a pair of transform iterators (first = begin(), second = end()).
-     * @param polyhedron - reference to the polyhedron
-     * @param offset - the offset to apply
+     * @param polyhedron reference to the polyhedron
+     * @param offset the offset to apply
      * @return pair of transform iterators
      */
     inline auto transformPolyhedron(const Polyhedron &polyhedron, const Array3 &offset = {0.0, 0.0, 0.0}) {

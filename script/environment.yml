@@ -1,0 +1,9 @@
+name: polyhedral-gravity-jupyter-notebook
+channels:
+  - conda-forge
+dependencies:
+  - jupyter
+  - numpy
+  - matplotlib
+  - sympy
+  - polyhedral-gravity-model

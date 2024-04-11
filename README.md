@@ -1,6 +1,6 @@
 # polyhedral-gravity-model
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fbuild-and-test.yml?label=Build%20and%20Test)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fbuild-and-test.yml?logo=GitHub%20Actions&label=Build%20and%20Test)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fdocs.yml?logo=GitBook&label=Documentation)
 ![GitHub](https://img.shields.io/github/license/esa/polyhedral-gravity-model)
 
@@ -24,19 +24,16 @@
 
 - [References](#references)
 - [Documentation & Examples](#documentation--examples)
-  - [Overview](#overview)
+  - [Input & Output (C++ and Python)](#input--output-c-and-python)
   - [Minimal Python Example](#minimal-python-example)
   - [Minimal C++ Example](#minimal-c-example)
 - [Installation](#installation)
   - [With conda](#with-conda)
   - [With pip](#with-pip)
   - [From source](#from-source)
-- [Miscellaneous](#miscellaneous)
+- [C++ Library & Executable](#c-library--executable)
   - [Building the C++ Library & Executable](#building-the-c-library--executable)
-  - [Supported Polyhedron Source Files (Python/ C++)](#supported-polyhedron-source-files-python-c)
-  - [The C++ Executable](#the-c-executable)
-    - [Config File](#config-file)
-    - [Output](#output)
+  - [Running the C++ Executable](#running-the-c-executable)
 - [Testing](#testing)
 - [Contributing](#contributing)
 
@@ -45,14 +42,14 @@
 This code is a validated implementation in C++17 of the Polyhedral Gravity Model
 by Tsoulis et al.. It was created in a collaborative project between
 TU Munich and ESA's Advanced Concepts Team. Please refer to the
-[project report](https://mediatum.ub.tum.de/1695208)
+[project report](https://mediatum.ub.tum.de/doc/1695208/1695208.pdf)
 for extensive information about the theoretical background, related work,
 implementation & design decisions, application, verification,
 and runtime measurements of the presented code.
 
 The implementation is based on the
 paper [Tsoulis, D., 2012. Analytical computation of the full gravity tensor of a homogeneous arbitrarily shaped polyhedral source using line integrals. Geophysics, 77(2), pp.F1-F11.](http://dx.doi.org/10.1190/geo2010-0334.1)
-and its corresponding [implementation in FORTRAN](https://software.seg.org/2012/0001/index.html).
+and its corresponding implementation in FORTRAN.
 
 Supplementary details can be found in the more recent
 paper [TSOULIS, Dimitrios; GAVRIILIDOU, Georgia. A computational review of the line integral analytical formulation of the polyhedral gravity signal. Geophysical Prospecting, 2021, 69. Jg., Nr. 8-9, S. 1745-1760.](https://doi.org/10.1111/1365-2478.13134)
@@ -61,15 +58,51 @@ which is strongly based on the former implementation in FORTRAN.
 
 ## Documentation & Examples
 
-### Overview
+> [!NOTE]
+> The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
+contain the full extensive documentation.
+It also covers the content of the `polyhedral_gravity.utility` module to check the mesh sanity.
 
-Some exemplary results and plots are stored in the
-[jupyter notebook](script/polyhedral-gravity.ipynb).
-It also provides a good introduction to the application of
-the python interface.
+## Input & Output (C++ and Python)
 
-The full extensive documentation can be found
-on [readthedocs](https://polyhedral-gravity-model-cpp.readthedocs.io/en/stable/).
+### Input
+
+The evaluation of the polyhedral gravity model requires the following parameters:
+
+| Name                                                                       |
+|----------------------------------------------------------------------------|
+| Polyhedral Mesh (either as vertices & faces or as polyhedral source files) |
+| Constant Density $\rho$                                                    |
+
+The mesh and the constants density's unit must match.
+Have a look the documentation to view the [supported mesh files](https://esa.github.io/polyhedral-gravity-model/supported_input.html).
+
+> [!IMPORTANT]  
+> The plane unit normals of every face of the polyhedral mesh must point **outwards**
+of the polyhedron!
+You can check this property via [MeshChecking](https://esa.github.io/polyhedral-gravity-model/api/calculation.html#meshchecking) in C++ or
+via the [utility](https://esa.github.io/polyhedral-gravity-model/api/python.html#module-polyhedral_gravity.utility) submodule in Python.
+If the vertex order of the faces is inverted, i.e. the plane unit normals point
+inwards, then the sign of the output will be inverted.
+
+### Output
+
+The calculation outputs the following parameters for every Computation Point *P*.
+The units of the respective output depend on the units of the input parameters (mesh and density)!
+Hence, if e.g. your mesh is in $km$, the density must match. Further, output units will be different accordingly.
+
+|                            Name                            | Unit (if mesh in $[m]$ and $\rho$ in $[kg/m^3]$) |                              Comment                              |
+|:----------------------------------------------------------:|:------------------------------------------------:|:-----------------------------------------------------------------:|
+|                            $V$                             |       $\frac{m^2}{s^2}$ or $\frac{J}{kg}$        |           The potential or also called specific energy            |
+|                    $V_x$, $V_y$, $V_z$                     |                 $\frac{m}{s^2}$                  | The gravitational accerleration in the three cartesian directions |
+| $V_{xx}$, $V_{yy}$, $V_{zz}$, $V_{xy}$, $V_{xz}$, $V_{yz}$ |                 $\frac{1}{s^2}$                  |   The spatial rate of change of the gravitational accleration    |
+
+
+>[!NOTE]
+>This gravity model's output obeys to the geodesy and geophysics sign conventions.
+Hence, the potential $V$ for a polyhedron with a mass $m > 0$ is defined as **positive**.
+Accordingly, the accelerations are defined as $\textbf{g} = + \nabla V$.
+
 
 ### Minimal Python Example
 
@@ -81,6 +114,7 @@ import numpy as np
 import polyhedral_gravity
 
 # We define the cube as a polyhedron with 8 vertices and 12 triangular faces
+# The polyhedron's (here: cube) normals need to point outwards (see below for checking this)
 # The density is set to 1.0
 cube_vertices = np.array(
     [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
@@ -91,7 +125,7 @@ cube_faces = np.array(
     [1, 2, 6], [1, 6, 5], [2, 3, 6], [3, 7, 6], [4, 5, 6], [4, 6, 7]]
 )
 cube_density = 1.0
-computation_point = np.array([[0, 0, 0]])
+computation_point = np.array([0, 0, 0])
 ```
 
 The simplest way to compute the gravity is to use the `evaluate` function:
@@ -106,7 +140,7 @@ potential, acceleration, tensor = polyhedral_gravity.evaluate(
 ```
 
 The more advanced way is to use the `GravityEvaluable` class. It caches the
-internal data strcuture and properties which can be reused for multiple
+internal data structure and properties which can be reused for multiple
 evaluations. This is especially useful if you want to compute the gravity
 for multiple computation points, but don't know the "future points" in advance.
 
@@ -121,6 +155,25 @@ potential, acceleration, tensor = evaluable(computation_point, parallel=True)
 In case you want to hand over the polyhedron via a supported file format,
 just replace the `polyhedral_source` argument with *a list of strings*,
 where each string is the path to a supported file format.
+Note that the `computation_point` could also be (N, 3)-shaped array.
+In this case, the return value of `evaluate(..)` or an `GravityEvaluable` will
+be a list of triplets comprising potential, acceleration, and tensor.
+
+The gravity model requires that the polyhedron's plane unit normals point outwards
+the polyhedron. In case you are unsure, you can check for this property by using the `utility` module beforehand.
+The method also verifies that all triangles are actually triangles with a non-zero
+surface area.
+
+```python
+print("Valid Mesh?", polyhedral_gravity.utility.check_mesh(cube_vertices, cube_faces))
+```
+
+If the method returns `False`, then you need to revise the vertex-ordering.
+
+> [!TIP]
+> More examples and plots are depicted in the
+[jupyter notebook](script/polyhedral-gravity.ipynb).
+
 
 ### Minimal C++ Example
 
@@ -158,6 +211,11 @@ const auto[potential, acceleration, tensor] = evaluable(point, parallel);
 const auto results = evaluable(points);
 ```
 
+Similarly to Python, the C++ implementation also provides mesh checking capabilities.
+
+> [!TIP]
+> For reference, have a look at [the main method](./src/main.cpp) of the C++ executable.
+
 ## Installation
 
 ### With conda
@@ -181,7 +239,7 @@ Binaries for the most common platforms are available on PyPI including
 Windows, Linux and macOS. For macOS and Linux, binaries for
 `x86_64` and `aarch64` are provided.
 In case `pip` uses the source distribution, please make sure that
-you have a C++17 capable compiler, CMake and ninja-build installed.
+you have a C++17 capable compiler and CMake installed.
 
 ### From source
 
@@ -197,7 +255,7 @@ all of them are **automatically** set-up via CMake:
 - pybind11 (2.10.4 or compatible), required for the Python interface, but not the C++ standalone
 
 The module will be build using a C++17 capable compiler,
-CMake and ninja-build. Just execute the following command in
+CMake. Just execute the following command in
 the repository root folder:
 
 ```bash
@@ -205,7 +263,7 @@ pip install .
 ```
 
 To modify the build options (like parallelization) have a look
-at the `setupy.py` and the [next paragraph](#building-the-c-library--executable). The options
+at the [next paragraph](#building-the-c-library--executable). The options
 are modified by setting the environment variables before executing
 the `pip install .` command, e.g.:
 
@@ -218,7 +276,7 @@ pip install .
 for your system in your local python environment. That way, they
 won't be fetched from GitHub.)
 
-## Miscellaneous
+## C++ Library & Executable
 
 ### Building the C++ Library & Executable
 
@@ -253,37 +311,7 @@ the defaults of the others are already correctly set):
 cmake .. -POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
 ```
 
-### Supported Polyhedron Source Files (Python/ C++)
-
-The implementation supports multiple common mesh formats for
-the polyhedral source. These fromats are supported by the C++ library
-and the Python interface.
-These include:
-
-|     File Suffix     |                        Name                        | Comment                                                                                                                                          |
-|:-------------------:|:--------------------------------------------------:|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| `.node` and `.face` |                   TetGen's files                   | These two files need to be given as a pair to the input. [Documentation of TetGen's files](https://wias-berlin.de/software/tetgen/fformats.html) |
-|       `.mesh`       |                 Medit's mesh files                 | Single file containing every needed mesh information.                                                                                            |
-|       `.ply`        | The Polygon File format/ Stanfoard Triangle format | Single file containing every needed mesh information. Blender File Format.                                                                       |
-|       `.off`        |                 Object File Format                 | Single file containing every needed mesh information.                                                                                            |
-|       `.stl`        |              Stereolithography format              | Single file containing every needed mesh information. Blender File Format.                                                                       |
-
-**Notice!** Only the ASCII versions of those respective files are supported! This is especially
-important for e.g. the `.ply` files which also can be in binary format.
-
-Good tools to convert your Polyhedron to a supported format (also for interchanging
-ASCII and binary format) are e.g.:
-
-- [Meshio](https://github.com/nschloe/meshio) for Python
-- [OpenMesh](https://openmesh-python.readthedocs.io/en/latest/readwrite.html) for Python
-
-The vertices in the input mesh file must be ordered so that the plane unit normals point outwards of the polyhedron for
-every face.
-One can use the program input-checking procedure to ensure the correct format. This method is activated via the
-corresponding configuration option and uses the Möller–Trumbore intersection algorithm. Notice that this algorithm is a
-quadratic complexity, so the check should only be utilized in case of uncertainty.
-
-### The C++ Executable
+### Running the C++ Executable
 
 After the build, the gravity model can be run by executing:
 
@@ -295,7 +323,7 @@ where the YAML-Configuration-File contains the required parameters.
 Examples for Configuration Files and Polyhedral Source Files can be
 found in this repository in the folder `/example-config/`.
 
-#### Config File
+#### Input Configuration File
 
 The configuration should look similar to the given example below.
 It is required to specify the source-files of the polyhedron's mesh (more info
@@ -311,7 +339,7 @@ gravityModel:
     polyhedron: #polyhedron source-file(s)
       - "../example-config/data/tsoulis.node"   # .node contains the vertices
       - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
-    density: 2670.0                             # constant density in [kg/m^3]
+    density: 2670.0                             # constant density, units must match with the mesh (see section below)
     points: # Location of the computation point(s) P
       - [ 0, 0, 0 ]                             # Here it is situated at the origin
     check_mesh: true                            # Fully optional, enables input checking (not given: false)
@@ -322,13 +350,9 @@ gravityModel:
 
 #### Output
 
-The calculation outputs the following parameters for every Computation Point *P*:
-
-|             Name             |      Unit       |                              Comment                              |
-|:----------------------------:|:---------------:|:-----------------------------------------------------------------:|
-|              V               | m^2/s^2 or J/kg |           The potential or also called specific energy            |
-|          Vx, Vy, Vz          |      m/s^2      | The gravitational accerleration in the three cartesian directions |
-| Vxx, Vyy, Vzz, Vxy, Vxz, Vyz |      1/s^2      |   The spatial rate of change of the gravitational accleration    |
+The executable produces a CSV file containing $V$, $V_x$, $V_y$, $V_z$,
+$V_{xx}$, $V_{yy}$, $V_{zz}$, $V_{xy}$, $V_{xz}$, $V_{yz}$ for every
+computation point *P*.
 
 ## Testing
 

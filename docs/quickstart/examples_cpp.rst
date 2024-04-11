@@ -1,5 +1,9 @@
-Quick Start C++
-===============
+.. _examples-cpp:
+
+Examples C++
+============
+
+Details about mesh and input units can be found in :ref:`quick-start-io`.
 
 As Executable
 -------------
@@ -35,7 +39,7 @@ Further one must specify the name of the .csv output file.
         polyhedron: #polyhedron source-file(s)
           - "../example-config/data/tsoulis.node"   # .node contains the vertices
           - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
-        density: 2670.0                             # constant density in [kg/m^3]
+        density: 2670.0                             # constant density, units must match with the mesh (see section below)
         points: # Location of the computation point(s) P
           - [ 0, 0, 0 ]                             # Here it is situated at the origin
         check_mesh: true                            # Fully optional, enables input checking (not given: false)
@@ -45,6 +49,7 @@ Further one must specify the name of the .csv output file.
 
 Have a look at :ref:`supported-polyhedron-source-files` to view the available
 options for polyhedral input.
+
 
 As Library
 ----------
@@ -128,12 +133,12 @@ about the vertices' ordering due to its quadratic complexity!
         }
 
 
-
-Evaluation with caching
-~~~~~~~~~~~~~~~~~~~~~~~
+GravityEvaluable (with caching)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Evaluating the gravity model for a given polyhedron
 defined from within source code for a specific point and density.
+
 
 .. code-block:: cpp
 
