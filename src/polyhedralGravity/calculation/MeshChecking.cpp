@@ -3,25 +3,13 @@
 namespace polyhedralGravity::MeshChecking {
 
     bool checkNormalsOutwardPointing(const Polyhedron &polyhedron) {
-        using namespace util;
         auto it = transformPolyhedron(polyhedron);
         // All normals have to point outwards (intersect the polyhedron even times)
         return thrust::transform_reduce(
                 thrust::device,
                 it.first, it.second, [&polyhedron](const Array3Triplet &face) {
-                    // The centroid of the triangular face
-                    const Array3 centroid = (face[0] + face[1] + face[2]) / 3.0;
-
-                    // The normal of the plane calculated with two segments of the triangle
-                    const Array3 segmentVector1 = face[1] - face[0];
-                    const Array3 segmentVector2 = face[2] - face[1];
-                    const Array3 normal = util::normal(segmentVector1, segmentVector2);
-
-                    // The origin of the array has a slight offset in direction of the normal
-                    const Array3 rayOrigin = centroid + (normal * EPSILON);
-
                     // If the ray intersects the polyhedron an even number of times then the normal points outwards
-                    const size_t intersects = detail::countRayPolyhedronIntersections(rayOrigin, normal, polyhedron);
+                    const size_t intersects = detail::countRayPolyhedronIntersections(face, polyhedron);
                     return intersects % 2 == 0;
                 }, true, thrust::logical_and<bool>());
     }
@@ -37,12 +25,25 @@ namespace polyhedralGravity::MeshChecking {
     }
 
     size_t
-    detail::countRayPolyhedronIntersections(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron) {
+    detail::countRayPolyhedronIntersections(const Array3Triplet& face, const Polyhedron &polyhedron) {
+        using namespace util;
+        // The centroid of the triangular face
+        const Array3 centroid = (face[0] + face[1] + face[2]) / 3.0;
+
+        // The normal of the plane calculated with two segments of the triangle
+        // The normal is the rayVector starting at the rayOrigin
+        const Array3 segmentVector1 = face[1] - face[0];
+        const Array3 segmentVector2 = face[2] - face[1];
+        const Array3 rayVector = util::normal(segmentVector1, segmentVector2);
+
+        // The origin of the array has a slight offset in direction of the normal
+        const Array3 rayOrigin = centroid + (rayVector * EPSILON);
+
+        // Count every triangular face which is intersected by the ray
         auto it = transformPolyhedron(polyhedron);
         std::set<Array3> intersections{};
-        // Count every triangular face which is intersected by the ray
-        std::for_each(it.first, it.second, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &triangle) {
-            const auto intersection = rayIntersectsTriangle(rayOrigin, rayVector, triangle);
+        std::for_each(it.first, it.second, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &otherFace) {
+            const std::unique_ptr<Array3> intersection = rayIntersectsTriangle(rayOrigin, rayVector, otherFace);
             if (intersection != nullptr) {
                 intersections.insert(*intersection);
             }

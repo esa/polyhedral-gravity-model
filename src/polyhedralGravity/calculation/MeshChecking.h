@@ -36,13 +36,12 @@ namespace polyhedralGravity::MeshChecking {
 
         /**
          * Calculates how often a vector starting at a specific origin intersects a polyhedron's mesh's triangles.
-         * @param rayOrigin the origin of the ray
-         * @param rayVector the vector describing the ray
+         * @param face the vector describing the ray
          * @param polyhedron the polyhedron consisting of vertices and triangular faces
          * @return true if the ray intersects the triangle
          */
         size_t
-        countRayPolyhedronIntersections(const Array3 &rayOrigin, const Array3 &rayVector, const Polyhedron &polyhedron);
+        countRayPolyhedronIntersections(const Array3Triplet& face, const Polyhedron &polyhedron);
 
         /**
          * Calculates how often a vector starting at a specific origin intersects a triangular face.
