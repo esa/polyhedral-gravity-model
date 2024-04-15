@@ -21,6 +21,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
+        ############################# LINUX WHEELS #############################
         # In case of Linux we need to install compiler and build tools before building the wheels
         # We further only build the manylinux wheels, but not the musllinux wheels
       - name: Build wheels (Linux)
@@ -34,6 +35,7 @@ jobs:
           package-dir: .
           output-dir: dist
         if: matrix.os == 'ubuntu-latest'
+      ############################# MACOS WHEELS #############################
       # Building on macOS requires an installation of gcc since the default clang compiler
       # lacks certain features required for building the package
       - name: Build wheels (macOS)
@@ -46,6 +48,7 @@ jobs:
           package-dir: .
           output-dir: dist
         if: matrix.os == 'macos-latest'
+      ############################# WINDOWS WHEELS #############################
       # Set up the Visual Studio environment on Windows (required, so that CMake finds the compiler)
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
@@ -113,6 +116,7 @@ jobs:
             3.9.x,
             3.10.x,
             3.11.x,
+            3.12.x,
             pypy3.7,
             pypy3.8,
             pypy3.9,
