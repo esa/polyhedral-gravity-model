@@ -33,7 +33,7 @@ jobs:
         run: cd build/test && ./polyhedralGravity_test
         if: matrix.os != 'windows-latest'
       - name: Test (Windows)
-        run: cd build/test && .\polyhedralGravity_test.exe
+        run: cd build/test/Release && .\polyhedralGravity_test.exe
         if: matrix.os == 'windows-latest'
 
   # Install the python interface & test that it is working using pytest
