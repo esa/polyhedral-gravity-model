@@ -11,8 +11,9 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
 
+  # Build the C++ library & test that it is working using GoogleTest
   build-and-test-cpp:
-    name: Build & Test on ${{ matrix.os }}
+    name: C/C++ Library on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -30,11 +31,10 @@ jobs:
           cmake --build . --config Release
       - name: Test
         run: cd build/test && ./polyhedralGravity_test
-        if: matrix.os == 'ubuntu-latest'
 
-  # Install the python interface by building from source and run pytest
+  # Install the python interface & test that it is working using pytest
   build-and-test-python:
-    name: Build & Test on ${{ matrix.os }}
+    name: Python Interface on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
