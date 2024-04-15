@@ -3,12 +3,15 @@
 #include <tuple>
 #include <variant>
 #include <string>
+#include <optional>
 #include <sstream>
 
 #include "thrust/transform.h"
 #include "thrust/execution_policy.h"
 
 #include "polyhedralGravity/calculation/GravityModelDetail.h"
+#include "polyhedralGravity/calculation/MeshChecking.h"
+#include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/Polyhedron.h"
@@ -30,6 +33,9 @@ namespace polyhedralGravity {
         /** The constant density of the polyhedron (the unit must match to the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$) */
         const double _density;
 
+        /** The orientation of the normals of the polyhedron, either outwards or inwards pointing the polyhedral source */
+        const NormalOrientation _orientation;
+
         /** Cache for the segment vectors (segments between vertices of a polyhedral face) */
         mutable std::vector<Array3Triplet> _segmentVectors;
 
@@ -39,33 +45,44 @@ namespace polyhedralGravity {
         /** Cache for the segment unit normals (unit normals of each the polyhedral faces' segments) */
         mutable std::vector<Array3Triplet> _segmentUnitNormals;
 
-
     public:
-
         /**
          * Instantiates a GravityEvaluable with a given constant density polyhedron.
-         * @param polyhedron the polyhedron
+         * @param polyhedralSource the polyhedron as polyhedron, vertices and faces, or a list of files
          * @param density the constant density (the unit must match to the mesh,
          *                e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+         * @param orientation the orientation of the plane unit normals of the polyhedron (either pointing outwards or inwards the polyhedron)
+         *                (default: OUTWARDS as this is the original assumption of Tsoulis et al.'s formulation)
+         * @param check if true, the polyhedral mesh will be checked for degenerated triangular surfaces and
+         *                that the orientation of the normals are outwards pointing/ pointing to as specified by the parameter orientation
+         *                The latter check requires @f$O(n^2)$@f operations!
+         *                By default the check is enabled and will inform the user about inconstencies and the quadratic runtime.
+         *                Explcitly enableing silence the @f$O(n^2)$@f warning, but produces an exception in case of inconstency
+         *                Explcity disableing silences everythign and avoids the @f$O(n^2)$@f runtime cost.
          *
          * @note This is a separate constructor since the polyhedron as a class it not exposed to the user via
          * the Python Interface. Thus, this constructor is only available via the C++ interface.
+         *
+         * @warning The input check requires @f$O(n^2)$@f operations and is enabled by default. Disable it when "you know your mesh"!
+         *
+         * @throws If inputCheck is true (or not set) and the orientation does not match with the polyhedral match a argument exception
          */
-        GravityEvaluable(const Polyhedron &polyhedron, double density) : _polyhedron{polyhedron}, _density{density} {
-            this->prepare();
-        }
-
-        /**
-         * Instantiates a GravityEvaluable with a given constant density polyhedron.
-         * @param polyhedralSource the vertices & faces of the polyhedron as tuple or the filenames of the files
-         * @param density the constant density (the unit must match to the mesh,
-         *                e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         */
-        GravityEvaluable(const PolyhedralSource &polyhedralSource, double density) : _polyhedron{
-                std::holds_alternative<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>>(polyhedralSource)
-                ? Polyhedron{std::get<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>>(polyhedralSource)}
-                : TetgenAdapter(std::get<std::vector<std::string>>(polyhedralSource)).getPolyhedron()},
-                                                                                     _density{density} {
+        GravityEvaluable(
+                const PolyhedralSource &polyhedralSource,
+                double density,
+                const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
+                const std::optional<bool> check = std::nullopt
+                ) :
+            _polyhedron{
+                    std::visit(util::overloaded{
+                                       [](const Polyhedron &arg) { return arg; },
+                                       [](const PolyhedralFileSource &arg) { return TetgenAdapter{arg}.getPolyhedron(); },
+                                       [](const PolyhedralDataSource &arg) { return Polyhedron{arg}; }
+                               }, polyhedralSource)
+            },
+            _density{density},
+            _orientation{orientation} {
+            this->runMeshCeck(check);
             this->prepare();
         }
 
@@ -75,18 +92,26 @@ namespace polyhedralGravity {
          * @param polyhedron the polyhedron
          * @param density the constant density (the unit must match to the mesh,
          *                e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+         * @param orientation the orientation of the plane unit normals of the polyhedron (either pointing outwards or inwards the polyhedron)
+         *                (default: OUTWARDS as this is the original assumption of Tsoulis et al.'s formulation)
          * @param segmentVectors the segment vectors
          * @param planeUnitNormals the plane unit normals
          * @param segmentUnitNormals the segment unit normals
          */
-        GravityEvaluable(const Polyhedron &polyhedron, double density, const std::vector<Array3Triplet> &segmentVectors,
+        GravityEvaluable(const Polyhedron &polyhedron,
+                         double density,
+                         const NormalOrientation &orientation,
+                         const std::vector<Array3Triplet> &segmentVectors,
                          const std::vector<Array3> &planeUnitNormals,
-                         const std::vector<Array3Triplet> &segmentUnitNormals) : _polyhedron{polyhedron},
-                                                                                 _density{density},
-                                                                                 _segmentVectors{segmentVectors},
-                                                                                 _planeUnitNormals{planeUnitNormals},
-                                                                                 _segmentUnitNormals{
-                                                                                         segmentUnitNormals} {}
+                         const std::vector<Array3Triplet> &segmentUnitNormals) :
+            _polyhedron{polyhedron},
+            _density{density},
+            _orientation{orientation},
+            _segmentVectors{segmentVectors},
+            _planeUnitNormals{planeUnitNormals},
+            _segmentUnitNormals{
+                    segmentUnitNormals} {
+        }
 
         /**
          * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
@@ -124,10 +149,20 @@ namespace polyhedralGravity {
          *
          * @return tuple of polyhedron, density, segmentVectors, planeUnitNormals and segmentUnitNormals
          */
-        std::tuple<Polyhedron, double, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
+        std::tuple<Polyhedron, double, NormalOrientation, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
         getState() const;
 
     private:
+        /**
+         * Runs the Mesh Sanity Check depending on the flag.
+         * If nullopt, the check is run and the user is informed about a potential unwanted @f$O(n^2)$@f runtime cost
+         * If true, the check is run, but no runtime cost warning is printed
+         * if false, the check is disabled and nothing at all is done
+         * @param flag to determine if what is done
+         *
+         * @throws std::runtime_error in case of wrong mesh properties
+         */
+        void runMeshCeck(const std::optional<bool> &flag) const;
 
         /**
          * Prepares the polyhedron for the evaluation by calculating the segment vectors, the plane unit normals
@@ -169,4 +204,4 @@ namespace polyhedralGravity {
 
     };
 
-} // namespace polyhedralGravity
+}// namespace polyhedralGravity

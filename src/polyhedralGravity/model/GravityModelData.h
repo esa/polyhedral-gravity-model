@@ -64,6 +64,30 @@ namespace polyhedralGravity {
         INWWARDS
     };
 
+
+    /**
+     * Overloaded insertion operator to output the string representation of a NormalOrientation enum value.
+     *
+     * @param os The output stream to write the string representation to.
+     * @param orientation The NormalOrientation enum value to output.
+     * @return The output stream after writing the string representation.
+     */
+    inline std::ostream& operator<<(std::ostream& os, const NormalOrientation& orientation) {
+        switch (orientation) {
+            case NormalOrientation::OUTWARDS:
+                os << "OUTWARDS";
+            break;
+            case NormalOrientation::INWWARDS:
+                os << "INWARDS";
+            break;
+            default:
+                os << "Unknown";
+            break;
+        }
+        return os;
+    }
+
+
     /**
      * Contains the 3D distances l1_pq and l2_pq between P and the endpoints of segment pq and
      * the 1D distances s1_pq and s2_pq between P'' and the segment endpoints.

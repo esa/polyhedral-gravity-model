@@ -15,7 +15,8 @@ namespace polyhedralGravity::util {
      * Alias for two-dimensional array with size M and N.
      * M is the major size.
      */
-    template<typename T, size_t M, size_t N> using Matrix = std::array<std::array<T, N>, M>;
+    template<typename T, size_t M, size_t N>
+    using Matrix = std::array<std::array<T, N>, M>;
 
     /**
      * Applies a binary function to elements of two containers piece by piece. The objects must
@@ -131,10 +132,10 @@ namespace polyhedralGravity::util {
     * @return a Container
      * TODO This method causes issues with the MVSC 19.31.31107.0? Although it is never used...
     */
-//    template<typename Container, typename Scalar>
-//    Container operator-(const Container &lhs, const Scalar &scalar) {
-//        return applyBinaryFunction(lhs, scalar, std::minus<>());
-//    }
+    //    template<typename Container, typename Scalar>
+    //    Container operator-(const Container &lhs, const Scalar &scalar) {
+    //        return applyBinaryFunction(lhs, scalar, std::minus<>());
+    //    }
 
     /**
     * Applies the Operation to a Container and a Scalar.
@@ -326,6 +327,34 @@ namespace polyhedralGravity::util {
         std::frexp(second, &y);
         return std::abs(x - y) > maxExponentDifference;
     }
+
+    /**
+    * A utility struct that creates an overload set out of all the function objects it inherits from.
+    * It allows a lambda function to be used with std::visit in a variant.
+    * The lambda function needs to be able to handle all types contained in the variant,
+    * and this struct allows it to do so by inheriting the function-call operator from each type.
+    * @tparam Ts A template parameter pack representing all types for which the struct should be able to handle.
+    *
+    * @ref https://en.cppreference.com/w/cpp/utility/variant/visit
+    */
+    template<class... Ts>
+    struct overloaded : Ts... {
+        using Ts::operator()...;
+    };
+
+    /**
+    * This function template provides deduction guides for the overloaded struct.
+    * It deduces the template arguments for overloaded based on its constructor arguments
+    * thus saving you from explicitly mentioning them while instantiation.
+    * @tparam Ts A template parameter pack representing all types that will be passed to the overloaded struct.
+    * @param Ts Variable numbers of parameters to pass to the overloaded struct.
+    * @return This doesn't return a value, but rather assists in the creation of an overloaded object.
+    *          The type of the object will be overloaded<Ts...>.
+    *
+    * @ref https://en.cppreference.com/w/cpp/utility/variant/visit
+    */
+    template<class... Ts>
+    overloaded(Ts...) -> overloaded<Ts...>;
 
     namespace detail {
 

@@ -19,7 +19,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(polyhedral_gravity, m) {
     using namespace polyhedralGravity;
     m.doc() = "Computes the full gravity tensor for a given constant density polyhedron which consists of some "
-              "vertices and triangular faces at a given computation points";
+            "vertices and triangular faces at a given computation points";
 
     m.def("evaluate", [](const PolyhedralSource &polyhedralSource, double density,
                          const std::variant<Array3, std::vector<Array3>> &computationPoints,
@@ -86,26 +86,26 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                 )mydelimiter", py::arg("computation_points"), py::arg("parallel") = true)
             .def(py::pickle(
                     [](const GravityEvaluable &evaluable) {
-                        const auto&[polyhedron, density, segmentVectors, planeUnitNormals, segmentUnitNormals] =
+                        const auto &[polyhedron, density, orientation, segmentVectors, planeUnitNormals, segmentUnitNormals] =
                                 evaluable.getState();
-                        return py::make_tuple(polyhedron.getVertices(), polyhedron.getFaces(), density, segmentVectors,
+                        return py::make_tuple(polyhedron.getVertices(), polyhedron.getFaces(), density, orientation, segmentVectors,
                                               planeUnitNormals, segmentUnitNormals);
                     },
                     [](const py::tuple &tuple) {
-                        constexpr size_t tupleSize = 6;
+                        constexpr size_t tupleSize = 7;
                         if (tuple.size() != tupleSize) {
                             throw std::runtime_error("Invalid state!");
                         }
-                        Polyhedron polyhedron {
-                            tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>()
+                        Polyhedron polyhedron{
+                                tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>()
                         };
                         GravityEvaluable evaluable{
-                            polyhedron, tuple[2].cast<double>(), tuple[3].cast<std::vector<Array3Triplet>>(),
-                            tuple[4].cast<std::vector<Array3>>(), tuple[5].cast<std::vector<Array3Triplet>>()
+                                polyhedron, tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), tuple[4].cast<std::vector<Array3Triplet>>(),
+                                tuple[5].cast<std::vector<Array3>>(), tuple[6].cast<std::vector<Array3Triplet>>()
                         };
                         return evaluable;
                     }
-            ));
+                    ));
 
     py::module_ utility = m.def_submodule("utility",
                                           "This submodule contains useful utility functions like parsing meshes "

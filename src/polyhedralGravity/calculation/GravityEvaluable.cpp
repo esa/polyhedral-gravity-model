@@ -3,6 +3,32 @@
 
 namespace polyhedralGravity {
 
+    void GravityEvaluable::runMeshCeck(const std::optional<bool> &flag) const {
+        if (flag.has_value() && !flag.value()) {
+            // Explcitly disabled check
+            return;
+        }
+        if (!flag.has_value()) {
+            // Implcitly enabled check, print a warning about the runtime cost
+            SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
+                "The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
+                "that all plane unit normals point in the specified direction. This checks requires "
+                "a quadratic runtime cost which is most of the time not desirable. "
+                "Please explcity enable or disable this by setting 'check' to true orfalse");
+        }
+        // Implictly or explcity enabled checking
+        if (!MeshChecking::checkTrianglesNotDegenerated(_polyhedron)) {
+            throw std::runtime_error{"At least on triangle in the mesh is degenerated and its surface area equals zero!"};
+        }
+        if (!MeshChecking::checkPlaneUnitNormalOrientation(_polyhedron, _orientation)) {
+            std::stringstream sstream{};
+            sstream << "The plane unit normals are not pointing in the specified direction '" << _orientation << "'! Please check the order "
+                "of the vertices in the polyhedral input source! You can use utility.plane_normal_orientation(..) "
+                "in Python or MeshChecking::getPlaneUnitNormalOrientation in C++ for a detailed explaination!";
+            throw std::runtime_error{sstream.str()};
+        }
+    }
+
     void GravityEvaluable::prepare() const {
         using namespace GravityModel::detail;
         // Initialize the vectors and allocate the required memory
@@ -94,6 +120,7 @@ namespace polyhedralGravity {
     }
 
     // Explicit template instantiation of the multipoint evaluate method
+
     template std::vector<GravityModelResult>
     GravityEvaluable::evaluate<true>(const std::vector<Array3> &computationPoints) const;
 
@@ -238,9 +265,9 @@ namespace polyhedralGravity {
         return ss.str();
     }
 
-    std::tuple<Polyhedron, double, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
+    std::tuple<Polyhedron, double, NormalOrientation, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
     GravityEvaluable::getState() const {
-        return std::make_tuple(_polyhedron, _density, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
+        return std::make_tuple(_polyhedron, _density, _orientation, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
     }
 
 }

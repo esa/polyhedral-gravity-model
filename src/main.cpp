@@ -24,24 +24,9 @@ int main(int argc, char *argv[]) {
         auto outputFileName = config->getOutputFileName();
         bool checkPolyhedralInput = config->getMeshInputCheckStatus();
 
-        // Checking that the vertices are correctly set-up in the input if activated
-        if (checkPolyhedralInput) {
-            SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Checking mesh...");
-            if (!MeshChecking::checkTrianglesNotDegenerated(poly)) {
-                throw std::runtime_error{
-                        "At least on triangle in the mesh is degenerated and its surface area equals zero!"};
-            } else if (!MeshChecking::checkPlaneUnitNormalOrientation(poly, NormalOrientation::OUTWARDS)) {
-                throw std::runtime_error{
-                        "The plane unit normals are not pointing outwards! Please check the order "
-                        "of the vertices in the polyhedral input source!"};
-            }  else {
-                SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The mesh is fine.");
-            }
-        }
-
         SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The calculation started...");
         auto start = std::chrono::high_resolution_clock::now();
-        auto result = GravityModel::evaluate(poly, density, computationPoints);
+        auto result = GravityModel::evaluate(poly, density, computationPoints, true, NormalOrientation::OUTWARDS, checkPolyhedralInput);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = end - start;
         auto ms = std::chrono::duration_cast<std::chrono::microseconds>(duration);

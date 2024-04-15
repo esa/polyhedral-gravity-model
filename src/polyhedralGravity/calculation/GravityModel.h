@@ -29,7 +29,9 @@ namespace polyhedralGravity::GravityModel {
      * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration
      * at computation Point P
      */
-    GravityModelResult evaluate(const PolyhedronOrSource &polyhedron, double density, const Array3 &computationPoint, bool parallel = true);
+    GravityModelResult evaluate(const PolyhedralSource &polyhedron, double density, const Array3 &computationPoint,
+        bool parallel = true, const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
+        const std::optional<bool> check = std::nullopt);
 
     /**
      * Evaluates the polyhedral gravity model for a given constant density polyhedron at multiple computation
@@ -43,6 +45,8 @@ namespace polyhedralGravity::GravityModel {
      * foreach computation Point P
      */
     std::vector<GravityModelResult>
-    evaluate(const PolyhedronOrSource &polyhedron, double density, const std::vector<Array3> &computationPoints, bool parallel = true);
+    evaluate(const PolyhedralSource &polyhedron, double density, const std::vector<Array3> &computationPoints,
+        bool parallel = true, const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
+        const std::optional<bool> check = std::nullopt);
 
 }

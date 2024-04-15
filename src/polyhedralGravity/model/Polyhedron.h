@@ -20,13 +20,16 @@ namespace polyhedralGravity {
      * Variant of possible polyhedron sources (composed of members, read from file), but not the polyhedron itself
      * @example Utilized in the Python interface which does not expose the Polyhedron class
      */
-    using PolyhedralSource = std::variant<std::tuple<std::vector<Array3>, std::vector<IndexArray3>>, std::vector<std::string>>;
+    using PolyhedralFileSource = std::vector<std::string>;
+
+
+    using PolyhedralDataSource = std::tuple<std::vector<Array3>, std::vector<IndexArray3>>;
 
     /**
      * Variant of possible polyhedral sources (direct, composed of members, read from file), including the polyhedron
      * @example Utilized in the C++ implementation of the polyhedral-gravity model
      */
-    using PolyhedronOrSource = std::variant<Polyhedron, std::tuple<std::vector<Array3>, std::vector<IndexArray3>>, std::vector<std::string>>;
+    using PolyhedralSource = std::variant<Polyhedron, PolyhedralDataSource, PolyhedralFileSource>;
 
     /**
      * Data structure containing the model data of one polyhedron. This includes nodes, edges (faces) and elements.
@@ -87,7 +90,7 @@ namespace polyhedralGravity {
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws runtime_error if no face contains the node zero indicating mathematical index
          */
-        explicit Polyhedron(std::tuple<std::vector<Array3>, std::vector<IndexArray3>> data)
+        explicit Polyhedron(const PolyhedralDataSource &data)
                 : Polyhedron(std::get<std::vector<Array3>>(data), std::get<std::vector<IndexArray3>>(data)) {}
 
 
