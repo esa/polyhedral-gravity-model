@@ -7,11 +7,11 @@
 #include "thrust/transform_reduce.h"
 #include "thrust/execution_policy.h"
 #include "thrust/iterator/counting_iterator.h"
-#include "polyhedralGravity/model/Polyhedron.h"
-#include "polyhedralGravity/model/GravityModelData.h"
+#include "Polyhedron.h"
+#include "GravityModelData.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
-#include "polyhedralGravity/calculation/PolyhedronTransform.h"
+#include "polyhedralGravity/model/PolyhedronTransform.h"
 
 namespace polyhedralGravity::MeshChecking {
 

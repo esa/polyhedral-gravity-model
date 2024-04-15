@@ -9,7 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "polyhedralGravity/calculation/GravityModel.h"
+#include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 
 

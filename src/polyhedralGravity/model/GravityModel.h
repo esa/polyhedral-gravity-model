@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <variant>
 
-#include "polyhedralGravity/calculation/GravityEvaluable.h"
+#include "polyhedralGravity/model/GravityEvaluable.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 

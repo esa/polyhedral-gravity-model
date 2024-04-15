@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <utility>
-#include "polyhedralGravity/calculation/GravityModel.h"
+#include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 
 #include "GravityModelVectorUtility.h"

@@ -1,8 +1,8 @@
 #include <chrono>
 #include "polyhedralGravity/input/ConfigSource.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
-#include "polyhedralGravity/calculation/GravityModel.h"
-#include "polyhedralGravity/calculation/MeshChecking.h"
+#include "polyhedralGravity/model/GravityModel.h"
+#include "polyhedralGravity/model/MeshChecking.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/output/CSVWriter.h"
 

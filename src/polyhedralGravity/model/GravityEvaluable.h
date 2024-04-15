@@ -9,12 +9,12 @@
 #include "thrust/transform.h"
 #include "thrust/execution_policy.h"
 
-#include "polyhedralGravity/calculation/GravityModelDetail.h"
-#include "polyhedralGravity/calculation/MeshChecking.h"
+#include "GravityModelDetail.h"
+#include "MeshChecking.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
-#include "polyhedralGravity/model/GravityModelData.h"
-#include "polyhedralGravity/model/Polyhedron.h"
+#include "GravityModelData.h"
+#include "Polyhedron.h"
 
 
 namespace polyhedralGravity {

@@ -3,7 +3,7 @@
 #include <array>
 #include <utility>
 #include <tuple>
-#include "polyhedralGravity/calculation/MeshChecking.h"
+#include "polyhedralGravity/model/MeshChecking.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
 

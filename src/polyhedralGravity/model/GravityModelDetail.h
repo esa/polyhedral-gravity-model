@@ -15,10 +15,10 @@
 #include "thrust/execution_policy.h"
 #include "xsimd/xsimd.hpp"
 
-#include "polyhedralGravity/calculation/PolyhedronTransform.h"
+#include "PolyhedronTransform.h"
+#include "Polyhedron.h"
+#include "GravityModelData.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
-#include "polyhedralGravity/model/Polyhedron.h"
-#include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityThrust.h"

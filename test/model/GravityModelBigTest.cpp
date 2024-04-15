@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 #include "polyhedralGravity/input/TetgenAdapter.h"
-#include "polyhedralGravity/calculation/GravityModel.h"
+#include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 
 #include "GravityModelVectorUtility.h"
