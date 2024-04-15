@@ -2,16 +2,52 @@
 
 namespace polyhedralGravity::MeshChecking {
 
-    bool checkNormalsOutwardPointing(const Polyhedron &polyhedron) {
+    bool checkPlaneUnitNormalOrientation(const Polyhedron &polyhedron, const NormalOrientation &normalOrientation) {
         auto it = transformPolyhedron(polyhedron);
         // All normals have to point outwards (intersect the polyhedron even times)
         return thrust::transform_reduce(
                 thrust::device,
-                it.first, it.second, [&polyhedron](const Array3Triplet &face) {
+                it.first, it.second, [&polyhedron, &normalOrientation](const Array3Triplet &face) {
                     // If the ray intersects the polyhedron an even number of times then the normal points outwards
+                    // If the ray intersects the polyhedron odd number if times the normal points inwards
                     const size_t intersects = detail::countRayPolyhedronIntersections(face, polyhedron);
-                    return intersects % 2 == 0;
+                    return (intersects % 2 == 0) == (normalOrientation == NormalOrientation::OUTWARDS);
                 }, true, thrust::logical_and<bool>());
+    }
+
+    std::pair<NormalOrientation, std::set<size_t>> getPlaneUnitNormalOrientation(const Polyhedron &polyhedron) {
+        // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
+        auto indexIterator = thrust::make_counting_iterator<size_t>(0);
+        size_t numberOfFaces = polyhedron.countFaces();
+        std::set<size_t> violatingOutwards{};
+        thrust::copy_if(
+                thrust::device,
+                indexIterator,
+                indexIterator + numberOfFaces,
+                std::inserter(violatingOutwards, violatingOutwards.end()),
+                [&polyhedron](const size_t index) {
+                    // If the ray intersects the polyhedron odd number if times the normal points inwards
+                    // Hence, violating the OUTWARDS constraint
+                    const size_t intersects = detail::countRayPolyhedronIntersections(polyhedron.getFace(index), polyhedron);
+                    return intersects % 2 != 0;
+                });
+        // 2. Step: If we have more than n/2 violations, the majority is inwards pointing --> Build complemntary set!
+        if (violatingOutwards.size() > numberOfFaces / 2) {
+            std::set<size_t> fullSet{};
+            std::copy_n(indexIterator, numberOfFaces, std::inserter(fullSet, fullSet.end()));
+            std::set<size_t> violatingInwards{};
+            std::set_difference(
+                    fullSet.begin(), fullSet.end(),
+                    violatingOutwards.begin(), violatingOutwards.end(),
+                    std::inserter(violatingInwards, violatingInwards.end())
+                    );
+            // 3a. Step: Return the inwards pointing as major orientation and
+            // the violating faces, i.e. which have outwards pointing normals
+            return std::make_pair(NormalOrientation::INWWARDS, violatingInwards);
+        }
+        // 3b. Step: Return the outwards pointing as major orientation
+        // and the violating faces, i.e. which have inwards pointing normals
+        return std::make_pair(NormalOrientation::OUTWARDS, violatingOutwards);
     }
 
     bool checkTrianglesNotDegenerated(const Polyhedron &polyhedron) {
@@ -25,7 +61,7 @@ namespace polyhedralGravity::MeshChecking {
     }
 
     size_t
-    detail::countRayPolyhedronIntersections(const Array3Triplet& face, const Polyhedron &polyhedron) {
+    detail::countRayPolyhedronIntersections(const Array3Triplet &face, const Polyhedron &polyhedron) {
         using namespace util;
         // The centroid of the triangular face
         const Array3 centroid = (face[0] + face[1] + face[2]) / 3.0;

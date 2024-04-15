@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
             if (!MeshChecking::checkTrianglesNotDegenerated(poly)) {
                 throw std::runtime_error{
                         "At least on triangle in the mesh is degenerated and its surface area equals zero!"};
-            } else if (!MeshChecking::checkNormalsOutwardPointing(poly)) {
+            } else if (!MeshChecking::checkPlaneUnitNormalOrientation(poly, NormalOrientation::OUTWARDS)) {
                 throw std::runtime_error{
                         "The plane unit normals are not pointing outwards! Please check the order "
                         "of the vertices in the polyhedral input source!"};

@@ -50,6 +50,21 @@ namespace polyhedralGravity {
     using GravityModelResult = std::tuple<double, Array3, Array6>;
 
     /**
+     * The orientation of the plane unit normals of the polyhedron.
+     * We use this property as the concret definition of the vertices ordering depends on the
+     * utilized cooridnate system.
+     * However, the normal alignement is independent. Tsoulis et al. equations require the
+     * normals to point outwards of the polyhedron. If the opposite hold, the result is
+     * inverted.
+     */
+    enum class NormalOrientation: char {
+        /** Outwards pointing plane unit normals*/
+        OUTWARDS,
+        /** Inwards pointing plane unit normals */
+        INWWARDS
+    };
+
+    /**
      * Contains the 3D distances l1_pq and l2_pq between P and the endpoints of segment pq and
      * the 1D distances s1_pq and s2_pq between P'' and the segment endpoints.
      * @note This struct is basically a named tuple
