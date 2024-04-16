@@ -79,6 +79,9 @@ namespace polyhedralGravity {
         return sstream.str();
     }
 
+    std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation> Polyhedron::getState() const {
+        return std::make_tuple(_vertices, _faces, _density, _orientation);
+    }
 
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
         // 1. Step: Find all indices of normals which vioate the constraint outwards pointing

@@ -277,6 +277,12 @@ namespace polyhedralGravity {
         [[nodiscard]] std::string toString() const;
 
         /**
+         * Returns the internal data strcuture of Python pickle support.
+         * @return tuple of vertices, faces, density and normal orientation
+         */
+        [[nodiscard]] std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation> getState() const;
+
+        /**
          * An iterator transforming the polyhedron's coordinates on demand by a given offset.
          * This function returns a pair of transform iterators (first = begin(), second = end()).
          * @param offset the offset to apply
