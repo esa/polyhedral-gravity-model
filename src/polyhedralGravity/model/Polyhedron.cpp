@@ -73,7 +73,7 @@ namespace polyhedralGravity {
     }
 
     std::string Polyhedron::toString() const {
-        std::stringstream sstream;
+        std::stringstream sstream{};
         sstream << "<polyhedral_gravity.Polyhedron, density=" << _density << ", vertices= "
            << countVertices() << ", faces= " << countFaces() << ", orientation= " << _orientation << ">";
         return sstream.str();
