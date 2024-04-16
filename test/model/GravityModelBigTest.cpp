@@ -19,6 +19,10 @@
  * The values which are used to check the C++ implementation are calculated by the
  * Tsoulis reference implementation in FORTRAN and saved in the files in test/resources.
  *
+ * This test case might fail locally using a different architecture/ compiler than the CI!
+ * This is okay - A fix would be to check container element verbosly in a loop with an epsilon.
+ * However, the ContainerEq() - as currentl used - matcher makes the test a lot more readbale.
+ *
  */
 class GravityModelBigTest : public ::testing::Test {
 
