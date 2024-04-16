@@ -6,8 +6,6 @@
 #include <utility>
 #include <fstream>
 #include <sstream>
-#include <string>
-#include "polyhedralGravity/input/TetgenAdapter.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 
@@ -35,8 +33,11 @@ protected:
     static constexpr size_t LOCAL_TEST_COUNT_NODES_PER_FACE = 3;
 
     polyhedralGravity::Polyhedron _polyhedron{
-            polyhedralGravity::TetgenAdapter{
-                    {"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}}.getPolyhedron()};
+        std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"},
+        1.0,
+        polyhedralGravity::NormalOrientation::OUTWARDS,
+        polyhedralGravity::PolyhedronIntegrity::DISABLE
+    };
 
     std::array<double, 3> _computationPoint{0.0, 0.0, 0.0};
 

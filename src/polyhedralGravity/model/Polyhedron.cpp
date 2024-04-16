@@ -26,7 +26,7 @@ namespace polyhedralGravity {
         : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity} {}
 
     Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
-        : Polyhedron{TetgenAdapter{polyhedralFiles}.getPolyhedron(), density, orientation, integrity} {}
+        : Polyhedron{TetgenAdapter{polyhedralFiles}.getPolyhedralSource(), density, orientation, integrity} {}
 
     const std::vector<Array3> &Polyhedron::getVertices() const {
         return _vertices;
@@ -60,6 +60,14 @@ namespace polyhedralGravity {
         return _density;
     }
 
+    void Polyhedron::setDensity(double density) {
+        _density = density;
+    }
+
+    NormalOrientation Polyhedron::getOrientation() const {
+        return _orientation;
+    }
+
     double Polyhedron::getOrientationFactor() const {
         return _orientation == NormalOrientation::OUTWARDS ? 1.0 : -1.0;
     }
@@ -71,58 +79,6 @@ namespace polyhedralGravity {
         return sstream.str();
     }
 
-
-    void Polyhedron::runIntegrityMeasures(const PolyhedronIntegrity &integrity) {
-        using util::operator<<;
-        switch (integrity) {
-            case PolyhedronIntegrity::DISABLE:
-                return;
-            case PolyhedronIntegrity::AUTOMATIC:
-                SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                                   "The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
-                                   "that all plane unit normals point in the specified direction. This checks requires "
-                                   "a quadratic runtime cost which is most of the time not desirable. "
-                                   "Please explcity enable or disable this by setting 'check' to true orfalse");
-            // NO BREAK! AUTOMATIC implies VERIFY, but with a info mesage to explcitly set the option
-            case PolyhedronIntegrity::VERIFY:
-            // NO BREAK! VERIFY terminates earlier, but does in the beginning the same as HEAL
-            case PolyhedronIntegrity::HEAL:
-                if (!this->checkTrianglesNotDegenerated()) {
-                    throw std::invalid_argument{"At least on triangle in the mesh is degenerated and its surface area equals zero!"};
-                }
-                const auto &[actualOrientation, violatingIndices] = this->checkPlaneUnitNormalOrientation();
-                if (actualOrientation != _orientation || !violatingIndices.empty()) {
-                    std::stringstream sstream{};
-                    sstream << "The plane unit normals are not all pointing in the specified direction " << _orientation << '\n';
-                    if (violatingIndices.empty()) {
-                        sstream << "Instead all plane unit normals are pointing "
-                                << actualOrientation
-                                << ". You can either reconstruct the reconstruct the polyhedron with the ortientation set to " << actualOrientation
-                                << ". Alternativly, you can reconstruct with the integrity check set to HEAL";
-                    } else {
-                        sstream << "The actual majority orientation is " << actualOrientation
-                                << ". You can either:\n 1) Fix the ordering of the following faces:\n"
-                                << violatingIndices << '\n'
-                                << "2) Or you reconstruct the polyhedron using the integrity check set to HEAL.";
-                    }
-                    if (integrity == PolyhedronIntegrity::VERIFY) {
-                        throw std::invalid_argument(sstream.str());
-                    } else {
-                        this->healPlaneUnitNormalOrientation(actualOrientation, violatingIndices);
-                    }
-                }
-        }
-    }
-
-    bool Polyhedron::checkTrianglesNotDegenerated() const {
-        const auto &[begin, end] = this->transformIterator();
-        // All triangles surface area needs to be greater than zero
-        return thrust::transform_reduce(
-                thrust::device,
-                begin, end, [](const Array3Triplet &face) {
-                    return util::surfaceArea(face) > 0.0;
-                }, true, thrust::logical_and<bool>());
-    }
 
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
         // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
@@ -157,6 +113,59 @@ namespace polyhedralGravity {
         // 3b. Step: Return the outwards pointing as major orientation
         // and the violating faces, i.e. which have inwards pointing normals
         return std::make_pair(NormalOrientation::OUTWARDS, violatingOutwards);
+    }
+
+    void Polyhedron::runIntegrityMeasures(const PolyhedronIntegrity &integrity) {
+        using util::operator<<;
+        switch (integrity) {
+            case PolyhedronIntegrity::DISABLE:
+                return;
+            case PolyhedronIntegrity::AUTOMATIC:
+                SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
+                                   "The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
+                                   "that all plane unit normals point in the specified direction. This checks requires "
+                                   "a quadratic runtime cost which is most of the time not desirable. "
+                                   "Please explcity enable or disable this by setting 'check' to true orfalse");
+            // NO BREAK! AUTOMATIC implies VERIFY, but with a info mesage to explcitly set the option
+            case PolyhedronIntegrity::VERIFY:
+            // NO BREAK! VERIFY terminates earlier, but does in the beginning the same as HEAL
+            case PolyhedronIntegrity::HEAL:
+                if (!this->checkTrianglesNotDegenerated()) {
+                    throw std::invalid_argument{"At least on triangle in the mesh is degenerated and its surface area equals zero!"};
+                }
+                const auto &[actualOrientation, violatingIndices] = this->checkPlaneUnitNormalOrientation();
+                if (actualOrientation != _orientation || !violatingIndices.empty()) {
+                    std::stringstream sstream{};
+                    sstream << "The plane unit normals are not all pointing in the specified direction " << _orientation << '\n';
+                    if (violatingIndices.empty()) {
+                        sstream << "Instead all plane unit normals are pointing "
+                                << actualOrientation
+                                << ". You can either reconstruct the reconstruct the polyhedron with the ortientation set to " << actualOrientation
+                                << ". Alternativly, you can reconstruct with the integrity check set to HEAL";
+                    } else {
+                        sstream << "The actual majority orientation is " << actualOrientation
+                                << ". You can either:\n 1) Fix the ordering of the following faces:\n"
+                                << violatingIndices << '\n'
+                                << "2) Or you reconstruct the polyhedron using the integrity check set to HEAL.";
+                    }
+                    // In case of HEAL, don't throw but repair
+                    if (integrity != PolyhedronIntegrity::HEAL) {
+                        throw std::invalid_argument(sstream.str());
+                    } else {
+                        this->healPlaneUnitNormalOrientation(actualOrientation, violatingIndices);
+                    }
+                }
+        }
+    }
+
+    bool Polyhedron::checkTrianglesNotDegenerated() const {
+        const auto &[begin, end] = this->transformIterator();
+        // All triangles surface area needs to be greater than zero
+        return thrust::transform_reduce(
+                thrust::device,
+                begin, end, [](const Array3Triplet &face) {
+                    return util::surfaceArea(face) > 0.0;
+                }, true, thrust::logical_and<bool>());
     }
 
     void Polyhedron::healPlaneUnitNormalOrientation(const NormalOrientation &actualOrientation, const std::set<size_t> &violatingIndices) {

@@ -21,7 +21,7 @@ namespace polyhedralGravity {
          * Returns a Polyhedron from the underlying source.
          * @return a polyhedron
          */
-        virtual std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedron() = 0;
+        virtual std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedralSource() = 0;
 
     };
 

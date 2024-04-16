@@ -44,7 +44,7 @@ namespace polyhedralGravity {
     GravityModel::calculatePlaneNormalOrientations(const Array3 &computationPoint, const Polyhedron &polyhedron,
                                                    const std::vector<Array3> &planeUnitNormals) {
         std::vector<double> planeNormalOrientations(planeUnitNormals.size(), 0.0);
-        auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
+        auto transformedPolyhedronIt = polyhedron.transformIterator(computationPoint);
         //Calculate sigma_p for every plane given as input: N_p and vertex0 of every face
         std::transform(planeUnitNormals.cbegin(), planeUnitNormals.cend(), transformedPolyhedronIt.first,
                        planeNormalOrientations.begin(),
@@ -58,7 +58,7 @@ namespace polyhedralGravity {
     std::vector<HessianPlane>
     GravityModel::calculateFacesToHessianPlanes(const Array3 &computationPoint, const Polyhedron &polyhedron) {
         std::vector<HessianPlane> hessianPlanes{polyhedron.countFaces()};
-        auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
+        auto transformedPolyhedronIt = polyhedron.transformIterator(computationPoint);
         //Calculate for each face/ plane/ triangle (here) the Hessian Plane
         std::transform(transformedPolyhedronIt.first, transformedPolyhedronIt.second, hessianPlanes.begin(),
                        [](const Array3Triplet &face) -> HessianPlane {
@@ -106,7 +106,7 @@ namespace polyhedralGravity {
             const std::vector<Array3> &orthogonalProjectionPointsOnPlane) {
         std::vector<Array3> segmentNormalOrientations{segmentUnitNormals.size()};
 
-        auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
+        auto transformedPolyhedronIt = polyhedron.transformIterator(computationPoint);
         auto first = util::zip(transformedPolyhedronIt.first,
                                orthogonalProjectionPointsOnPlane.begin(), segmentUnitNormals.begin());
         auto last = util::zip(transformedPolyhedronIt.second,
@@ -132,7 +132,7 @@ namespace polyhedralGravity {
         std::vector<Array3Triplet> orthogonalProjectionPointsOnSegments{orthogonalProjectionPointsOnPlane.size()};
 
         //Zip the three required arguments together: P' for every plane, sigma_pq for every segment, the faces
-        auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
+        auto transformedPolyhedronIt = polyhedron.transformIterator(computationPoint);
         auto first = util::zip(orthogonalProjectionPointsOnPlane.begin(), segmentNormalOrientation.begin(),
                                transformedPolyhedronIt.first);
         auto last = util::zip(orthogonalProjectionPointsOnPlane.end(), segmentNormalOrientation.end(),
@@ -172,7 +172,7 @@ namespace polyhedralGravity {
         std::vector<std::array<Distance, 3>> distances{segmentVectors.size()};
 
         //Zip the three required arguments together: G_ij for every segment, P'' for every segment
-        auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
+        auto transformedPolyhedronIt = polyhedron.transformIterator(computationPoint);
         auto first = util::zip(segmentVectors.begin(), orthogonalProjectionPointsOnSegment.begin(),
                                transformedPolyhedronIt.first);
         auto last = util::zip(segmentVectors.end(), orthogonalProjectionPointsOnSegment.end(),
@@ -199,7 +199,7 @@ namespace polyhedralGravity {
         std::vector<std::array<TranscendentalExpression, 3>> transcendentalExpressions{distances.size()};
 
         //Zip iterator consisting of  3D and 1D distances l1/l2 and s1/2 | h_p | h_pq | sigma_pq | P'_p | faces
-        auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
+        auto transformedPolyhedronIt = polyhedron.transformIterator(computationPoint);
         auto first = util::zip(distances.begin(), planeDistances.begin(), segmentDistances.begin(),
                                segmentNormalOrientation.begin(), orthogonalProjectionPointsOnPlane.begin(),
                                transformedPolyhedronIt.first);
@@ -238,7 +238,7 @@ namespace polyhedralGravity {
         std::vector<std::pair<double, Array3>> singularities{planeDistances.size()};
 
         //Zip iterator consisting of G_ij vectors | sigma_pq | faces | P' | h_p | sigma_p | N_i
-        auto transformedPolyhedronIt = transformPolyhedron(polyhedron, computationPoint);
+        auto transformedPolyhedronIt = polyhedron.transformIterator(computationPoint);
         auto first = util::zip(segmentVectors.begin(), segmentNormalOrientation.begin(),
                                orthogonalProjectionPointsOnPlane.begin(), planeUnitNormals.begin(),
                                planeDistances.begin(), planeNormalOrientations.begin(), transformedPolyhedronIt.first);

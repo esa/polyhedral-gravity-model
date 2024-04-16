@@ -35,7 +35,7 @@ namespace polyhedralGravity {
         using namespace util;
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
-                            computationPoint[0], computationPoint[1], computationPoint[2], _density);
+                            computationPoint[0], computationPoint[1], computationPoint[2], _polyhedron.getDensity());
         /*
          * Calculate V and Vx, Vy, Vz and Vxx, Vyy, Vzz, Vxy, Vxz, Vyz
          */

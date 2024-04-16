@@ -72,7 +72,7 @@ namespace polyhedralGravity {
          * converted to a Polyhedron.
          * @return a Polyhedron
          */
-        std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedron() override;
+        std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedralSource() override;
 
         /**
          * Reads nodes from a .node file

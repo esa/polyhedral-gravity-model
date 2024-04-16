@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 
     try {
         std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>(argv[1]);
-        auto polyhedralSource = config->getDataSource()->getPolyhedron();
+        auto polyhedralSource = config->getDataSource()->getPolyhedralSource();
         auto density = config->getDensity();
         auto computationPoints = config->getPointsOfInterest();
         auto outputFileName = config->getOutputFileName();

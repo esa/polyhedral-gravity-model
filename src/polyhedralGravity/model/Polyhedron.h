@@ -249,6 +249,18 @@ namespace polyhedralGravity {
         [[nodiscard]] double getDensity() const;
 
         /**
+         * Sets the density to a new value. The density's unit must match to the scaling of the mesh.
+         * @param density the new constant density of the polyhedron
+         */
+        void setDensity(double density);
+
+        /**
+         * Returns the orientation of the plane unit normals of this polyhedron
+         * @return OUTWARDS or INWARDS
+         */
+        [[nodiscard]] NormalOrientation getOrientation() const;
+
+        /**
          * Retruns the plane unit normal orientation factor.
          * If the unit normals are outwards pointing, it is 1.0 as Tsoulis inteneded.
          * If the unit normals are inwards pointing, it is -1.0 (reversed).
@@ -282,6 +294,16 @@ namespace polyhedralGravity {
             return std::make_pair(first, last);
         }
 
+        /**
+         * This method determines the majority vertex ordering of a polyhedron and the set of faces which
+         * violate the majority constraint and need to be adpated.
+         * Hence, if the set is empty, all faces obey to the returned ordering/ plane unit normal orientation.
+         *
+         * @return a pair consisting of majority ordering (OUTWARDS or INWARDS pointing normals)
+         *  and a set of face indices which violate the constraint
+         */
+        [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation() const;
+
     private:
         /**
          * Checks the integrity of the polyhedron depending on the integrity flag.
@@ -299,16 +321,6 @@ namespace polyhedralGravity {
          * @return true if triangles are fine and none of them is degenerate
          */
         [[nodiscard]] bool checkTrianglesNotDegenerated() const;
-
-        /**
-         * This method determines the majority vertex ordering of a polyhedron and the set of faces which
-         * violate the majority constraint and need to be adpated.
-         * Hence, if the set is empty, all faces obey to the returned ordering/ plane unit normal orientation.
-         *
-         * @return a pair consisting of majority ordering (OUTWARDS or INWARDS pointing normals)
-         *  and a set of face indices which violate the constraint
-         */
-        [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation() const;
 
         /**
          * Fixes the orientation of the plane unit normals for a given set of violating face indices.
