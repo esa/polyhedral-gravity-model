@@ -2,7 +2,6 @@
 #include "polyhedralGravity/input/ConfigSource.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/model/GravityModel.h"
-#include "polyhedralGravity/model/MeshChecking.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/output/CSVWriter.h"
 
@@ -16,9 +15,8 @@ int main(int argc, char *argv[]) {
     }
 
     try {
-
         std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>(argv[1]);
-        auto poly = config->getDataSource()->getPolyhedron();
+        auto polyhedralSource = config->getDataSource()->getPolyhedron();
         auto density = config->getDensity();
         auto computationPoints = config->getPointsOfInterest();
         auto outputFileName = config->getOutputFileName();
@@ -26,7 +24,8 @@ int main(int argc, char *argv[]) {
 
         SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The calculation started...");
         auto start = std::chrono::high_resolution_clock::now();
-        auto result = GravityModel::evaluate(poly, density, computationPoints, true, NormalOrientation::OUTWARDS, checkPolyhedralInput);
+        Polyhedron polyhedron{polyhedralSource, density};
+        auto result = GravityModel::evaluate(polyhedron, computationPoints, true);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = end - start;
         auto ms = std::chrono::duration_cast<std::chrono::microseconds>(duration);

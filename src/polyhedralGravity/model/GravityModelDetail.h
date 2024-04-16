@@ -15,7 +15,6 @@
 #include "thrust/execution_policy.h"
 #include "xsimd/xsimd.hpp"
 
-#include "PolyhedronTransform.h"
 #include "Polyhedron.h"
 #include "GravityModelData.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"

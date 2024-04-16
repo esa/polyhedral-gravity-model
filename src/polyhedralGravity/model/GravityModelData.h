@@ -87,6 +87,38 @@ namespace polyhedralGravity {
         return os;
     }
 
+    /**
+     * The three mode the poylhedron class takes in
+     * the constructor in order to determine what initilaization checks to conduct.
+     * This enum is exclusivly utilized in the constrcutor of a {@link Polyhedron} and its private method
+     * {@link runIntegrityMeasures}
+     */
+    enum class PolyhedronIntegrity: char {
+        /**
+         * All activities regarding MeshChecking are disabled.
+         * @note No runtime overhead!
+         */
+        DISABLE,
+        /**
+         * Only verification of the NormalOrientation.
+         * A misalignment (e.g. specified OUTWARDS, but is not) leads to a runtime_error.
+         * @note Runtime Cost @f$O(n^2)$@f
+         */
+        VERIFY,
+        /**
+         * Like VERIFY, but also informs the user about the option in any case on the runtime costs.
+         * This is the implicit default option.
+         * @note Runtime Cost: @f$O(n^2)$@f and output to stdout in every case!
+         */
+        AUTOMATIC,
+        /**
+         * Verification and Autmatioc Healing of the NormalOrientation.
+         * A misalignemt does not lead to a runtime_error, but to an internal correction. Cost: @f$O(n^2)$@f
+         * @note Runtime Cost: @f$O(n^2)$@f and a modification of the mesh input!
+         */
+        HEAL,
+    };
+
 
     /**
      * Contains the 3D distances l1_pq and l2_pq between P and the endpoints of segment pq and

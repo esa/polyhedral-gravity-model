@@ -3,32 +3,6 @@
 
 namespace polyhedralGravity {
 
-    void GravityEvaluable::runMeshCeck(const std::optional<bool> &flag) const {
-        if (flag.has_value() && !flag.value()) {
-            // Explcitly disabled check
-            return;
-        }
-        if (!flag.has_value()) {
-            // Implcitly enabled check, print a warning about the runtime cost
-            SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                "The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
-                "that all plane unit normals point in the specified direction. This checks requires "
-                "a quadratic runtime cost which is most of the time not desirable. "
-                "Please explcity enable or disable this by setting 'check' to true orfalse");
-        }
-        // Implictly or explcity enabled checking
-        if (!MeshChecking::checkTrianglesNotDegenerated(_polyhedron)) {
-            throw std::runtime_error{"At least on triangle in the mesh is degenerated and its surface area equals zero!"};
-        }
-        if (!MeshChecking::checkPlaneUnitNormalOrientation(_polyhedron, _orientation)) {
-            std::stringstream sstream{};
-            sstream << "The plane unit normals are not pointing in the specified direction '" << _orientation << "'! Please check the order "
-                "of the vertices in the polyhedral input source! You can use utility.plane_normal_orientation(..) "
-                "in Python or MeshChecking::getPlaneUnitNormalOrientation in C++ for a detailed explaination!";
-            throw std::runtime_error{sstream.str()};
-        }
-    }
-
     void GravityEvaluable::prepare() const {
         using namespace GravityModel::detail;
         // Initialize the vectors and allocate the required memory
@@ -65,11 +39,9 @@ namespace polyhedralGravity {
         /*
          * Calculate V and Vx, Vy, Vz and Vxx, Vyy, Vzz, Vxy, Vxz, Vyz
          */
-        auto polyhedronIterator = transformPolyhedron(_polyhedron, computationPoint);
-        auto zip1 = util::zip(polyhedronIterator.first, _segmentVectors.begin(), _planeUnitNormals.begin(),
-                              _segmentUnitNormals.begin());
-        auto zip2 = util::zip(polyhedronIterator.second, _segmentVectors.end(), _planeUnitNormals.end(),
-                              _segmentUnitNormals.end());
+        const auto &[polyBegin, polyEnd] = _polyhedron.transformIterator(computationPoint);
+        auto zip1 = util::zip(polyBegin, _segmentVectors.begin(), _planeUnitNormals.begin(), _segmentUnitNormals.begin());
+        auto zip2 = util::zip(polyEnd, _segmentVectors.end(), _planeUnitNormals.end(), _segmentUnitNormals.end());
 
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Starting to iterate over the planes...");
@@ -88,7 +60,7 @@ namespace polyhedralGravity {
                             "Finished the sums. Applying final prefix and eliminating rounding errors.");
 
         //9. Step: Compute prefix consisting of GRAVITATIONAL_CONSTANT * density
-        const double prefix = util::GRAVITATIONAL_CONSTANT * _density;
+        const double prefix = util::GRAVITATIONAL_CONSTANT * _polyhedron.getDensity() * _polyhedron.getOrientationFactor();
 
         //10. Step: Final expressions after application of the prefix (and a division by 2 for the potential)
         potential = (potential * prefix) / 2.0;
@@ -259,15 +231,15 @@ namespace polyhedralGravity {
     }
 
     std::string GravityEvaluable::toString() const {
-        std::stringstream ss;
-        ss << "<polyhedral_gravity.GravityEvaluable, density=" << _density << ", vertices= "
+        std::stringstream sstream;
+        sstream << "<polyhedral_gravity.GravityEvaluable, density=" << _polyhedron.getDensity() << ", vertices= "
            << _polyhedron.countVertices() << ", faces= " << _polyhedron.countFaces() << ">";
-        return ss.str();
+        return sstream.str();
     }
 
-    std::tuple<Polyhedron, double, NormalOrientation, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
+    std::tuple<Polyhedron, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
     GravityEvaluable::getState() const {
-        return std::make_tuple(_polyhedron, _density, _orientation, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
+        return std::make_tuple(_polyhedron, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
     }
 
 }

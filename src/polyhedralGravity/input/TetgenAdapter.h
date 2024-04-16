@@ -22,7 +22,7 @@ namespace polyhedralGravity {
  *
  * The Adapter further keeps en eye on the already read in files in order to give feedback if data is in conflict.
  */
-    class TetgenAdapter : public DataSource {
+    class TetgenAdapter final : public DataSource {
 
         /**
          * The default exception message
@@ -72,7 +72,7 @@ namespace polyhedralGravity {
          * converted to a Polyhedron.
          * @return a Polyhedron
          */
-        Polyhedron getPolyhedron() override;
+        std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedron() override;
 
         /**
          * Reads nodes from a .node file

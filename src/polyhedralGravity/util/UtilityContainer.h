@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <set>
 #include <numeric>
 #include <utility>
 #include <algorithm>
@@ -395,14 +396,30 @@ namespace polyhedralGravity::util {
      */
     template<typename T, size_t N>
     std::ostream &operator<<(std::ostream &os, const std::array<T, N> &array) {
-        os << "[";
-        auto it = array.begin();
-        auto end = array.end() - 1;
-        while (it != end) {
-            os << *it << " ";
-            ++it;
-        }
-        os << *it << "]";
+        os.operator<<('[');
+        os.operator<<(' ');
+        std::for_each(array.cbegin(), array.cend(), [&os](const auto& arg) {
+            os << arg << ' ';
+        });
+        os.operator<<(']');
+        return os;
+    }
+
+    /**
+     * Operator << for a set.
+     * @tparam T type of the set, must have an << operator overload
+     * @param os the ostream
+     * @param set the set itself
+     * @return ostream
+     */
+    template<typename T>
+    std::ostream &operator<<(std::ostream &os, const std::set<T> &set) {
+        os.operator<<('[');
+        os.operator<<(' ');
+        std::for_each(set.cbegin(), set.cend(), [&os](const auto& arg) {
+            os << arg << ' ';
+        });
+        os.operator<<(']');
         return os;
     }
 
