@@ -1,5 +1,5 @@
 from typing import Tuple, List, Union
-import polyhedral_gravity
+from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation
 import numpy as np
 import pickle
 import pytest
@@ -59,11 +59,16 @@ def test_polyhedral_gravity(
     is callable with file/ array inputs.
     """
     points, expected_potential, expected_acceleration = reference_solution
-    sol = polyhedral_gravity.evaluate(
+    polyhedron = Polyhedron(
         polyhedral_source=polyhedral_source,
         density=DENSITY,
+        normal_orientation=NormalOrientation.OUTWARDS,
+        integrity_check=PolyhedronIntegrity.VERIFY,
+    )
+    sol = evaluate(
+        polyhedron=polyhedron,
         computation_points=points,
-        parallel=True
+        parallel=True,
     )
     potential = np.array([result[0] for result in sol])
     acceleration = np.array([result[1] for result in sol])
@@ -82,13 +87,16 @@ def test_polyhedral_gravity_evaluable(
     is instantiable with file/ array inputs.
     """
     points, expected_potential, expected_acceleration = reference_solution
-    evaluable = polyhedral_gravity.GravityEvaluable(
+    polyhedron = Polyhedron(
         polyhedral_source=polyhedral_source,
         density=DENSITY,
+        normal_orientation=NormalOrientation.OUTWARDS,
+        integrity_check=PolyhedronIntegrity.VERIFY,
     )
+    evaluable = GravityEvaluable(polyhedron=polyhedron)
     sol = evaluable(
         computation_points=points,
-        parallel=True
+        parallel=True,
     )
     potential = np.array([result[0] for result in sol])
     acceleration = np.array([result[1] for result in sol])
@@ -109,10 +117,13 @@ def test_polyhedral_evaluable_pickle(
     pickled and unpicked as well).
     """
     points, expected_potential, expected_acceleration = reference_solution
-    initial_evaluable = polyhedral_gravity.GravityEvaluable(
+    polyhedron = Polyhedron(
         polyhedral_source=polyhedral_source,
-        density=DENSITY
+        density=DENSITY,
+        normal_orientation=NormalOrientation.OUTWARDS,
+        integrity_check=PolyhedronIntegrity.DISABLE,
     )
+    initial_evaluable = GravityEvaluable(polyhedron=polyhedron)
     pickle_output = tmp_path.joinpath("evaluable.pk")
     with open(pickle_output, "wb") as f:
         pickle.dump(initial_evaluable, f, pickle.HIGHEST_PROTOCOL)
@@ -122,7 +133,7 @@ def test_polyhedral_evaluable_pickle(
 
     sol = read_evaluable(
         computation_points=points,
-        parallel=True
+        parallel=True,
     )
     potential = np.array([result[0] for result in sol])
     acceleration = np.array([result[1] for result in sol])

@@ -10,7 +10,6 @@
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/GravityEvaluable.h"
-#include "polyhedralGravity/input/TetgenAdapter.h"
 
 
 namespace py = pybind11;
