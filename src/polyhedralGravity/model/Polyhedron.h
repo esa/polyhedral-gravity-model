@@ -10,6 +10,7 @@
 #include <tuple>
 #include <variant>
 #include <string>
+#include <sstream>
 #include <memory>
 #include "thrust/copy.h"
 #include "polyhedralGravity/output/Logging.h"
