@@ -20,141 +20,263 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
     m.doc() = "Computes the full gravity tensor for a given constant density polyhedron which consists of some "
             "vertices and triangular faces at a given computation points";
 
-    m.def("evaluate", [](const PolyhedralSource &polyhedralSource, double density,
-                         const std::variant<Array3, std::vector<Array3>> &computationPoints,
-                         bool parallel) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> {
-              using namespace polyhedralGravity;
-              if (std::holds_alternative<Array3>(computationPoints)) {
-                  return std::visit([&density, &computationPoints, parallel](const auto &source) {
-                      using namespace polyhedralGravity;
-                      return GravityModel::evaluate(source, density, std::get<Array3>(computationPoints), parallel);
-                  }, polyhedralSource);
-              } else {
-                  return std::visit([&density, &computationPoints, parallel](const auto &source) {
-                      using namespace polyhedralGravity;
-                      return GravityModel::evaluate(source, density, std::get<std::vector<Array3>>(computationPoints),
-                                                    parallel);
-                  }, polyhedralSource);
-              }
-          }, R"mydelimiter(
-            Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
+    py::enum_<NormalOrientation>(m, "NormalOrientation", R"mydelimiter(
+            The orientation of the plane unit normals of the polyhedron.
+            Tsoulis et al. equations require the normals to point outwards of the polyhedron.
+            If the opposite hold, the result is negated.
+            The implementation can handle both cases.
+        )mydelimiter")
+        .value("OUTWARDS", NormalOrientation::OUTWARDS, "Outwards pointing plane unit normals")
+        .value("INWARDS", NormalOrientation::INWWARDS, "Inwards pointing plane unit normals");
 
-            Args:
-                polyhedral_source:  The vertices & faces of the polyhedron as tuple or
-                                    the filenames of the files containing the vertices & faces as list of strings
-                density:            The constant density of the polyhedron in [kg/m^3]
-                computation_points: The computation points as tuple or list of points
-                parallel:           If true, the computation is done in parallel (default: true)
+    py::enum_<PolyhedronIntegrity>(m, "PolyhedronIntegrity", R"mydelimiter(
+            The pointing direction of the normals of a Polyhedron.
+            They can either point outwards or inwards the polyhedron.
+        )mydelimiter")
+        .value("DISABLE", PolyhedronIntegrity::DISABLE,
+            "All activities regarding MeshChecking are disabled. No runtime overhead!")
+        .value("VERIFY", PolyhedronIntegrity::VERIFY,
+            "Only verification of the NormalOrientation. "
+            "A misalignment (e.g. specified OUTWARDS, but is not) leads to a runtime_error. Runtime Cost O(n^2)")
+        .value("AUTOMATIC", PolyhedronIntegrity::AUTOMATIC,
+            "Like VERIFY, but also informs the user about the option in any case on the runtime costs. "
+            "This is the implicit default option. Runtime Cost: O(n^2) and output to stdout in every case!" )
+        .value("HEAL", PolyhedronIntegrity::HEAL,
+            "Verification and Autmatioc Healing of the NormalOrientation. "
+            "A misalignemt does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: @f$O(n^2)$@f");
 
-            Returns:
-                Either a tuple of potential, acceleration and second derivatives at the computation points or
-                if multiple computation points are given, the result is a list of tuples
-        )mydelimiter", py::arg("polyhedral_source"), py::arg("density"), py::arg("computation_points"),
-          py::arg("parallel") = true);
+    py::class_<Polyhedron>(m, "Polyhedron", R"mydelimiter(
+            A constant density Polyhedron stores the mesh data consisting of vertices and triangular faces.
+            The density and the coordinate system in which vertices and faces are defined need to have the same scale/ units.
+            Tsoulis et al.'s polyhedral gravity model requires that the plane unit normals of every face are pointing outwards
+            of the polyhedron. Otherwise the results are negated.
+            The class by default enforces this constraints and offers utility to (automatically) make the input data obey to this constraint.
+        )mydelimiter")
+        .def(py::init<const PolyhedralSource &, double, const NormalOrientation &, const PolyhedronIntegrity &>(),
+            R"mydelimiter(
+                Creates a new Polyhedron from vertices and faces and a constant density.
+                If the integrity_check is not set to DISABLE, the mesh integrity is checked
+                (so that it fits the specification of the polyhedral model by Tsoulis et al.)
 
-    pybind11::class_<GravityEvaluable>(m, "GravityEvaluable", R"mydelimiter(
-                A class to evaluate the polyhedral gravity model for a given constant density polyhedron at a given computation point.
-                It provides a __call__ method to evaluate the polyhedral gravity model for computation points while
-                also caching the polyhedron data over the lifetime of the object.
+                Args:
+                    polyhedral_source:  The vertices & faces of the polyhedron as pair of (N, 3)-arrays
+                    density:            The constant density of the polyhedron, it must match the mesh's units, e.g. mesh in [m] then density in [kg/m^3]
+                    normal_orientation: The pointing direction of the mesh's plane unit normals, i.e., either OUTWARDS or INWARDS of the polyhedron
+                                        (default: OUTWARDS)
+                    integrity_check:    Conducts an Integrity Check (degenerated faces/ vertex ordering) depending on the values. Options
+                                        - AUTOMATIC (Default): Prints to stdout and throws ValueError if normal_orientation is wrong/ inconsisten
+                                        - VERIFY: Like AUTOMATIC, but does not print to stdout
+                                        - DISABLE: Recommened, when you know the mesh to avoid to pay O(n^2) runtime. Disables ALL checks
+                                        - HEAL: Automatically fixes the normal_orientation and vertex ordering to the correct values
+                Raises:
+                    ValueError if `integrity_check` is set to AUTOMATIC or VERIFY and the mesh is inconsistent
+
+                Note:
+                    The integrity_check is automatically enabled to avoid wrong results due to the wrong vertex ordering.
+                    The check requires O(n^2) operations. You want to turn this off, when you know you mesh!
+            )mydelimiter",
+            py::arg("polyhedral_source"),
+            py::arg("density"),
+            py::arg("normal_orientation") = NormalOrientation::OUTWARDS,
+            py::arg("integrity_check") = PolyhedronIntegrity::AUTOMATIC
+            )
+        .def(py::init<const PolyhedralFiles &, double, const NormalOrientation &, const PolyhedronIntegrity &>(),
+            R"mydelimiter(
+                Creates a new Polyhedron from vertices and faces and a constant density.
+                If the integrity_check is not set to DISABLE, the mesh integrity is checked
+                (so that it fits the specification of the polyhedral model by Tsoulis et al.)
+
+                Args:
+                    polyhedral_source:  The filenames of the files containing the vertices & faces as list of strings
+                    density:            The constant density of the polyhedron, it must match the mesh's units, e.g. mesh in [m] then density in [kg/m^3]
+                    normal_orientation: The pointing direction of the mesh's plane unit normals, i.e., either OUTWARDS or INWARDS of the polyhedron
+                                        (default: OUTWARDS)
+                    integrity_check:    Conducts an Integrity Check (degenerated faces/ vertex ordering) depending on the values. Options
+                                        - AUTOMATIC (Default): Prints to stdout and throws ValueError if normal_orientation is wrong/ inconsisten
+                                        - VERIFY: Like AUTOMATIC, but does not print to stdout
+                                        - DISABLE: Recommened, when you know the mesh to avoid to pay O(n^2) runtime. Disables ALL checks
+                                        - HEAL: Automatically fixes the normal_orientation and vertex ordering to the correct values
+                Raises:
+                    ValueError if `integrity_check` is set to AUTOMATIC or VERIFY and the mesh is inconsistent
+
+                Note:
+                    The integrity_check is automatically enabled to avoid wrong results due to the wrong vertex ordering.
+                    The check requires O(n^2) operations. You want to turn this off, when you know you mesh!
+            )mydelimiter",
+            py::arg("polyhedral_source"),
+            py::arg("density"),
+            py::arg("normal_orientation") = NormalOrientation::OUTWARDS,
+            py::arg("integrity_check") = PolyhedronIntegrity::AUTOMATIC
+            )
+            .def("check_normal_orientation", &Polyhedron::checkPlaneUnitNormalOrientation, R"mydelimiter(
+                Returns a tuple consisting of majority plane unit normal orientation,
+                i.e. the direction in which at least more than half of the plane unit normals point,
+                and the indices of the faces violating this orientation, i.e. the faces whose plane unit normals point in the other direction.
+                The set of incides vioalting the property is empty if the mesh has a clear ordering.
+                The set contains values if the mesh is incosistent.
+
+                Returns:
+                    Tuple consisting consisting of majority plane unit normal orientation and the indices of the faces violating this orientation.
+
+                Note:
+                    This utility is mainly for diagnostics and debugging purposes. If the polyhedron is constrcuted with `integrity_check`
+                    set to AUTOMATIC or VERIFY, the construction fails anyways.
+                    If set to HEAL, this method should return an empty set (but maybe a different ordering than initially specified)
+                    Only if set to DISABLE, then this method might actually return a set with faulty indices.
+                    Hence, if you want to know your mesh error. Construct the polyhedron with `integrity_check=DISABLE` and call this method.
             )mydelimiter")
-            .def(pybind11::init<const PolyhedralSource &, double>(),
-                 R"mydelimiter(
-                    Creates a new GravityEvaluable for a given constant density polyhedron.
-                    It provides a __call__ method to evaluate the polyhedral gravity model for computation points while
-                    also caching the polyhedron data over the lifetime of the object.
-
-                    Args:
-                        polyhedral_source:  The vertices & faces of the polyhedron as tuple or
-                                            the filenames of the files containing the vertices & faces as list of strings
-                        density:            The constant density of the polyhedron in [kg/m^3]
-                    )mydelimiter",
-                 pybind11::arg("polyhedral_source"),
-                 pybind11::arg("density"))
-            .def("__repr__", &GravityEvaluable::toString)
-            .def("__call__", &GravityEvaluable::operator(),
-                 R"mydelimiter(
-                    Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
-
-                    Args:
-                        computation_points: The computation points as tuple or list of points
-                        parallel:           If true, the computation is done in parallel (default: true)
-
-                    Returns:
-                        Either a tuple of potential, acceleration and second derivatives at the computation points or
-                        if multiple computation points are given, the result is a list of tuples
-                )mydelimiter", py::arg("computation_points"), py::arg("parallel") = true)
-            .def(py::pickle(
-                    [](const GravityEvaluable &evaluable) {
-                        const auto &[polyhedron, density, orientation, segmentVectors, planeUnitNormals, segmentUnitNormals] =
-                                evaluable.getState();
-                        return py::make_tuple(polyhedron.getVertices(), polyhedron.getFaces(), density, orientation, segmentVectors,
-                                              planeUnitNormals, segmentUnitNormals);
-                    },
-                    [](const py::tuple &tuple) {
-                        constexpr size_t tupleSize = 7;
-                        if (tuple.size() != tupleSize) {
-                            throw std::runtime_error("Invalid state!");
-                        }
-                        Polyhedron polyhedron{
-                                tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>()
-                        };
-                        GravityEvaluable evaluable{
-                                polyhedron, tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), tuple[4].cast<std::vector<Array3Triplet>>(),
-                                tuple[5].cast<std::vector<Array3>>(), tuple[6].cast<std::vector<Array3Triplet>>()
-                        };
-                        return evaluable;
-                    }
-                    ));
-
-    py::module_ utility = m.def_submodule("utility",
-                                          "This submodule contains useful utility functions like parsing meshes "
-                                          "or checking if the polyhedron's mesh plane unit normals point outwards "
-                                          "like it is required by the polyhedral-gravity model.");
-
-    utility.def("read", [](const std::vector<std::string> &filenames) {
-        TetgenAdapter tetgen{filenames};
-        auto polyhedron = tetgen.getPolyhedralSource();
-        return std::make_tuple(polyhedron.getVertices(), polyhedron.getFaces());
-    }, R"mydelimiter(
-            Reads a polyhedron from a mesh file. The vertices and faces are read from input
-            files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
-
-            Args:
-                input_files (List[str]): list of input files.
-            Returns:
-                tuple of vertices (N, 3) (floats) and faces (N, 3) (ints).
-          )mydelimiter", py::arg("input_files"));
-
-    utility.def("check_mesh", [](const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces) {
-        Polyhedron poly{vertices, faces};
-        return MeshChecking::checkTrianglesNotDegenerated(poly) && MeshChecking::checkPlaneUnitNormalOrientation(poly);
-    }, R"mydelimiter(
-                Checks if no triangles of the polyhedral mesh are degenerated by checking that their surface area
-                is greater zero.
-                Further, Checks if all the polyhedron's plane unit normals are pointing outwards.
+            .def("__getitem__", &Polyhedron::getResolvedFace, R"mydelimiter(
+                Returns the the three cooridnates of the vertices making the face at the requested index.
 
                 Args:
-                    vertices (2-D array-like): (N, 3) array of vertex coordinates (floats).
-                    faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints).
+                    index:  The index of the face
+
                 Returns:
-                    True if no triangle is degenerate and the polyhedron's plane unit normals are all pointing outwards.
-          )mydelimiter", py::arg("vertices"), py::arg("faces"));
+                    The resolved face (so the vertices as coordinates) as (3, 3)-array
 
+                Raises:
+                    IndexError if face index is out-of-bounds
+            )mydelimiter", py::arg("index"))
+            .def_property_readonly("vertices", &Polyhedron::getVertices, "The vertices (type: floats) of the polyhedron as (N, 3)-array")
+            .def_property_readonly("faces", &Polyhedron::getFace, "The faces (type: int) of the polyhedron as (M, 3) array")
+            .def_property("density", &Polyhedron::getDensity, &Polyhedron::setDensity, "The density (mutable) of the polyhedron")
+            .def_property_readonly("normal_orientation", &Polyhedron::getOrientation, "The plane unit normal orientation of the polyhedron");
 
-    utility.def("check_mesh", [](const std::vector<std::string> &filenames) {
-        TetgenAdapter tetgen{filenames};
-        Polyhedron poly = tetgen.getPolyhedralSource();
-        return MeshChecking::checkTrianglesNotDegenerated(poly) && MeshChecking::checkPlaneUnitNormalOrientation(poly);
-    }, R"mydelimiter(
-                Checks if no triangles of the polyhedral mesh are degenerated by checking that their surface area
-                is greater zero.
-                Further, Checks if all the polyhedron's plane unit normals are pointing outwards.
-                Reads a polyhedron from a mesh file. The vertices and faces are read from input
-                files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
-
-                Args:
-                    input_files (List[str]): list of input files.
-                Returns:
-                    True if no triangle is degenerate and the polyhedron's plane unit normals are all pointing outwards.
-          )mydelimiter", py::arg("input_files"));
+//     py::class_<GravityEvaluable>(m, "GravityEvaluable", R"mydelimiter(
+//                 A class to evaluate the polyhedral gravity model for a given constant density polyhedron at a given computation point.
+//                 It provides a __call__ method to evaluate the polyhedral gravity model for computation points while
+//                 also caching the polyhedron data over the lifetime of the object.
+//             )mydelimiter")
+//             .def(py::init<const PolyhedralSource &, double>(),
+//                  R"mydelimiter(
+//                     Creates a new GravityEvaluable for a given constant density polyhedron.
+//                     It provides a __call__ method to evaluate the polyhedral gravity model for computation points while
+//                     also caching the polyhedron data over the lifetime of the object.
+//
+//                     Args:
+//                         polyhedral_source:  The vertices & faces of the polyhedron as tuple or
+//                                             the filenames of the files containing the vertices & faces as list of strings
+//                         density:            The constant density of the polyhedron in [kg/m^3]
+//                     )mydelimiter",
+//                  py::arg("polyhedral_source"),
+//                  py::arg("density"))
+//             .def("__repr__", &GravityEvaluable::toString)
+//             .def("__call__", &GravityEvaluable::operator(),
+//                  R"mydelimiter(
+//                     Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
+//
+//                     Args:
+//                         computation_points: The computation points as tuple or list of points
+//                         parallel:           If true, the computation is done in parallel (default: true)
+//
+//                     Returns:
+//                         Either a tuple of potential, acceleration and second derivatives at the computation points or
+//                         if multiple computation points are given, the result is a list of tuples
+//                 )mydelimiter", py::arg("computation_points"), py::arg("parallel") = true)
+//             .def(py::pickle(
+//                     [](const GravityEvaluable &evaluable) {
+//                         const auto &[polyhedron, density, orientation, segmentVectors, planeUnitNormals, segmentUnitNormals] =
+//                                 evaluable.getState();
+//                         return py::make_tuple(polyhedron.getVertices(), polyhedron.getFaces(), density, orientation, segmentVectors,
+//                                               planeUnitNormals, segmentUnitNormals);
+//                     },
+//                     [](const py::tuple &tuple) {
+//                         constexpr size_t tupleSize = 7;
+//                         if (tuple.size() != tupleSize) {
+//                             throw std::runtime_error("Invalid state!");
+//                         }
+//                         Polyhedron polyhedron{
+//                                 tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>()
+//                         };
+//                         GravityEvaluable evaluable{
+//                                 polyhedron, tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), tuple[4].cast<std::vector<Array3Triplet>>(),
+//                                 tuple[5].cast<std::vector<Array3>>(), tuple[6].cast<std::vector<Array3Triplet>>()
+//                         };
+//                         return evaluable;
+//                     }
+//                     ));
+//
+//     m.def("evaluate", [](const PolyhedralSource &polyhedralSource, double density,
+//                          const std::variant<Array3, std::vector<Array3>> &computationPoints,
+//                          bool parallel) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> {
+//               using namespace polyhedralGravity;
+//               if (std::holds_alternative<Array3>(computationPoints)) {
+//                   return std::visit([&density, &computationPoints, parallel](const auto &source) {
+//                       using namespace polyhedralGravity;
+//                       return GravityModel::evaluate(source, density, std::get<Array3>(computationPoints), parallel);
+//                   }, polyhedralSource);
+//               } else {
+//                   return std::visit([&density, &computationPoints, parallel](const auto &source) {
+//                       using namespace polyhedralGravity;
+//                       return GravityModel::evaluate(source, density, std::get<std::vector<Array3>>(computationPoints),
+//                                                     parallel);
+//                   }, polyhedralSource);
+//               }
+//           }, R"mydelimiter(
+//             Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
+//
+//             Args:
+//                 polyhedral_source:  The vertices & faces of the polyhedron as tuple or
+//                                     the filenames of the files containing the vertices & faces as list of strings
+//                 density:            The constant density of the polyhedron in [kg/m^3]
+//                 computation_points: The computation points as tuple or list of points
+//                 parallel:           If true, the computation is done in parallel (default: true)
+//
+//             Returns:
+//                 Either a tuple of potential, acceleration and second derivatives at the computation points or
+//                 if multiple computation points are given, the result is a list of tuples
+//         )mydelimiter", py::arg("polyhedral_source"), py::arg("density"), py::arg("computation_points"),
+//           py::arg("parallel") = true);
+//
+//     py::module_ utility = m.def_submodule("utility",
+//                                           "This submodule contains useful utility functions like parsing meshes "
+//                                           "or checking if the polyhedron's mesh plane unit normals point outwards "
+//                                           "like it is required by the polyhedral-gravity model.");
+//
+//     utility.def("read", [](const std::vector<std::string> &filenames) {
+//         TetgenAdapter tetgen{filenames};
+//         auto polyhedron = tetgen.getPolyhedralSource();
+//         return std::make_tuple(polyhedron.getVertices(), polyhedron.getFaces());
+//     }, R"mydelimiter(
+//             Reads a polyhedron from a mesh file. The vertices and faces are read from input
+//             files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
+//
+//             Args:
+//                 input_files (List[str]): list of input files.
+//             Returns:
+//                 tuple of vertices (N, 3) (floats) and faces (N, 3) (ints).
+//           )mydelimiter", py::arg("input_files"));
+//
+//     utility.def("check_mesh", [](const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces) {
+//         Polyhedron poly{vertices, faces};
+//         return MeshChecking::checkTrianglesNotDegenerated(poly) && MeshChecking::checkPlaneUnitNormalOrientation(poly);
+//     }, R"mydelimiter(
+//                 Checks if no triangles of the polyhedral mesh are degenerated by checking that their surface area
+//                 is greater zero.
+//                 Further, Checks if all the polyhedron's plane unit normals are pointing outwards.
+//
+//                 Args:
+//                     vertices (2-D array-like): (N, 3) array of vertex coordinates (floats).
+//                     faces (2-D array-like): (N, 3) array of faces, vertex-indices (ints).
+//                 Returns:
+//                     True if no triangle is degenerate and the polyhedron's plane unit normals are all pointing outwards.
+//           )mydelimiter", py::arg("vertices"), py::arg("faces"));
+//
+//
+//     utility.def("check_mesh", [](const std::vector<std::string> &filenames) {
+//         TetgenAdapter tetgen{filenames};
+//         Polyhedron poly = tetgen.getPolyhedralSource();
+//         return MeshChecking::checkTrianglesNotDegenerated(poly) && MeshChecking::checkPlaneUnitNormalOrientation(poly);
+//     }, R"mydelimiter(
+//                 Checks if no triangles of the polyhedral mesh are degenerated by checking that their surface area
+//                 is greater zero.
+//                 Further, Checks if all the polyhedron's plane unit normals are pointing outwards.
+//                 Reads a polyhedron from a mesh file. The vertices and faces are read from input
+//                 files (either .node/.face, mesh, .ply, .off, .stl). File-Order matters in case of the first option!
+//
+//                 Args:
+//                     input_files (List[str]): list of input files.
+//                 Returns:
+//                     True if no triangle is degenerate and the polyhedron's plane unit normals are all pointing outwards.
+//           )mydelimiter", py::arg("input_files"));
 }

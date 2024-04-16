@@ -38,10 +38,10 @@ namespace polyhedralGravity {
      * utilized cooridnate system.
      * However, the normal alignement is independent. Tsoulis et al. equations require the
      * normals to point outwards of the polyhedron. If the opposite hold, the result is
-     * inverted.
+     * negated.
      */
     enum class NormalOrientation: char {
-        /** Outwards pointing plane unit normals*/
+        /** Outwards pointing plane unit normals */
         OUTWARDS,
         /** Inwards pointing plane unit normals */
         INWWARDS
@@ -96,7 +96,7 @@ namespace polyhedralGravity {
         AUTOMATIC,
         /**
          * Verification and Autmatioc Healing of the NormalOrientation.
-         * A misalignemt does not lead to a runtime_error, but to an internal correction. Cost: @f$O(n^2)$@f
+         * A misalignemt does not lead to a runtime_error, but to an internal correction.
          * @note Runtime Cost: @f$O(n^2)$@f and a modification of the mesh input!
          */
         HEAL,
