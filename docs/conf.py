@@ -30,9 +30,14 @@ def configure_doxyfile(input_dir, output_dir):
         file.write(filedata)
 
 
-# Check if we're running on Read the Docs' servers or in the GitHub Actions Workflow
+# If you bild the docs locally, but not via CMake, first set the environment variable BUILD_DOCS_CLI
 breathe_projects = {}
-if os.environ.get("READTHEDOCS", None) is not None or os.environ.get("GITHUB_PAGES_BUILD", None) is not None:
+if any([
+    os.environ.get("READTHEDOCS", None),
+    os.environ.get("GITHUB_PAGES_BUILD", None),
+    os.environ.get("BUILD_DOCS_CLI", None)]
+):
+    # These lines assume that we are in  /<repo-root>/docs/ folder
     input_dir = "../src"
     output_dir = "build"
     configure_doxyfile(input_dir, output_dir)
@@ -50,7 +55,7 @@ author = "Jonas Schuhmacher"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["breathe"]
+extensions = ["breathe", "sphinx.ext.napoleon", "sphinx.ext.autodoc"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
