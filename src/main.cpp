@@ -20,11 +20,11 @@ int main(int argc, char *argv[]) {
         auto density = config->getDensity();
         auto computationPoints = config->getPointsOfInterest();
         auto outputFileName = config->getOutputFileName();
-        bool checkPolyhedralInput = config->getMeshInputCheckStatus();
+        PolyhedronIntegrity checkPolyhedralInput = config->getMeshInputCheckStatus() ? PolyhedronIntegrity::HEAL : PolyhedronIntegrity::DISABLE;
 
         SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The calculation started...");
         auto start = std::chrono::high_resolution_clock::now();
-        Polyhedron polyhedron{polyhedralSource, density};
+        Polyhedron polyhedron{polyhedralSource, density, NormalOrientation::OUTWARDS, checkPolyhedralInput};
         auto result = GravityModel::evaluate(polyhedron, computationPoints, true);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = end - start;

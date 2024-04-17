@@ -45,7 +45,7 @@ namespace polyhedralGravity {
         /** Outwards pointing plane unit normals */
         OUTWARDS,
         /** Inwards pointing plane unit normals */
-        INWWARDS
+        INWARDS
     };
 
 
@@ -56,17 +56,17 @@ namespace polyhedralGravity {
      * @param orientation The NormalOrientation enum value to output.
      * @return The output stream after writing the string representation.
      */
-    inline std::ostream& operator<<(std::ostream& os, const NormalOrientation& orientation) {
+    inline std::ostream &operator<<(std::ostream &os, const NormalOrientation &orientation) {
         switch (orientation) {
             case NormalOrientation::OUTWARDS:
                 os << "OUTWARDS";
-            break;
-            case NormalOrientation::INWWARDS:
+                break;
+            case NormalOrientation::INWARDS:
                 os << "INWARDS";
-            break;
+                break;
             default:
                 os << "Unknown";
-            break;
+                break;
         }
         return os;
     }
@@ -139,7 +139,6 @@ namespace polyhedralGravity {
         NormalOrientation _orientation;
 
     public:
-
         /**
          * Generates a polyhedron from nodes and faces.
          * @param vertices a vector of nodes
@@ -153,12 +152,12 @@ namespace polyhedralGravity {
          * @throws std::invalid_argument dpending on the {@param integrity} flag
          */
         Polyhedron(
-            const std::vector<Array3> &vertices,
-            const std::vector<IndexArray3> &faces,
-            double density,
-            const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-            const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC
-        );
+                const std::vector<Array3> &vertices,
+                const std::vector<IndexArray3> &faces,
+                double density,
+                const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
+                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC
+                );
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -172,7 +171,7 @@ namespace polyhedralGravity {
          * @throws std::invalid_argument dpending on the {@param integrity} flag
          */
         Polyhedron(
-                const PolyhedralSource& polyhedralSource,
+                const PolyhedralSource &polyhedralSource,
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                 const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC
@@ -180,7 +179,7 @@ namespace polyhedralGravity {
 
         /**
          * Generates a polyhedron from nodes and faces.
-         * @param polyhedralSource a list of files (see {@link TetgenAdapter} or
+         * @param polyhedralFiles a list of files (see {@link TetgenAdapter}
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
@@ -190,6 +189,22 @@ namespace polyhedralGravity {
          * @throws std::invalid_argument dpending on the {@param integrity} flag
          */
         Polyhedron(const PolyhedralFiles &polyhedralFiles, double density,
+                   const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
+                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC);
+
+        /**
+         * Generates a polyhedron from nodes and faces.
+         * This constructor using a variant is maninly utilized from the Python Interface.
+         * @param polyhedralSource a list of files (see {@link TetgenAdapter} or a tuple of vector containing the nodes and trianglular faces.
+         * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         *
+         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
+         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
+         * @throws std::invalid_argument dpending on the {@param integrity} flag
+         */
+        Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                    const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC);
 

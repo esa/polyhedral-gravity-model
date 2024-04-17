@@ -32,12 +32,11 @@ mesh files.
 
 .. note::
 
-    The plane unit normals of every face of the polyhedral mesh must point **outwards**
-    of the polyhedron!
-    You can check this property via :ref:`mesh-checking-cpp` in C++ or
-    via the :ref:`mesh-checking-python` submodule in Python.
-    If the vertex order of the faces is inverted, i.e. the plane unit normals point
-    inwards, then the sign of the output will be inverted.
+    The plane unit normals of every face of the polyhedral mesh must point
+    consistently **outwards** or **inwards** the polyhedron!
+    This property is automatically enforced by the class :code:`Polyhedron` in
+    both C++ library and Python interface as long as not explicit set to :code:`DISABLE`.
+    Setting this to off, is recommend for advanced users and when you "know your mesh".
 
 
 Gravity Model Output

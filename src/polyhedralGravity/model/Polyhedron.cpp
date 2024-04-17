@@ -28,6 +28,10 @@ namespace polyhedralGravity {
     Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
         : Polyhedron{TetgenAdapter{polyhedralFiles}.getPolyhedralSource(), density, orientation, integrity} {}
 
+    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
+    : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : TetgenAdapter{std::get<PolyhedralFiles>(polyhedralSource)}.getPolyhedralSource(),
+        density, orientation, integrity} {}
+
     const std::vector<Array3> &Polyhedron::getVertices() const {
         return _vertices;
     }
@@ -111,7 +115,7 @@ namespace polyhedralGravity {
                     );
             // 3a. Step: Return the inwards pointing as major orientation and
             // the violating faces, i.e. which have outwards pointing normals
-            return std::make_pair(NormalOrientation::INWWARDS, violatingInwards);
+            return std::make_pair(NormalOrientation::INWARDS, violatingInwards);
         }
         // 3b. Step: Return the outwards pointing as major orientation
         // and the violating faces, i.e. which have inwards pointing normals

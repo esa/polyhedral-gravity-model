@@ -154,13 +154,13 @@ TEST_F(PolyhedronTest, CubeOutwardNormals) {
     EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
-    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::DISABLE));
-    EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
-    EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
-    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
+    EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
+    EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Checking that the healing leads to the correct result (More than n/2 normals (actuall all) are outwards. Hence, only change of the Orientation)
-    Polyhedron healedPolyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL);
+    Polyhedron healedPolyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL);
     EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::OUTWARDS);
     EXPECT_THAT(healedPolyhedron.getFaces(), ContainerEq(_facesOutwards));
 }
@@ -169,10 +169,10 @@ TEST_F(PolyhedronTest, CubeInwardsNormals) {
     using namespace polyhedralGravity;
     using namespace testing;
     // Correct Set-Up, No-throw for all options
-    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::DISABLE));
-    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::AUTOMATIC));
-    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::VERIFY));
-    EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY));
+    EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
@@ -181,14 +181,14 @@ TEST_F(PolyhedronTest, CubeInwardsNormals) {
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
 
     // Checking that checkPlaneUnitNormalOrientation() returns the correct set of indices & majority orientation
-    Polyhedron intenionalDisabledCheckingPolyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::DISABLE);
+    Polyhedron intenionalDisabledCheckingPolyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE);
     const auto &[majorityOrientation, violatingIndices] = intenionalDisabledCheckingPolyhedron.checkPlaneUnitNormalOrientation();
     EXPECT_EQ(majorityOrientation, NormalOrientation::OUTWARDS);
     EXPECT_THAT(violatingIndices, ContainerEq(std::set<size_t>({0, 4})));
 
     // Checking that the healing leads to the correct result (More than n/2 normals (actuall all) are outwards. Hence, only change of the Orientation)
     Polyhedron healedPolyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL);
-    EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::INWWARDS);
+    EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::INWARDS);
     EXPECT_THAT(healedPolyhedron.getFaces(), ContainerEq(_facesInwards));
 }
 
@@ -202,19 +202,19 @@ TEST_F(PolyhedronTest, CubeOutwardNormalsMajor) {
     EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
-    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::DISABLE));
-    EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
-    EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
-    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
+    EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
+    EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Checking that checkPlaneUnitNormalOrientation() returns the correct set of indices & majority orientation
-    Polyhedron intenionalDisabledCheckingPolyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::DISABLE);
+    Polyhedron intenionalDisabledCheckingPolyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE);
     const auto &[majorityOrientation, violatingIndices] = intenionalDisabledCheckingPolyhedron.checkPlaneUnitNormalOrientation();
     EXPECT_EQ(majorityOrientation, NormalOrientation::OUTWARDS);
     EXPECT_THAT(violatingIndices, ContainerEq(std::set<size_t>({0, 4})));
 
     // Checking that the healing leads to the correct result (More than n/2 normals are outwards. Here orientation & faces' vertex ordering changes)
-    Polyhedron healedPolyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL);
+    Polyhedron healedPolyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL);
     EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::OUTWARDS);
     EXPECT_THAT(healedPolyhedron.getFaces(), ContainerEq(_facesOutwards));
 }
@@ -223,10 +223,10 @@ TEST_F(PolyhedronTest, CubeOutwardInwardsMajor) {
     using namespace polyhedralGravity;
     using namespace testing;
     // The majority is correct. However, 2 faces have inward pointing normals (Index 9, 10, and 11) --> Will throw but not in the healing scenario
-    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::DISABLE));
-    EXPECT_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
-    EXPECT_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
-    EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
+    EXPECT_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
+    EXPECT_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
+    EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
@@ -237,12 +237,12 @@ TEST_F(PolyhedronTest, CubeOutwardInwardsMajor) {
     // Checking that checkPlaneUnitNormalOrientation() returns the correct set of indices & majority orientation
     Polyhedron intenionalDisabledCheckingPolyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE);
     const auto &[majorityOrientation, violatingIndices] = intenionalDisabledCheckingPolyhedron.checkPlaneUnitNormalOrientation();
-    EXPECT_EQ(majorityOrientation, NormalOrientation::INWWARDS);
+    EXPECT_EQ(majorityOrientation, NormalOrientation::INWARDS);
     EXPECT_THAT(violatingIndices, ContainerEq(std::set<size_t>({9, 10, 11})));
 
     // Checking that the healing leads to the correct result (More than n/2 normals are outwards. Here orientation & faces' vertex ordering changes)
-    Polyhedron healedPolyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL);
-    EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::INWWARDS);
+    Polyhedron healedPolyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL);
+    EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::INWARDS);
     EXPECT_THAT(healedPolyhedron.getFaces(), ContainerEq(_facesInwards));
 }
 
@@ -250,7 +250,7 @@ TEST_F(PolyhedronTest, CubeDegenerated) {
     using namespace polyhedralGravity;
     using namespace testing;
     // A degenarted mesh is not repaired, throw always expect DISABLE is checked
-    for (auto orientation: std::set({NormalOrientation::INWWARDS, NormalOrientation::OUTWARDS})) {
+    for (auto orientation: std::set({NormalOrientation::INWARDS, NormalOrientation::OUTWARDS})) {
         EXPECT_NO_THROW(Polyhedron(_cubeVertices, _degeneratedFaces, 1.0, orientation, PolyhedronIntegrity::DISABLE));
         EXPECT_THROW(Polyhedron(_cubeVertices, _degeneratedFaces, 1.0, orientation, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
         EXPECT_THROW(Polyhedron(_cubeVertices, _degeneratedFaces, 1.0, orientation, PolyhedronIntegrity::VERIFY), std::invalid_argument);
@@ -268,13 +268,13 @@ TEST_F(PolyhedronTest, PrsimOutwards) {
     EXPECT_NO_THROW(Polyhedron (_prismVertices, _prismOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
-    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::DISABLE));
-    EXPECT_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
-    EXPECT_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
-    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
+    EXPECT_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
+    EXPECT_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
+    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Checking that the healing leads to the correct result (More than n/2 normals (actuall all) are outwards. Hence, only change of the Orientation)
-    Polyhedron healedPolyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL);
+    Polyhedron healedPolyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL);
     EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::OUTWARDS);
     EXPECT_THAT(healedPolyhedron.getFaces(), ContainerEq(_prismOutwards));
 }
@@ -283,10 +283,10 @@ TEST_F(PolyhedronTest, PrsimInwards) {
     using namespace polyhedralGravity;
     using namespace testing;
     // Correct Set-Up, No-throw for all options
-    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::DISABLE));
-    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::AUTOMATIC));
-    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::VERIFY));
-    EXPECT_NO_THROW(Polyhedron (_prismVertices, _prismInwards, 1.0, NormalOrientation::INWWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
+    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC));
+    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY));
+    EXPECT_NO_THROW(Polyhedron (_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
@@ -296,7 +296,7 @@ TEST_F(PolyhedronTest, PrsimInwards) {
 
     // Checking that the healing leads to the correct result (More than n/2 normals (actuall all) are outwards. Hence, only change of the Orientation)
     Polyhedron healedPolyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL);
-    EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::INWWARDS);
+    EXPECT_EQ(healedPolyhedron.getOrientation(), NormalOrientation::INWARDS);
     EXPECT_THAT(healedPolyhedron.getFaces(), ContainerEq(_prismInwards));
 }
 
