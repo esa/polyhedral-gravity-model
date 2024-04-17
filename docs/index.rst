@@ -53,6 +53,7 @@ And for more details, refer to the **Python API** or **C++ API**.
 
    background/rational
    background/approach
+   background/mesh_integrity
    background/evaluable_vs_evaluate
 
 .. toctree::

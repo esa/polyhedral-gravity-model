@@ -144,14 +144,14 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             Args:
                 polyhedral_source:  The vertices (:math:`(N, 3)`-array-like) and faces (:math:`(M, 3)`-array-like) of the polyhedron as pair or
                                     The filenames of the files containing the vertices & faces as list of strings
-                density:            The constant density of the polyhedron, it must match the mesh's units, e.g. mesh in :math`[m]` then density in :math:`[kg/m^3]`
+                density:            The constant density of the polyhedron, it must match the mesh's units, e.g. mesh in :math:`[m]` then density in :math:`[kg/m^3]`
                 normal_orientation: The pointing direction of the mesh's plane unit normals, i.e., either :code:`OUTWARDS` or :code:`INWARDS` of the polyhedron.
                                     One of :py:class:`polyhedral_gravity.NormalOrientation`.
                                     (default: :code:`OUTWARDS`)
                 integrity_check:    Conducts an Integrity Check (degenerated faces/ vertex ordering) depending on the values. One of :py:class:`polyhedral_gravity.PolyhedronIntegrity`:
 
                                         * :code:`AUTOMATIC` (Default): Prints to stdout and throws ValueError if normal_orientation is wrong/ inconsisten
-                                        * :coce:`VERIFY`: Like :code:`AUTOMATIC`, but does not print to stdout
+                                        * :code:`VERIFY`: Like :code:`AUTOMATIC`, but does not print to stdout
                                         * :code:`DISABLE`: Recommened, when you know the mesh to avoid to pay :math:`O(n^2)` runtime. Disables ALL checks
                                         * :code`HEAL`: Automatically fixes the normal_orientation and vertex ordering to the correct values
 
@@ -181,8 +181,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             Note:
                 This utility is mainly for diagnostics and debugging purposes. If the polyhedron is constrcuted with `integrity_check`
                 set to :code:`AUTOMATIC` or :code:`VERIFY`, the construction fails anyways.
-                If set to code:`HEAL`, this method should return an empty set (but maybe a different ordering than initially specified)
-                Only if set to coe:`DISABLE`, then this method might actually return a set with faulty indices.
+                If set to :code:`HEAL`, this method should return an empty set (but maybe a different ordering than initially specified)
+                Only if set to code:`DISABLE`, then this method might actually return a set with faulty indices.
                 Hence, if you want to know your mesh error. Construct the polyhedron with :code:`integrity_check=DISABLE` and call this method.
             )mydelimiter")
             .def("__getitem__", &Polyhedron::getResolvedFace, R"mydelimiter(
@@ -193,7 +193,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                 index:  The index of the face
 
             Returns:
-                :math:´(3, 3)`-array-like: The resolved face
+                :math:`(3, 3)`-array-like: The resolved face
 
             Raises:
                 IndexError if face index is out-of-bounds
@@ -256,9 +256,9 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                  parallel:           If :code:`True`, the computation is done in parallel (default: :code:`True`)
 
              Returns:
-                 Either a tuple of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
+                 Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
                  and second derivatives :math:`[V_{xx}, V_{yy}, V_{zz}, V_{xy},V_{xz}, V_{yz}]` at the computation points or
-                 if multiple computation points are given a list of these tuples
+                 if multiple computation points are given a list of these triplets
              )mydelimiter", py::arg("computation_points"), py::arg("parallel") = true)
             .def(py::pickle(
                     [](const GravityEvaluable &evaluable) {
@@ -298,9 +298,9 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                  parallel:              If :code:`True`, the computation is done in parallel (default: :code:`True`)
 
              Returns:
-                 Either a tuple of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
+                 Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
                  and second derivatives :math:`[V_{xx}, V_{yy}, V_{zz}, V_{xy},V_{xz}, V_{yz}]` at the computation points or
-                 if multiple computation points are given a list of these tuples
+                 if multiple computation points are given a list of these triplets
              )mydelimiter", py::arg("polyhedron"), py::arg("computation_points"), py::arg("parallel") = true);
 
 }

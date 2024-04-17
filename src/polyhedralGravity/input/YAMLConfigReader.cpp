@@ -39,7 +39,7 @@ namespace polyhedralGravity {
         if (_file[ROOT][INPUT] && _file[ROOT][INPUT][INPUT_CHECK]) {
             return _file[ROOT][INPUT][INPUT_CHECK].as<bool>();
         } else {
-            return false;
+            return true;
         }
     }
 

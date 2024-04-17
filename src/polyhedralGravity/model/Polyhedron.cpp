@@ -78,8 +78,8 @@ namespace polyhedralGravity {
 
     std::string Polyhedron::toString() const {
         std::stringstream sstream{};
-        sstream << "<polyhedral_gravity.Polyhedron, density=" << _density << ", vertices= "
-           << countVertices() << ", faces= " << countFaces() << ", orientation= " << _orientation << ">";
+        sstream << "<polyhedral_gravity.Polyhedron, density = " << _density << ", vertices = "
+           << countVertices() << ", faces = " << countFaces() << ", orientation = " << _orientation << ">";
         return sstream.str();
     }
 
@@ -98,7 +98,7 @@ namespace polyhedralGravity {
                 indexIterator + numberOfFaces,
                 std::inserter(violatingOutwards, violatingOutwards.end()),
                 [this](const size_t index) {
-                    // If the ray intersects the polyhedron odd number if times the normal points inwards
+                    // If the ray intersects the polyhedron odd number of times the normal points inwards
                     // Hence, violating the OUTWARDS constraint
                     const size_t intersects = countRayPolyhedronIntersections(this->getResolvedFace(index));
                     return intersects % 2 != 0;
@@ -132,7 +132,8 @@ namespace polyhedralGravity {
                                    "The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
                                    "that all plane unit normals point in the specified direction. This checks requires "
                                    "a quadratic runtime cost which is most of the time not desirable. "
-                                   "Please explcity enable or disable this by setting 'check' to true orfalse");
+                                   "Please explcity set the inetgrity_check to either VERIFY, HEAL or DISABLE."
+                                   "You can find further details in the documentation!");
             // NO BREAK! AUTOMATIC implies VERIFY, but with a info mesage to explcitly set the option
             case PolyhedronIntegrity::VERIFY:
             // NO BREAK! VERIFY terminates earlier, but does in the beginning the same as HEAL
@@ -147,13 +148,13 @@ namespace polyhedralGravity {
                     if (violatingIndices.empty()) {
                         sstream << "Instead all plane unit normals are pointing "
                                 << actualOrientation
-                                << ". You can either reconstruct the reconstruct the polyhedron with the ortientation set to " << actualOrientation
-                                << ". Alternativly, you can reconstruct with the integrity check set to HEAL";
+                                << ". You can either reconstruct the polyhedron with the ortientation set to " << actualOrientation
+                                << ". Alternativly, you can reconstruct with the inetgrity_check set to HEAL";
                     } else {
-                        sstream << "The actual majority orientation is " << actualOrientation
+                        sstream << "The actual majority orientation of the polyhedron's normals is " << actualOrientation
                                 << ". You can either:\n 1) Fix the ordering of the following faces:\n"
                                 << violatingIndices << '\n'
-                                << "2) Or you reconstruct the polyhedron using the integrity check set to HEAL.";
+                                << "2) Or you reconstruct the polyhedron using the inetgrity_check set to HEAL.";
                     }
                     // In case of HEAL, don't throw but repair
                     if (integrity != PolyhedronIntegrity::HEAL) {

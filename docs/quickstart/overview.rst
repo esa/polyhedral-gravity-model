@@ -36,7 +36,8 @@ mesh files.
     consistently **outwards** or **inwards** the polyhedron!
     This property is automatically enforced by the class :code:`Polyhedron` in
     both C++ library and Python interface as long as not explicit set to :code:`DISABLE`.
-    Setting this to off, is recommend for advanced users and when you "know your mesh".
+    Setting this to :code:`DISABLE`, is recommended for advanced users or when you "know your mesh".
+    For details, refer to the APIs or :ref:`mesh-integrity-check`.
 
 
 Gravity Model Output

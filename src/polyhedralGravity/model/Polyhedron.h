@@ -80,25 +80,25 @@ namespace polyhedralGravity {
     enum class PolyhedronIntegrity: char {
         /**
          * All activities regarding MeshChecking are disabled.
-         * @note No runtime overhead!
+         * No runtime overhead!
          */
         DISABLE,
         /**
          * Only verification of the NormalOrientation.
          * A misalignment (e.g. specified OUTWARDS, but is not) leads to a runtime_error.
-         * @note Runtime Cost @f$O(n^2)$@f
+         * Runtime Cost O(n^2)
          */
         VERIFY,
         /**
          * Like VERIFY, but also informs the user about the option in any case on the runtime costs.
          * This is the implicit default option.
-         * @note Runtime Cost: @f$O(n^2)$@f and output to stdout in every case!
+         * Runtime Cost: O(n^2) and output to stdout in every case!
          */
         AUTOMATIC,
         /**
          * Verification and Autmatioc Healing of the NormalOrientation.
          * A misalignemt does not lead to a runtime_error, but to an internal correction.
-         * @note Runtime Cost: @f$O(n^2)$@f and a modification of the mesh input!
+         * Runtime Cost: O(n^2) and a modification of the mesh input!
          */
         HEAL,
     };

@@ -81,7 +81,7 @@ namespace polyhedralGravity {
 
         /**
          * Reads the enablement of the input sanity check from the yaml file.
-         * @return true if explicitly enabled, otherwise per-default false
+         * @return true or false if explicitly enabled, otherwise per-default true
          */
         bool getMeshInputCheckStatus() override;
 
