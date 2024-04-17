@@ -225,7 +225,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                         }
                         Polyhedron polyhedron{
                                 tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>(),
-                                tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>()
+                                tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), PolyhedronIntegrity::DISABLE
                         };
                         return polyhedron;
                     }

@@ -1,5 +1,5 @@
 import numpy as np
-import polyhedral_gravity as gravity_model
+from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity
 import mesh_plotting
 import mesh_utility
 
@@ -10,6 +10,12 @@ vertices_lp, faces_lp = mesh_utility.read_pk_file("../mesh/eros_lp.pk")
 vertices, faces = np.array(vertices), np.array(faces)
 DENSITY = 1.0
 VALUES = np.arange(-2, 2.01, 0.01)
+
+eros = Polyhedron(
+    polyhedral_source=(vertices, faces),
+    density=DENSITY,
+    integrity_check=PolyhedronIntegrity.DISABLE,
+)
 
 ########################################################################################################################
 # Triangulation
@@ -22,7 +28,7 @@ mesh_plotting.plot_triangulation(vertices_lp, faces_lp, "Triangulation of Eros",
 # Plot of the potential and Acceleration in XY Plane (Z = 0)
 ########################################################################################################################
 computation_points = np.array(np.meshgrid(VALUES, VALUES, [0])).T.reshape(-1, 3)
-gravity_results = gravity_model.evaluate(vertices, faces, DENSITY, computation_points)
+gravity_results = evaluate(eros, computation_points)
 
 potentials = -1 * np.array([i[0] for i in gravity_results])
 potentials = potentials.reshape((len(VALUES), len(VALUES)))
@@ -47,7 +53,7 @@ mesh_plotting.plot_quiver(X, Y, acc_xy, "Acceleration in $x$ and $y$ direction f
 # Plot of the potential and Acceleration in XZ Plane (Y = 0)
 ########################################################################################################################
 computation_points = np.array(np.meshgrid(VALUES, [0], VALUES)).T.reshape(-1, 3)
-gravity_results = gravity_model.evaluate(vertices, faces, DENSITY, computation_points)
+gravity_results = evaluate(eros, computation_points)
 
 potentials = -1 * np.array([i[0] for i in gravity_results])
 potentials = potentials.reshape((len(VALUES), len(VALUES)))
@@ -75,7 +81,7 @@ mesh_plotting.plot_quiver(X, Z, acc_xy, "Acceleration in $x$ and $z$ direction f
 # Plot of the potential and Acceleration in YZ Plane (X = 0)
 ########################################################################################################################
 computation_points = np.array(np.meshgrid([0], VALUES, VALUES)).T.reshape(-1, 3)
-gravity_results = gravity_model.evaluate(vertices, faces, DENSITY, computation_points)
+gravity_results = evaluate(eros, computation_points)
 
 potentials = -1 * np.array([i[0] for i in gravity_results])
 potentials = potentials.reshape((len(VALUES), len(VALUES)))

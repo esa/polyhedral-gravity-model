@@ -1,5 +1,5 @@
 import numpy as np
-import polyhedral_gravity as gravity_model
+from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity
 
 import mesh_plotting
 
@@ -32,6 +32,12 @@ cube_faces = np.array([
 DENSITY = 1.0
 VALUES = np.arange(-2, 2.01, 0.01)
 
+cube = Polyhedron(
+    polyhedral_source=(cube_vertices, cube_faces),
+    density=DENSITY,
+    integrity_check=PolyhedronIntegrity.DISABLE,
+)
+
 ########################################################################################################################
 # Triangulation
 ########################################################################################################################
@@ -43,7 +49,7 @@ mesh_plotting.plot_triangulation(cube_vertices, cube_faces, "Triangulation of a 
 # Plot of the potential and Acceleration in XY Plane (Z = 0)
 ########################################################################################################################
 computation_points = np.array(np.meshgrid(VALUES, VALUES, [0])).T.reshape(-1, 3)
-gravity_results = gravity_model.evaluate(cube_vertices, cube_faces, DENSITY, computation_points)
+gravity_results = evaluate(cube, computation_points)
 
 potentials = -1 * np.array([i[0] for i in gravity_results])
 potentials = potentials.reshape((len(VALUES), len(VALUES)))
