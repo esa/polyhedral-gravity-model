@@ -25,7 +25,7 @@ jobs:
         # In case of Linux we need to install compiler and build tools before building the wheels
         # We further only build the manylinux wheels, but not the musllinux wheels
       - name: Build wheels (Linux)
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.17.0
         env:
           CIBW_BEFORE_BUILD: yum makecache && yum install -y gcc-c++ cmake && pip install ninja
           CIBW_BUILD: "*manylinux*"
