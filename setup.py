@@ -168,13 +168,10 @@ setup(
     version="3.0",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
-    description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points",
-    long_description="""
-        The package polyhedral_gravity provides a simple to use interface for the evaluation of the full gravity
-        tensor of a constant density polyhedron at given computation points according to the geodetic convention.
-        It is based on a fast, parallelized backbone in C++ capable of evaluating the gravity at thousands of
-        computation points in the fraction of a second.
-    """,
+    description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "
+                "according to the geodetic convention",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     ext_modules=[CMakeExtension("polyhedral_gravity")],
     cmdclass={"build_ext": CMakeBuild},
     license="GPLv3",
@@ -182,5 +179,24 @@ setup(
     zip_safe=False,
     python_requires=">=3.6",
     include_package_data=True,
+    project_urls={
+        "Homepage": "https://github.com/esa/polyhedral-gravity-model",
+        "Source": "https://github.com/esa/polyhedral-gravity-model",
+        "Documentation": "https://esa.github.io/polyhedral-gravity-model/",
+        "Repository": "https://github.com/esa/polyhedral-gravity-model.git",
+        "Issues": "https://github.com/esa/polyhedral-gravity-model/issues",
+        "Changelog": "https://github.com/esa/polyhedral-gravity-model/releases",
+    },
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Programming Language :: C++",
+        "Programming Language :: Python",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: MacOS",
+        "Operating System :: POSIX :: Linux",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Physics",
+    ],
 )
 # --------------------------------------------------------------------------------
