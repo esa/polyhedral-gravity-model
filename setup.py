@@ -47,7 +47,8 @@ def get_cmake_generator():
     If not, returns "Ninja" if ninja build is installed.
     Otherwise, none is returned.
     """
-    if (os_env_generator := os.environ.get("CMAKE_GENERATOR")) is not None:
+    os_env_generator = os.environ.get("CMAKE_GENERATOR", None)
+    if os_env_generator is not None:
         return os_env_generator
     elif is_ninja_installed():
         return "Ninja"
