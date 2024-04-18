@@ -192,7 +192,6 @@ setup(
         "Homepage": "https://github.com/esa/polyhedral-gravity-model",
         "Source": "https://github.com/esa/polyhedral-gravity-model",
         "Documentation": "https://esa.github.io/polyhedral-gravity-model/",
-        "Repository": "https://github.com/esa/polyhedral-gravity-model.git",
         "Issues": "https://github.com/esa/polyhedral-gravity-model/issues",
         "Changelog": "https://github.com/esa/polyhedral-gravity-model/releases",
     },
