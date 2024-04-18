@@ -75,7 +75,7 @@ The evaluation of the polyhedral gravity model requires the following parameters
 | Constant Density $\rho$                                                    |
 
 The mesh and the constants density's unit must match.
-Have a look the documentation to view the [supported mesh files](https://esa.github.io/polyhedral-gravity-model/supported_input.html).
+Have a look the documentation to view the [supported mesh files](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html).
 
 ### Output
 
@@ -337,7 +337,7 @@ found in this repository in the folder `/example-config/`.
 
 The configuration should look similar to the given example below.
 It is required to specify the source-files of the polyhedron's mesh (more info
-about the supported file in the [previous paragraph](#supported-polyhedron-source-files-python-c)), the density
+about the supported file in the [documentation](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html)), the density
 of the polyhedron, and the wished computation points where the
 gravity tensor shall be computed.
 Further one must specify the name of the .csv output file.

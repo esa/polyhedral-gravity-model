@@ -160,6 +160,15 @@ class CMakeBuild(build_ext):
 # -----------------------------------------------------------------------------------------
 
 
+picture_in_readme = '''<p align="center">
+  <img src="paper/figures/eros_010.png" width="50%">
+  <br>
+  <em>
+    <a href="https://github.com/gomezzz/geodesyNets/blob/master/3dmeshes/eros_lp.pk">Mesh of (433) Eros</a> with 739 vertices and 1474 faces
+  </em>
+</p>'''
+
+
 # --------------------------------------------------------------------------------
 # Modify these entries to customize the package metadata of the polyhedral gravity
 # --------------------------------------------------------------------------------
@@ -170,7 +179,7 @@ setup(
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "
                 "according to the geodetic convention",
-    long_description=open("README.md").read(),
+    long_description=open("README.md").read().replace(picture_in_readme, ''),
     long_description_content_type="text/markdown",
     ext_modules=[CMakeExtension("polyhedral_gravity")],
     cmdclass={"build_ext": CMakeBuild},
