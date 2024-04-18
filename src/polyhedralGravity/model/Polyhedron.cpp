@@ -89,37 +89,42 @@ namespace polyhedralGravity {
 
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
         // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
-        auto indexIterator = thrust::make_counting_iterator<size_t>(0);
-        size_t numberOfFaces = this->countFaces();
-        std::set<size_t> violatingOutwards{};
-        thrust::copy_if(
-                thrust::device,
-                indexIterator,
-                indexIterator + numberOfFaces,
-                std::inserter(violatingOutwards, violatingOutwards.end()),
-                [this](const size_t index) {
+        const auto&[polyBegin, polyEnd] = this->transformIterator();
+        const size_t n = this->countFaces();
+        // Vector contains TRUE if the corrspeonding index VIOLATES the OUTWARDS cirteria
+        // Vector contains FALSE if the cooresponding index FULFILLS the OUTWARDS criteria
+        thrust::device_vector<bool> violatingBoolOutwards(n, false);
+        thrust::transform(
+            thrust::device,
+                polyBegin,
+                polyEnd,
+                violatingBoolOutwards.begin(),
+                [&](const auto &face) {
                     // If the ray intersects the polyhedron odd number of times the normal points inwards
                     // Hence, violating the OUTWARDS constraint
-                    const size_t intersects = countRayPolyhedronIntersections(this->getResolvedFace(index));
+                    const size_t intersects = this->countRayPolyhedronIntersections(face);
                     return intersects % 2 != 0;
                 });
-        // 2. Step: If we have more than n/2 violations, the majority is inwards pointing --> Build complemntary set!
-        if (violatingOutwards.size() > numberOfFaces / 2) {
-            std::set<size_t> fullSet{};
-            std::copy_n(indexIterator, numberOfFaces, std::inserter(fullSet, fullSet.end()));
-            std::set<size_t> violatingInwards{};
-            std::set_difference(
-                    fullSet.begin(), fullSet.end(),
-                    violatingOutwards.begin(), violatingOutwards.end(),
-                    std::inserter(violatingInwards, violatingInwards.end())
-                    );
-            // 3a. Step: Return the inwards pointing as major orientation and
+        const size_t numberOfOutwardsViolations = std::count(violatingBoolOutwards.cbegin(), violatingBoolOutwards.cend(), true);
+        // 2. Step: Create a set with only the indices violating the constraint
+        std::set<size_t> violatingIndices{};
+        auto countingIterator = thrust::make_counting_iterator<size_t>(0);
+
+        if (numberOfOutwardsViolations <= n / 2) {
+            std::copy_if(countingIterator, countingIterator + n, std::inserter(violatingIndices, violatingIndices.end()), [&violatingBoolOutwards](const size_t &index) {
+                return violatingBoolOutwards[index];
+            });
+            // 3a. Step: Return the outwards pointing as major orientation
+            // and the violating faces, i.e. which have inwards pointing normals
+            return std::make_pair(NormalOrientation::OUTWARDS, violatingIndices);
+        } else {
+            std::copy_if(countingIterator, countingIterator + n, std::inserter(violatingIndices, violatingIndices.end()), [&violatingBoolOutwards](const size_t &index) {
+                return !violatingBoolOutwards[index];
+            });
+            // 3b. Step: Return the inwards pointing as major orientation and
             // the violating faces, i.e. which have outwards pointing normals
-            return std::make_pair(NormalOrientation::INWARDS, violatingInwards);
+            return std::make_pair(NormalOrientation::INWARDS, violatingIndices);
         }
-        // 3b. Step: Return the outwards pointing as major orientation
-        // and the violating faces, i.e. which have inwards pointing normals
-        return std::make_pair(NormalOrientation::OUTWARDS, violatingOutwards);
     }
 
     void Polyhedron::runIntegrityMeasures(const PolyhedronIntegrity &integrity) {

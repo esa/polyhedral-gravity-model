@@ -13,6 +13,7 @@
 #include <sstream>
 #include <memory>
 #include "thrust/copy.h"
+#include "thrust/device_vector.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "thrust/transform_reduce.h"
 #include "thrust/execution_policy.h"

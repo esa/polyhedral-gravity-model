@@ -2,14 +2,15 @@
 #include "gmock/gmock.h"
 
 #include <set>
+#include <chrono>
 #include <vector>
 #include <utility>
 #include <array>
 #include <algorithm>
 #include <random>
 #include <thrust/generate.h>
+#include <iostream>
 #include "polyhedralGravity/model/Polyhedron.h"
-
 
 /**
  * Cheks that the detection of wrong faces works as intended.
@@ -60,6 +61,9 @@ public:
         for (size_t i = 0; i < SET_NUMBER; ++i) {
             std::set<size_t> generatedSet;
             thrust::generate_n(std::inserter(generatedSet, generatedSet.end()), SET_SIZE, [&dist, &engine]() {return dist(engine);});
+            while(generatedSet.size() < SET_SIZE) {
+                generatedSet.insert(dist(engine));
+            }
             indexSets.push_back(generatedSet);
         }
         return indexSets;
@@ -76,7 +80,16 @@ TEST_P(PolyhedronBigTest, BigPolyhedronFindWrongVertices) {
     ASSERT_EQ(expectedViolatingIndices.size(), SET_SIZE);
 
     Polyhedron invalidPolyhedron = createViolatingPolyhedron(expectedViolatingIndices);
+
+    auto start = std::chrono::high_resolution_clock::now();
+
     const auto&[actualOrientation, actualViolatingIndices] = invalidPolyhedron.checkPlaneUnitNormalOrientation();
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto dur = end - start;
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur);
+    std::cout << "Measured time: " << ms.count() << " microseconds ";
+
 
     // The orientation changes if violatingIndcies > len(faces)/2 --> So ensure that the size of the test-parameter is smaller than len(faces)/2
     ASSERT_EQ(actualOrientation, NormalOrientation::OUTWARDS);
