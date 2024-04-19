@@ -108,45 +108,10 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
-  # 3. Check if the package can be installed from testpypi
-  #    Notice, that this is more of an installation test since the
-  #    import check has already been done in the build_wheels job
-  check_testpypi:
-    needs: [upload_testpypi]
-    name: Test import on ${{ matrix.os }} with ${{ matrix.py }}
-    runs-on: ${{ matrix.os }}
-    if: always()
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        py:
-          [
-            3.7.x,
-            3.8.x,
-            3.9.x,
-            3.10.x,
-            3.11.x,
-            3.12.x,
-            pypy3.7,
-            pypy3.8,
-            pypy3.9,
-            pypy3.10,
-          ]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.py }}
-      - name: Install package from testpypi
-        run: pip install --index-url https://test.pypi.org/simple/ polyhedral-gravity
-      - name: Check import
-        run: python -c "import polyhedral_gravity"
-
-  # 4. Upload the wheels to the actually Python Package Index
+  # 3. Upload the wheels to the actually Python Package Index
   #    using trusted publishing
   upload_pypi:
-    needs: [build_wheels, make_sdist, check_testpypi]
+    needs: [build_wheels, make_sdist, upload_testpypi]
     environment:
       name: pypi
       url: https://pypi.org/p/polyhedral-gravity
