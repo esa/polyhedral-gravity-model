@@ -38,12 +38,22 @@ jobs:
       ############################# MACOS WHEELS #############################
       # Building on macOS requires an installation of gcc since the default clang compiler
       # lacks certain features required for building the package
-      - name: Build wheels (macOS)
+      - name: Build wheels (macOS ARM)
+        uses: pypa/cibuildwheel@v2.17.0
+        env:
+          CIBW_BEFORE_BUILD: brew install ninja
+          CIBW_ARCHS_MACOS: "arm64"
+          CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
+        with:
+          package-dir: .
+          output-dir: dist
+        if: matrix.os == 'macos-latest'
+      - name: Build wheels (macOS x86_64)
         uses: pypa/cibuildwheel@v2.17.0
         env:
           CIBW_BEFORE_BUILD: brew install ninja gcc@12
           CIBW_ENVIRONMENT: "CC=gcc-12 CXX=g++-12"
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ARCHS_MACOS: "x86_64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
           package-dir: .
