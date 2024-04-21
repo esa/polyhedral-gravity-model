@@ -44,7 +44,6 @@ mesh_plotting.plot_grid_3d(X, Y, potentials, "Potential of Eros XY-Plane ($z=0$)
 # We just want a slice of x, y values for z = 0
 accelerations = np.array([i[1][:] for i in gravity_results])
 acc_xy = np.delete(accelerations, 2, 1)
-acc_xy = -1 * acc_xy
 
 mesh_plotting.plot_quiver(X, Y, acc_xy, "Acceleration in $x$ and $y$ direction for $z=0$",
                           "../figures/eros/eros_field_xy.png", vertices=vertices, coordinate=2)
@@ -71,7 +70,6 @@ mesh_plotting.plot_grid_3d(X, Z, potentials,
 # We just want a slice of x, y values for z = 0
 accelerations = np.array([i[1][:] for i in gravity_results])
 acc_xy = np.delete(accelerations, 1, 1)
-acc_xy = -1 * acc_xy
 
 mesh_plotting.plot_quiver(X, Z, acc_xy, "Acceleration in $x$ and $z$ direction for $y=0$",
                           "../figures/eros/eros_field_xz.png", labels=('$x$', '$z$'),
@@ -99,7 +97,6 @@ mesh_plotting.plot_grid_3d(Y, Z, potentials,
 # We just want a slice of x, y values for z = 0
 accelerations = np.array([i[1][:] for i in gravity_results])
 acc_xy = np.delete(accelerations, 0, 1)
-acc_xy = -1 * acc_xy
 
 mesh_plotting.plot_quiver(Y, Z, acc_xy, "Acceleration in $y$ and $z$ direction for $x=0$",
                           "../figures/eros/eros_field_yz.png", labels=('$y$', '$z$'),

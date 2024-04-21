@@ -64,7 +64,6 @@ mesh_plotting.plot_grid_3d(X, Y, potentials, "Potential of a Cube ($z=0$)", "../
 # We just want a slice of x, y values for z = 0
 accelerations = np.array([i[1][:] for i in gravity_results])
 acc_xy = np.delete(accelerations, 2, 1)
-acc_xy = -1 * acc_xy
 
 mesh_plotting.plot_quiver(X, Y, acc_xy, "Acceleration in $x$ and $y$ direction for $z=0$",
                           "../figures/cube/cube_field.png", plot_rectangle=True)
