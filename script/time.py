@@ -32,7 +32,6 @@ def run_time_measurements(sample_size: int = 1000) -> Dict[str, float]:
     end_time = timeit.default_timer()
 
     delta = (end_time - start_time) / sample_size * 1e6
-    # Print the time in milliseconds
     print("######## Old Single-Point ########")
     print(f"--> {sample_size} times 1 point with old interface")
     print(f"--> Time taken: {delta:.3f} microseconds per point")
@@ -43,7 +42,6 @@ def run_time_measurements(sample_size: int = 1000) -> Dict[str, float]:
     end_time = timeit.default_timer()
 
     delta = (end_time - start_time) / sample_size * 1e6
-    # Print the time in milliseconds
     print("######## Old Multi-Point ########")
     print(f"--> 1 time {sample_size} points with old interface")
     print(f"--> Time taken: {delta:.3f} microseconds per point")
@@ -57,7 +55,6 @@ def run_time_measurements(sample_size: int = 1000) -> Dict[str, float]:
     end_time = timeit.default_timer()
 
     delta = (end_time - start_time) / sample_size * 1e6
-    # Print the time in milliseconds
     print("######## GravityEvaluable (Single-Point) #########")
     print(f"--> {sample_size} times 1 point with GravityEvaluable")
     print(f"--> Time taken: {delta:.3f} microseconds per point")
@@ -70,7 +67,6 @@ def run_time_measurements(sample_size: int = 1000) -> Dict[str, float]:
     end_time = timeit.default_timer()
 
     delta = (end_time - start_time) / sample_size * 1e6
-    # Print the time in milliseconds
     print("######## GravityEvaluable (Multi-Point) ########")
     print(f"--> 1 time {sample_size} points with GravityEvaluable")
     print(f"--> Time taken: {delta:.3f} microseconds per point")
