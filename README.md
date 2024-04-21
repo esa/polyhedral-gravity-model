@@ -327,7 +327,7 @@ cmake .. -POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
 After the build, the gravity model can be run by executing:
 
 ```bash
-    ./polyhedralGravity <YAML-Configuration-File>
+./polyhedralGravity <YAML-Configuration-File>
 ```
 
 where the YAML-Configuration-File contains the required parameters.
