@@ -30,7 +30,7 @@ def configure_doxyfile(input_dir, output_dir):
         file.write(filedata)
 
 
-# If you bild the docs locally, but not via CMake, first set the environment variable BUILD_DOCS_CLI
+# If you build the docs locally, but not via CMake, first set the environment variable BUILD_DOCS_CLI
 breathe_projects = {}
 if any([
     os.environ.get("READTHEDOCS", None),

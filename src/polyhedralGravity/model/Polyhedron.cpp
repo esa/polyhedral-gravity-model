@@ -137,7 +137,7 @@ namespace polyhedralGravity {
                                    "The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
                                    "that all plane unit normals point in the specified direction. This checks requires "
                                    "a quadratic runtime cost which is most of the time not desirable. "
-                                   "Please explcity set the inetgrity_check to either VERIFY, HEAL or DISABLE."
+                                   "Please explicitly set the integrity_check to either VERIFY, HEAL or DISABLE."
                                    "You can find further details in the documentation!");
             // NO BREAK! AUTOMATIC implies VERIFY, but with a info mesage to explcitly set the option
             case PolyhedronIntegrity::VERIFY:
@@ -153,13 +153,13 @@ namespace polyhedralGravity {
                     if (violatingIndices.empty()) {
                         sstream << "Instead all plane unit normals are pointing "
                                 << actualOrientation
-                                << ". You can either reconstruct the polyhedron with the ortientation set to " << actualOrientation
+                                << ". You can either reconstruct the polyhedron with the orientation set to " << actualOrientation
                                 << ". Alternativly, you can reconstruct with the inetgrity_check set to HEAL";
                     } else {
                         sstream << "The actual majority orientation of the polyhedron's normals is " << actualOrientation
                                 << ". You can either:\n 1) Fix the ordering of the following faces:\n"
                                 << violatingIndices << '\n'
-                                << "2) Or you reconstruct the polyhedron using the inetgrity_check set to HEAL.";
+                                << "2) Or you reconstruct the polyhedron using the integrity_check set to HEAL.";
                     }
                     // In case of HEAL, don't throw but repair
                     if (integrity != PolyhedronIntegrity::HEAL) {
