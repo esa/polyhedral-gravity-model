@@ -131,7 +131,7 @@ cube_polyhedron = Polyhedron(
 
 In case you want to hand over the polyhedron via a [supported file format](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html),
 just replace the `polyhedral_source` argument with *a list of strings*,
-where each string is the path to a supported file format.
+where each string is the path to a supported file format, e.g. `polyhedral_source=["eros.node","eros.face"]` or `polyhedral_source=["eros.mesh"]`.
 
 Continuing, the simplest way to compute the gravity is to use the `evaluate` function:
 
