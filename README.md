@@ -175,7 +175,7 @@ cube_polyhedron = Polyhedron(
   polyhedral_source=(cube_vertices, cube_faces),
   density=cube_density,
   normal_orientation=NormalOrientation.INWARDS, # OUTWARDS (default) or INWARDS
-  integrity_check=PolyhedronIntegrity.VERIFY,   # AUTOMATIC (default) == VERIFY, DISABLE or HEAL
+  integrity_check=PolyhedronIntegrity.VERIFY,   # VERIFY (default), DISABLE or HEAL
 )
 ```
 
