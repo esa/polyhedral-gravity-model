@@ -120,7 +120,7 @@ cube_density = 1.0
 computation_point = np.array([0, 0, 0])
 ```
 
-We first, define a constant density Polyhedron from `vertices` and `faces`
+We first define a constant density Polyhedron from `vertices` and `faces`
 
 ```python
 cube_polyhedron = Polyhedron(
