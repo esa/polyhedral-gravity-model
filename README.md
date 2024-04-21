@@ -61,7 +61,7 @@ which is strongly based on the former implementation in FORTRAN.
 > [!NOTE]
 > The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
 contain the full extensive documentation of the C++ Library and Python Interface
-as well as background on the gravity model and advanced settings not detailed here!
+as well as background on the gravity model and advanced settings not detailed here.
 
 ## Input & Output (C++ and Python)
 
