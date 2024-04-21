@@ -129,7 +129,7 @@ cube_polyhedron = Polyhedron(
 )
 ```
 
-In case you want to hand over the polyhedron via a supported file format,
+In case you want to hand over the polyhedron via a [supported file format](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html),
 just replace the `polyhedral_source` argument with *a list of strings*,
 where each string is the path to a supported file format.
 
@@ -149,14 +149,15 @@ evaluations. This is especially useful if you want to compute the gravity
 for multiple computation points, but don't know the "future points" in advance.
 
 ```python
-evaluable = GravityEvaluable(polyhedron=cube_polyhedron)
+evaluable = GravityEvaluable(polyhedron=cube_polyhedron) # stores intermediate computation steps
 potential, acceleration, tensor = evaluable(
   computation_points=computation_point,
   parallel=True,
 )
+# Any future evaluable call after this one will be faster
 ```
 
-Note that the `computation_point` could also be (N, 3)-shaped array.
+Note that the `computation_point` could also be (N, 3)-shaped array to compute multiple points at once.
 In this case, the return value of `evaluate(..)` or an `GravityEvaluable` will
 be a list of triplets comprising potential, acceleration, and tensor.
 
@@ -166,8 +167,8 @@ This property is - by default - checked when constructing the `Polyhedron`! So, 
 is impossible if not **explicitly** disabled to create an invalid `Polyhedron`.
 You can disable/ enable this setting via the optional `integrity_check` flag and can even
 automatically repair the ordering via `HEAL`.
-As advanced user/ when you "know the mesh",
-you want to disable this check (via `DISABLE`) due to the additional runtime overhead!
+If you are confident that your mesh is defined correctly (e.g. checked once with the integrity check)
+you can disable this check (via `DISABLE`) to avoid the additional runtime overhead of the check.
 
 ```python
 cube_polyhedron = Polyhedron(
