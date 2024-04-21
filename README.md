@@ -315,8 +315,7 @@ The following options are available:
 During testing POLYHEDRAL_GRAVITY_PARALLELIZATION=`TBB` has been the most performant.
 It is further not recommend to change the LOGGING_LEVEL to something else than `INFO=2`.
 
-The recommended CMake command would look like this (we only need to change `PARALLELIZATION_DEVICE`, since
-the defaults of the others are already correctly set):
+The recommended CMake settings using the `TBB` backend would look like this:
 
 ```bash
 cmake .. -POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
