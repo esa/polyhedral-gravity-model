@@ -13,7 +13,7 @@ namespace polyhedralGravity {
      * The YAMLConfigReader serves as Interface between yaml-cpp and the Polyhedral Gravity Model and
      * reads in the input from an yaml configuration file.
      */
-    class YAMLConfigReader : public ConfigSource {
+    class YAMLConfigReader final : public ConfigSource {
 
         /*
          * The following static variables contain the names of the YAML nodes.
@@ -81,7 +81,7 @@ namespace polyhedralGravity {
 
         /**
          * Reads the enablement of the input sanity check from the yaml file.
-         * @return true if explicitly enabled, otherwise per-default false
+         * @return true or false if explicitly enabled, otherwise per-default true
          */
         bool getMeshInputCheckStatus() override;
 

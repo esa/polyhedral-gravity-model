@@ -49,6 +49,7 @@ namespace polyhedralGravity {
      */
     using GravityModelResult = std::tuple<double, Array3, Array6>;
 
+
     /**
      * Contains the 3D distances l1_pq and l2_pq between P and the endpoints of segment pq and
      * the 1D distances s1_pq and s2_pq between P'' and the segment endpoints.

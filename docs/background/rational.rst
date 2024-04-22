@@ -6,7 +6,7 @@ The Rational
 
 .. image:: /../_static/eros_010.png
   :align: center
-  :width: 400
+  :width: 75%
   :alt: Downscaled mesh of (433) Eros to 10% of its original vertices and faces.
 
 Downscaled mesh of (433) Eros to 10% of its original vertices and faces.

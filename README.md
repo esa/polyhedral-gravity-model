@@ -60,8 +60,8 @@ which is strongly based on the former implementation in FORTRAN.
 
 > [!NOTE]
 > The [GitHub Pages](https://esa.github.io/polyhedral-gravity-model) of this project
-contain the full extensive documentation.
-It also covers the content of the `polyhedral_gravity.utility` module to check the mesh sanity.
+contain the full extensive documentation of the C++ Library and Python Interface
+as well as background on the gravity model and advanced settings not detailed here.
 
 ## Input & Output (C++ and Python)
 
@@ -75,15 +75,7 @@ The evaluation of the polyhedral gravity model requires the following parameters
 | Constant Density $\rho$                                                    |
 
 The mesh and the constants density's unit must match.
-Have a look the documentation to view the [supported mesh files](https://esa.github.io/polyhedral-gravity-model/supported_input.html).
-
-> [!IMPORTANT]  
-> The plane unit normals of every face of the polyhedral mesh must point **outwards**
-of the polyhedron!
-You can check this property via [MeshChecking](https://esa.github.io/polyhedral-gravity-model/api/calculation.html#meshchecking) in C++ or
-via the [utility](https://esa.github.io/polyhedral-gravity-model/api/python.html#module-polyhedral_gravity.utility) submodule in Python.
-If the vertex order of the faces is inverted, i.e. the plane unit normals point
-inwards, then the sign of the output will be inverted.
+Have a look the documentation to view the [supported mesh files](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html).
 
 ### Output
 
@@ -111,31 +103,43 @@ around a cube:
 
 ```python
 import numpy as np
-import polyhedral_gravity
+from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation
 
 # We define the cube as a polyhedron with 8 vertices and 12 triangular faces
-# The polyhedron's (here: cube) normals need to point outwards (see below for checking this)
+# The polyhedron's normals point outwards (see below for checking this)
 # The density is set to 1.0
 cube_vertices = np.array(
-    [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
-    [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]
+  [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+   [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]
 )
 cube_faces = np.array(
-    [[1, 3, 2], [0, 3, 1], [0, 1, 5], [0, 5, 4], [0, 7, 3], [0, 4, 7],
-    [1, 2, 6], [1, 6, 5], [2, 3, 6], [3, 7, 6], [4, 5, 6], [4, 6, 7]]
+  [[1, 3, 2], [0, 3, 1], [0, 1, 5], [0, 5, 4], [0, 7, 3], [0, 4, 7],
+   [1, 2, 6], [1, 6, 5], [2, 3, 6], [3, 7, 6], [4, 5, 6], [4, 6, 7]]
 )
 cube_density = 1.0
 computation_point = np.array([0, 0, 0])
 ```
 
-The simplest way to compute the gravity is to use the `evaluate` function:
+We first define a constant density Polyhedron from `vertices` and `faces`
 
 ```python
-potential, acceleration, tensor = polyhedral_gravity.evaluate(
-    polyhedral_source=(cube_vertices, cube_faces),
-    density=cube_density,
-    computation_points=computation_point,
-    parallel=True
+cube_polyhedron = Polyhedron(
+  polyhedral_source=(cube_vertices, cube_faces),
+  density=cube_density,
+)
+```
+
+In case you want to hand over the polyhedron via a [supported file format](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html),
+just replace the `polyhedral_source` argument with *a list of strings*,
+where each string is the path to a supported file format, e.g. `polyhedral_source=["eros.node","eros.face"]` or `polyhedral_source=["eros.mesh"]`.
+
+Continuing, the simplest way to compute the gravity is to use the `evaluate` function:
+
+```python
+potential, acceleration, tensor = evaluate(
+  polyhedron=cube_polyhedron,
+  computation_points=computation_point,
+  parallel=True,
 )
 ```
 
@@ -145,30 +149,35 @@ evaluations. This is especially useful if you want to compute the gravity
 for multiple computation points, but don't know the "future points" in advance.
 
 ```python
-evaluable = polyhedral_gravity.GravityEvaluable(
-    polyhedral_source=(cube_vertices, cube_faces),
-    density=cube_density
+evaluable = GravityEvaluable(polyhedron=cube_polyhedron) # stores intermediate computation steps
+potential, acceleration, tensor = evaluable(
+  computation_points=computation_point,
+  parallel=True,
 )
-potential, acceleration, tensor = evaluable(computation_point, parallel=True)
+# Any future evaluable call after this one will be faster
 ```
 
-In case you want to hand over the polyhedron via a supported file format,
-just replace the `polyhedral_source` argument with *a list of strings*,
-where each string is the path to a supported file format.
-Note that the `computation_point` could also be (N, 3)-shaped array.
+Note that the `computation_point` could also be (N, 3)-shaped array to compute multiple points at once.
 In this case, the return value of `evaluate(..)` or an `GravityEvaluable` will
 be a list of triplets comprising potential, acceleration, and tensor.
 
-The gravity model requires that the polyhedron's plane unit normals point outwards
-the polyhedron. In case you are unsure, you can check for this property by using the `utility` module beforehand.
-The method also verifies that all triangles are actually triangles with a non-zero
-surface area.
+The gravity model requires that all the polyhedron's plane unit normals consistently
+point outwards or inwards the polyhedron. You can specify this via the `normal_orientation`.
+This property is - by default - checked when constructing the `Polyhedron`! So, don't worry, it
+is impossible if not **explicitly** disabled to create an invalid `Polyhedron`.
+You can disable/ enable this setting via the optional `integrity_check` flag and can even
+automatically repair the ordering via `HEAL`.
+If you are confident that your mesh is defined correctly (e.g. checked once with the integrity check)
+you can disable this check (via `DISABLE`) to avoid the additional runtime overhead of the check.
 
 ```python
-print("Valid Mesh?", polyhedral_gravity.utility.check_mesh(cube_vertices, cube_faces))
+cube_polyhedron = Polyhedron(
+  polyhedral_source=(cube_vertices, cube_faces),
+  density=cube_density,
+  normal_orientation=NormalOrientation.INWARDS, # OUTWARDS (default) or INWARDS
+  integrity_check=PolyhedronIntegrity.VERIFY,   # VERIFY (default), DISABLE or HEAL
+)
 ```
-
-If the method returns `False`, then you need to revise the vertex-ordering.
 
 > [!TIP]
 > More examples and plots are depicted in the
@@ -184,9 +193,11 @@ It works analogously to the Python example above.
 // Defining the input like above in the Python example
 std::vector<std::array<double, 3>> vertices = ...
 std::vector<std::array<size_t, 3>> faces = ...
-// The polyhedron is defined by its vertices and faces
-Polyhedron polyhedron{vertices, faces};
 double density = 1.0;
+// The constant density polyhedron is defined by its vertices & faces
+// It also supports the hand-over of NormalOrientation and PolyhedronIntegrity as optional arguments
+// as above described for the Python Interface
+Polyhedron polyhedron{vertices, faces, density};
 std::vector<std::array<double, 3>> points = ...
 std::array<double, 3> point = points[0];
 bool parallel = true;
@@ -196,19 +207,19 @@ The C++ library provides also two ways to compute the gravity. Via
 the free function `evaluate`...
 
 ```cpp
-const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, density, point);
+const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, parallel);
 ```
 
 ... or via the `GravityEvaluable` class.
 
 ```cpp
 // Instantiation of the GravityEvaluable object
-GravityEvaluable evaluable{polyhedron, density};
+GravityEvaluable evaluable{polyhedron};
 
 // From now, we can evaluate the gravity model for any point with
 const auto[potential, acceleration, tensor] = evaluable(point, parallel);
 // or for multiple points with
-const auto results = evaluable(points);
+const auto results = evaluable(points, parallel);
 ```
 
 Similarly to Python, the C++ implementation also provides mesh checking capabilities.
@@ -304,8 +315,7 @@ The following options are available:
 During testing POLYHEDRAL_GRAVITY_PARALLELIZATION=`TBB` has been the most performant.
 It is further not recommend to change the LOGGING_LEVEL to something else than `INFO=2`.
 
-The recommended CMake command would look like this (we only need to change `PARALLELIZATION_DEVICE`, since
-the defaults of the others are already correctly set):
+The recommended CMake settings using the `TBB` backend would look like this:
 
 ```bash
 cmake .. -POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
@@ -316,7 +326,7 @@ cmake .. -POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
 After the build, the gravity model can be run by executing:
 
 ```bash
-    ./polyhedralGravity <YAML-Configuration-File>
+./polyhedralGravity <YAML-Configuration-File>
 ```
 
 where the YAML-Configuration-File contains the required parameters.
@@ -327,7 +337,7 @@ found in this repository in the folder `/example-config/`.
 
 The configuration should look similar to the given example below.
 It is required to specify the source-files of the polyhedron's mesh (more info
-about the supported file in the [previous paragraph](#supported-polyhedron-source-files-python-c)), the density
+about the supported file in the [documentation](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html)), the density
 of the polyhedron, and the wished computation points where the
 gravity tensor shall be computed.
 Further one must specify the name of the .csv output file.
@@ -342,7 +352,8 @@ gravityModel:
     density: 2670.0                             # constant density, units must match with the mesh (see section below)
     points: # Location of the computation point(s) P
       - [ 0, 0, 0 ]                             # Here it is situated at the origin
-    check_mesh: true                            # Fully optional, enables input checking (not given: false)
+    check_mesh: true                            # Fully optional, enables mesh autodetect+repair of 
+                                                # the polyhedron's vertex ordering (not given: true)
   output:
     filename: "gravity_result.csv"              # The name of the output file 
 

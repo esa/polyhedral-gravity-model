@@ -21,10 +21,11 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
+        ############################# LINUX WHEELS #############################
         # In case of Linux we need to install compiler and build tools before building the wheels
         # We further only build the manylinux wheels, but not the musllinux wheels
       - name: Build wheels (Linux)
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.17.0
         env:
           CIBW_BEFORE_BUILD: yum makecache && yum install -y gcc-c++ cmake && pip install ninja
           CIBW_BUILD: "*manylinux*"
@@ -34,23 +35,36 @@ jobs:
           package-dir: .
           output-dir: dist
         if: matrix.os == 'ubuntu-latest'
+      ############################# MACOS WHEELS #############################
       # Building on macOS requires an installation of gcc since the default clang compiler
       # lacks certain features required for building the package
-      - name: Build wheels (macOS)
-        uses: pypa/cibuildwheel@v2.15.0
+      - name: Build wheels (macOS ARM)
+        uses: pypa/cibuildwheel@v2.17.0
         env:
-          CIBW_BEFORE_BUILD: brew install ninja gcc@12
-          CIBW_ENVIRONMENT: "CC=gcc-12 CXX=g++-12"
+          CIBW_BEFORE_BUILD: brew install ninja
+          CIBW_ARCHS_MACOS: "arm64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
           package-dir: .
           output-dir: dist
         if: matrix.os == 'macos-latest'
+      - name: Build wheels (macOS x86_64)
+        uses: pypa/cibuildwheel@v2.17.0
+        env:
+          CIBW_BEFORE_BUILD: brew install ninja gcc@12
+          CIBW_ENVIRONMENT: "CC=gcc-12 CXX=g++-12"
+          CIBW_ARCHS_MACOS: "x86_64"
+          CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
+        with:
+          package-dir: .
+          output-dir: dist
+        if: matrix.os == 'macos-latest'
+      ############################# WINDOWS WHEELS #############################
       # Set up the Visual Studio environment on Windows (required, so that CMake finds the compiler)
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Build wheels (Windows)
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.17.0
         env:
           CIBW_BEFORE_BUILD: choco install -y ninja cmake
           CIBW_ARCHS_WINDOWS: "auto64"
@@ -94,44 +108,10 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
-  # 3. Check if the package can be installed from testpypi
-  #    Notice, that this is more of an installation test since the
-  #    import check has already been done in the build_wheels job
-  check_testpypi:
-    needs: [upload_testpypi]
-    name: Test import on ${{ matrix.os }} with ${{ matrix.py }}
-    runs-on: ${{ matrix.os }}
-    if: always()
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        py:
-          [
-            3.7.x,
-            3.8.x,
-            3.9.x,
-            3.10.x,
-            3.11.x,
-            pypy3.7,
-            pypy3.8,
-            pypy3.9,
-            pypy3.10,
-          ]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.py }}
-      - name: Install package from testpypi
-        run: pip install --index-url https://test.pypi.org/simple/ polyhedral-gravity
-      - name: Check import
-        run: python -c "import polyhedral_gravity"
-
-  # 4. Upload the wheels to the actually Python Package Index
+  # 3. Upload the wheels to the actually Python Package Index
   #    using trusted publishing
   upload_pypi:
-    needs: [build_wheels, make_sdist, check_testpypi]
+    needs: [build_wheels, make_sdist, upload_testpypi]
     environment:
       name: pypi
       url: https://pypi.org/p/polyhedral-gravity

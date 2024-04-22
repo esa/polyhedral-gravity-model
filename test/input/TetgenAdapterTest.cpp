@@ -9,7 +9,7 @@ class TetgenAdapterTest : public ::testing::Test {
 
 protected:
 
-    std::vector<std::array<double, 3>> _expectedNodes = {
+    std::vector<std::array<double, 3>> _expectedVertices = {
             {-20, 0,  25},
             {0,   0,  25},
             {0,   10, 25},
@@ -47,9 +47,9 @@ TEST_F(TetgenAdapterTest, readSimpleNode) {
     };
 
     TetgenAdapter tetgenAdapter{simpleFiles};
-    auto actualPolyhedron = tetgenAdapter.getPolyhedron();
+    const auto&[actualVertices, actualFaces] = tetgenAdapter.getPolyhedralSource();
 
-    ASSERT_THAT(actualPolyhedron.getVertices(), ContainerEq(_expectedNodes));
+    ASSERT_THAT(actualVertices, ContainerEq(_expectedVertices));
 }
 
 
@@ -63,9 +63,9 @@ TEST_F(TetgenAdapterTest, readSimpleFace) {
     };
 
     TetgenAdapter tetgenAdapter{simpleFiles};
-    auto actualPolyhedron = tetgenAdapter.getPolyhedron();
+    const auto&[actualVertices, actualFaces] = tetgenAdapter.getPolyhedralSource();
 
-    ASSERT_THAT(actualPolyhedron.getFaces(), ContainerEq(_expectedFaces));
+    ASSERT_THAT(actualFaces, ContainerEq(_expectedFaces));
 }
 
 TEST_F(TetgenAdapterTest, readSimpleMesh) {
@@ -75,12 +75,12 @@ TEST_F(TetgenAdapterTest, readSimpleMesh) {
     std::vector<std::string> simpleFiles{"resources/TetgenAdapterTestReadSimple.mesh"};
 
     TetgenAdapter tetgenAdapter{simpleFiles};
-    auto actualPolyhedron = tetgenAdapter.getPolyhedron();
+    const auto&[actualVertices, actualFaces] = tetgenAdapter.getPolyhedralSource();
 
-    for (const auto &actualVertice: actualPolyhedron.getVertices()) {
-        ASSERT_THAT(_expectedNodes, Contains(actualVertice));
+    for (const auto &actualVertice: actualVertices) {
+        ASSERT_THAT(_expectedVertices, Contains(actualVertice));
     }
-    ASSERT_EQ(_expectedFaces.size(), actualPolyhedron.countFaces());
+    ASSERT_EQ(_expectedFaces.size(), actualFaces.size());
 }
 
 TEST_F(TetgenAdapterTest, readSimpleOff) {
@@ -90,12 +90,12 @@ TEST_F(TetgenAdapterTest, readSimpleOff) {
     std::vector<std::string> simpleFiles{"resources/TetgenAdapterTestReadSimple.off"};
 
     TetgenAdapter tetgenAdapter{simpleFiles};
-    auto actualPolyhedron = tetgenAdapter.getPolyhedron();
+    const auto&[actualVertices, actualFaces] = tetgenAdapter.getPolyhedralSource();
 
-    for (const auto &actualVertice: actualPolyhedron.getVertices()) {
-        ASSERT_THAT(_expectedNodes, Contains(actualVertice));
+    for (const auto &actualVertice: actualVertices) {
+        ASSERT_THAT(_expectedVertices, Contains(actualVertice));
     }
-    ASSERT_EQ(_expectedFaces.size(), actualPolyhedron.countFaces());
+    ASSERT_EQ(_expectedFaces.size(), actualFaces.size());
 }
 
 TEST_F(TetgenAdapterTest, readSimplePly) {
@@ -105,12 +105,12 @@ TEST_F(TetgenAdapterTest, readSimplePly) {
     std::vector<std::string> simpleFiles{"resources/TetgenAdapterTestReadSimple.ply"};
 
     TetgenAdapter tetgenAdapter{simpleFiles};
-    auto actualPolyhedron = tetgenAdapter.getPolyhedron();
+    const auto&[actualVertices, actualFaces] = tetgenAdapter.getPolyhedralSource();
 
-    for (const auto &actualVertice: actualPolyhedron.getVertices()) {
-        ASSERT_THAT(_expectedNodes, Contains(actualVertice));
+    for (const auto &actualVertice: actualVertices) {
+        ASSERT_THAT(_expectedVertices, Contains(actualVertice));
     }
-    ASSERT_EQ(_expectedFaces.size(), actualPolyhedron.countFaces());
+    ASSERT_EQ(_expectedFaces.size(), actualFaces.size());
 }
 
 TEST_F(TetgenAdapterTest, readSimpleStl) {
@@ -120,10 +120,10 @@ TEST_F(TetgenAdapterTest, readSimpleStl) {
     std::vector<std::string> simpleFiles{"resources/TetgenAdapterTestReadSimple.stl"};
 
     TetgenAdapter tetgenAdapter{simpleFiles};
-    auto actualPolyhedron = tetgenAdapter.getPolyhedron();
+    const auto&[actualVertices, actualFaces] = tetgenAdapter.getPolyhedralSource();
 
-    for (const auto &actualVertice: actualPolyhedron.getVertices()) {
-        ASSERT_THAT(_expectedNodes, Contains(actualVertice));
+    for (const auto &actualVertice: actualVertices) {
+        ASSERT_THAT(_expectedVertices, Contains(actualVertice));
     }
-    ASSERT_EQ(_expectedFaces.size(), actualPolyhedron.countFaces());
+    ASSERT_EQ(_expectedFaces.size(), actualFaces.size());
 }

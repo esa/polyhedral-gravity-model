@@ -6,9 +6,7 @@
 #include <utility>
 #include <fstream>
 #include <sstream>
-#include <string>
-#include "polyhedralGravity/input/TetgenAdapter.h"
-#include "polyhedralGravity/calculation/GravityModel.h"
+#include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 
 #include "GravityModelVectorUtility.h"
@@ -20,6 +18,10 @@
  *
  * The values which are used to check the C++ implementation are calculated by the
  * Tsoulis reference implementation in FORTRAN and saved in the files in test/resources.
+ *
+ * This test case might fail locally using a different architecture/ compiler than the CI!
+ * This is okay - A fix would be to check container element verbosly in a loop with an epsilon.
+ * However, the ContainerEq() - as currentl used - matcher makes the test a lot more readbale.
  *
  */
 class GravityModelBigTest : public ::testing::Test {
@@ -35,8 +37,11 @@ protected:
     static constexpr size_t LOCAL_TEST_COUNT_NODES_PER_FACE = 3;
 
     polyhedralGravity::Polyhedron _polyhedron{
-            polyhedralGravity::TetgenAdapter{
-                    {"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}}.getPolyhedron()};
+        std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"},
+        1.0,
+        polyhedralGravity::NormalOrientation::OUTWARDS,
+        polyhedralGravity::PolyhedronIntegrity::DISABLE
+    };
 
     std::array<double, 3> _computationPoint{0.0, 0.0, 0.0};
 

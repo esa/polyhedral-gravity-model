@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tuple>
 #include "polyhedralGravity/model/Polyhedron.h"
 
 namespace polyhedralGravity {
@@ -20,7 +21,7 @@ namespace polyhedralGravity {
          * Returns a Polyhedron from the underlying source.
          * @return a polyhedron
          */
-        virtual Polyhedron getPolyhedron() = 0;
+        virtual std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedralSource() = 0;
 
     };
 

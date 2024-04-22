@@ -10,28 +10,41 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # Build & Test on Linux
-  build-and-test-linux:
-    runs-on: ubuntu-latest
+
+  # Build the C++ library & test that it is working using GoogleTest
+  build-and-test-cpp:
+    name: C/C++ Library on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.os == 'windows-latest'
       - name: Build
         run: |
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
-          cmake --build .
-      - name: Test
+          cmake --build . --config Release
+      - name: Test (Linux & macOS)
         run: cd build/test && ./polyhedralGravity_test
+        if: matrix.os != 'windows-latest'
 
-  # Install the python interface by building from source and run pytest
-  pytest-linux:
-    runs-on: ubuntu-latest
+  # Install the python interface & test that it is working using pytest
+  build-and-test-python:
+    name: Python Interface on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
-      - name: Install Ninja Build
-        run: |
-          sudo apt-get install ninja-build -y
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.os == 'windows-latest'
       - name: Install Conda environment from environment.yml
         uses: mamba-org/provision-with-micromamba@main
         with:
@@ -44,22 +57,3 @@ jobs:
           pip install . -vv --no-build-isolation
           pytest -n 3
           
-
-  # Builds the polyhedral gravity python interface the interface
-  # No testing on Windows since it takes too long
-  # Enables the long paths feature on Windows (newer thrust versions require this)
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Build
-        run: |
-          New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
-          git config --system core.longpaths true
-          mkdir build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_POLYHEDRAL_PYTHON_INTERFACE=ON ..
-          cmake --build . --config Release
-
-      

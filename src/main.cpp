@@ -1,8 +1,7 @@
 #include <chrono>
 #include "polyhedralGravity/input/ConfigSource.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
-#include "polyhedralGravity/calculation/GravityModel.h"
-#include "polyhedralGravity/calculation/MeshChecking.h"
+#include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/output/CSVWriter.h"
 
@@ -16,32 +15,17 @@ int main(int argc, char *argv[]) {
     }
 
     try {
-
         std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>(argv[1]);
-        auto poly = config->getDataSource()->getPolyhedron();
+        auto polyhedralSource = config->getDataSource()->getPolyhedralSource();
         auto density = config->getDensity();
         auto computationPoints = config->getPointsOfInterest();
         auto outputFileName = config->getOutputFileName();
-        bool checkPolyhedralInput = config->getMeshInputCheckStatus();
-
-        // Checking that the vertices are correctly set-up in the input if activated
-        if (checkPolyhedralInput) {
-            SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Checking mesh...");
-            if (!MeshChecking::checkTrianglesNotDegenerated(poly)) {
-                throw std::runtime_error{
-                        "At least on triangle in the mesh is degenerated and its surface area equals zero!"};
-            } else if (!MeshChecking::checkNormalsOutwardPointing(poly)) {
-                throw std::runtime_error{
-                        "The plane unit normals are not pointing outwards! Please check the order "
-                        "of the vertices in the polyhedral input source!"};
-            }  else {
-                SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The mesh is fine.");
-            }
-        }
+        PolyhedronIntegrity checkPolyhedralInput = config->getMeshInputCheckStatus() ? PolyhedronIntegrity::HEAL : PolyhedronIntegrity::DISABLE;
 
         SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The calculation started...");
         auto start = std::chrono::high_resolution_clock::now();
-        auto result = GravityModel::evaluate(poly, density, computationPoints);
+        Polyhedron polyhedron{polyhedralSource, density, NormalOrientation::OUTWARDS, checkPolyhedralInput};
+        auto result = GravityModel::evaluate(polyhedron, computationPoints, true);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = end - start;
         auto ms = std::chrono::duration_cast<std::chrono::microseconds>(duration);

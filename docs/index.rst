@@ -53,6 +53,7 @@ And for more details, refer to the **Python API** or **C++ API**.
 
    background/rational
    background/approach
+   background/mesh_integrity
    background/evaluable_vs_evaluate
 
 .. toctree::
@@ -66,7 +67,6 @@ And for more details, refer to the **Python API** or **C++ API**.
    :maxdepth: 2
 
    api/model
-   api/calculation
    api/input
    api/output
    api/util

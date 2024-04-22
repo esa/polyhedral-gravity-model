@@ -2,7 +2,7 @@
 
 namespace polyhedralGravity {
 
-    Polyhedron TetgenAdapter::getPolyhedron() {
+    std::tuple<std::vector<Array3>, std::vector<IndexArray3>> TetgenAdapter::getPolyhedralSource() {
         //1. Step: Read in from files
         for (const auto &fileName: _fileNames) {
             size_t pos = fileName.find_last_of('.');
@@ -12,7 +12,7 @@ namespace polyhedralGravity {
         }
 
         //2. Convert tetgenio to Polyhedron
-        return {_vertices, _faces};
+        return std::make_tuple(_vertices, _faces);
     }
 
     void TetgenAdapter::readNode(const std::string &filename) {

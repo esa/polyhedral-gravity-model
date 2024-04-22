@@ -7,7 +7,7 @@ Details about mesh and input units can be found in :ref:`quick-start-io`.
 
 The use of the Python interface is pretty straight-forward since
 there is only one method: :code:`evaluate(..)` or the alternative
-class :code:`GravityEvaluable` caching the polyhedron.
+class :code:`GravityEvaluable` caching the :code:`Polyhedron` and intermediate results.
 Have a look at :ref:`evaluable-vs-eval` for further
 details about the difference.
 If you strive for maximal performance, use the the class :code:`GravityEvaluable`.
@@ -16,50 +16,19 @@ The polyhedral source can either be a tuple of vertices and faces, or
 a list of polyhedral mesh files (see :ref:`supported-polyhedron-source-files`).
 
 The method calls follow the same pattern as the C++ interface.
-
-.. code-block:: python
-
-    import polyhedral_gravity as model
-
-    #############################################
-    # Free function call
-    #############################################
-    # Define the polyhedral_source which is either (vertices, faces) or a list of files
-    # Define the density (a float)
-    # Define the computation_points which is either a single point or a list of points
-    # Define if the computation is parallel or not (the default is parallel, which corresponds to True)
-    results = model.evaluate(
-        polyhedral_source=polyhedral_source,
-        density=density,
-        computation_points=computation_points,
-        parallel=True
-    )
-
-    #############################################
-    # With the evaluable class
-    # This allows multiple evaluations on the same polyhedron
-    # without the overhead of setting up the normals etc.
-    #############################################
-    # Parameters are the same as for the free function call
-    evaluable = model.GravityEvaluable(
-        polyhedral_source=polyhedral_source,
-        density=density
-    )
-    results = evaluable(
-        computation_points=computation_points,
-        parallel=True
-    )
+You always define a :code:`Polyhedron` and then evaluate the polyhedral
+gravity model using either the :code:`GravityEvaluable` or :code:`evaluate(..)`.
 
 
 Free function
 -------------
 
-**Example 1:** Evaluating the gravity model for a given polyhedron
-defined from within source code for a specific point and density.
+**Example 1:** Evaluating the gravity model for a given constant density
+polyhedron defined from within source code for a single point.
 
 .. code-block:: python
 
-        import polyhedral_gravity as model
+        from polyhedral_gravity import Polyhedron, evaluate
 
         # Defining every input parameter in the source code
         vertices = ...          # (N-3)-array-like of type float
@@ -67,20 +36,24 @@ defined from within source code for a specific point and density.
         density = ...           # float
         computation_point = ... # (3)-array-like
 
-        # Evaluate the gravity model
+        # Create a constant density polyhedron & Evaluate the gravity model
         # Notice that the third argument could also be a list of points
         # Returns a tuple of potential, acceleration and tensor
         # If computation_point would be a (N,3)-array, the output would be list of triplets!
-        potential, acceleration, tensor = model.evaluate((vertices, faces), density, computation_point, parallel=True)
+        polyhedron = Polyhedron((vertices, faces), density)
+        potential, acceleration, tensor = evaluate(polyhedron, computation_point, parallel=True)
 
 
-**Example 2a:** Evaluating the gravity model for a given polyhedron
-in some source files for several points and density.
+**Example 2a:** Evaluating the gravity model for a given constant density polyhedron
+in some source files for several points.
 Of course, you can also use keyword arguments for the parameters.
+We also check that the polyhedron's plane unit normals are actually
+outwards pointing. This will raise a ValueError if at least on
+plane unit normal is inwards pointing.
 
 .. code-block:: python
 
-        import polyhedral_gravity as model
+    from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity, NormalOrientation
 
         # Reading the vertices and files from a .node and .face file
         file_vertices = '___.node'      # str, path to file
@@ -91,20 +64,28 @@ Of course, you can also use keyword arguments for the parameters.
         # Evaluate the gravity model
         # Notice that the last argument could also be a list of points
         # Returns a list of tuple of potential, acceleration and tensor
-        results = model.evaluate(
+        polyhedron = Polyhedron(
             polyhedral_source=[file_vertices, file_nodes],
             density=density,
+            normal_orientation=NormalOrientation.OUTWARDS,
+            integrity_check=PolyhedronIntegrity.VERIFY,
+        )
+        results = evaluate(
+            polyhedron=polyhedron,
             computation_points=computation_points,
-            parallel=True
+            parallel=True,
         )
 
 
-**Example 2b:** Evaluating the gravity model for a given polyhedron
-in some source files for a specific point and density.
+**Example 2b:** Evaluating the gravity model for a given constant density polyhedron
+in some source files for a specific point.
+We also check that the polyhedron's plane unit normals are actually
+outwards pointing. We don't specify this here, as :code:`OUTWARDS` is the default.
+It will raise a ValueError if at least on plane unit normal is inwards pointing.
 
 .. code-block:: python
 
-        import polyhedral_gravity as model
+    from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity
 
         # Reading the vertices and files from a single .mesh file
         file = '___.mesh'       # str, path to file
@@ -115,21 +96,24 @@ in some source files for a specific point and density.
         # Notice that the last argument could also be a list of points
         # Returns a tuple of potential, acceleration and tensor
         # If computation_point would be a (N,3)-array, the output would be list of triplets!
-        potential, acceleration, tensor = model.evaluate([mesh], density, computation_point)
+        polyhedron = Polyhedron(
+            polyhedral_source=[file],
+            density=density,
+            integrity_check=PolyhedronIntegrity.VERIFY,
+        )
+        potential, acceleration, tensor = evaluate(polyhedron, computation_point)
 
 
 For example 2a and 2b, refer to :ref:`supported-polyhedron-source-files` to view the available
 options for polyhedral input.
 
-**Example 3:** A guard statement checks that the plane unit
-normals are pointing outwards and no triangular surface is degenerated.
-Only use this statement if one needs clarification
-about the vertices' ordering due to its quadratic complexity!
+**Example 3a:** Here explicitly disable the security check.
+We **won't get an exception** if the plane unit normals are not
+oriented as specified, **but we also don't pay for the check with quadratic runtime complexity!**
 
 .. code-block:: python
 
-    import polyhedral_gravity as model
-    import polyhedral_gravity.utility as mesh_sanity
+    from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity, NormalOrientation
 
     # Defining every input parameter in the source code
     vertices = ...          # (N-3)-array-like of type float
@@ -137,15 +121,44 @@ about the vertices' ordering due to its quadratic complexity!
     density = ...           # float
     computation_point = ... # (3)-array-like
 
+    # Evaluate the gravity model
+    # Returns a tuple of potential, acceleration and tensor
+    # If computation_point would be a (N,3)-array, the output would be list of triplets!
+    polyhedron = Polyhedron(
+        polyhedral_source=(vertices, faces),
+        density=density,
+        normal_orientation=NormalOrientation.OUTWARDS,
+        integrity_check=PolyhedronIntegrity.DISABLE,
+    )
+    potential, acceleration, tensor = evaluate(polyhedron, computation_point)
 
 
-    # Additional guard statement to check that the plane normals
-    # are outwards pointing
-    if mesh_sanity.check_mesh(vertices, faces):
-        # Evaluate the gravity model
-        # Returns a tuple of potential, acceleration and tensor
-        # If computation_point would be a (N,3)-array, the output would be list of triplets!
-        potential, acceleration, tensor = model.evaluate((vertices, faces), density, computation_point)
+**Example 3b:** Here we use the :code:`HEAL` option.
+This guarantees a valid polyhedron. But the ordering of the faces array and
+the normal_orientation might differ.
+And we also need to pay the additional quadratic runtime for the checking algorithmus.
+
+.. code-block:: python
+
+    from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity, NormalOrientation
+
+    # Defining every input parameter in the source code
+    vertices = ...          # (N-3)-array-like of type float
+    faces = ...             # (N-3)-array-like of type int
+    density = ...           # float
+    computation_point = ... # (3)-array-like
+
+    # Actually, the normal_orientation doesn't matter! We could the argument
+    # as HEAL guarantees a valid polyhedron
+    # but the polyhedron might different properties polyhedron.faces
+    # and polyhedron.normal_orientation than specified
+    polyhedron = Polyhedron(
+        polyhedral_source=(vertices, faces),
+        density=density,
+        normal_orientation=NormalOrientation.OUTWARDS,
+        integrity_check=PolyhedronIntegrity.HEAL,
+    )
+    potential, acceleration, tensor = evaluate(polyhedron, computation_point)
 
 
 GravityEvaluable
@@ -161,7 +174,7 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
 
 .. code-block:: python
 
-        import polyhedral_gravity as model
+        from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity
 
         # Defining every input parameter in the source code
         vertices = ...           # (N-3)-array-like of type float
@@ -169,8 +182,15 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
         density = ...            # float
         computation_points = ... # (N,3)-array-like
 
+        # Definition of the Polyhedron in previous examples
+        polyhedron = Polyhedron(
+            polyhedral_source=(vertices, faces),
+            density=density,
+            integrity_check=PolyhedronIntegrity.HEAL,
+        )
+
         # Create the evaluable object
-        evaluable = model.GravityEvaluable(polyhedral_source, density)
+        evaluable = GravityEvaluable(polyhedron, density)
 
         for point in computation_points:
             # Evaluate the gravity model for single points (3)-array-like

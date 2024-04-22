@@ -35,15 +35,13 @@ namespace polyhedralGravity {
         using namespace util;
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
-                            computationPoint[0], computationPoint[1], computationPoint[2], _density);
+                            computationPoint[0], computationPoint[1], computationPoint[2], _polyhedron.getDensity());
         /*
          * Calculate V and Vx, Vy, Vz and Vxx, Vyy, Vzz, Vxy, Vxz, Vyz
          */
-        auto polyhedronIterator = transformPolyhedron(_polyhedron, computationPoint);
-        auto zip1 = util::zip(polyhedronIterator.first, _segmentVectors.begin(), _planeUnitNormals.begin(),
-                              _segmentUnitNormals.begin());
-        auto zip2 = util::zip(polyhedronIterator.second, _segmentVectors.end(), _planeUnitNormals.end(),
-                              _segmentUnitNormals.end());
+        const auto &[polyBegin, polyEnd] = _polyhedron.transformIterator(computationPoint);
+        auto zip1 = util::zip(polyBegin, _segmentVectors.begin(), _planeUnitNormals.begin(), _segmentUnitNormals.begin());
+        auto zip2 = util::zip(polyEnd, _segmentVectors.end(), _planeUnitNormals.end(), _segmentUnitNormals.end());
 
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Starting to iterate over the planes...");
@@ -62,7 +60,7 @@ namespace polyhedralGravity {
                             "Finished the sums. Applying final prefix and eliminating rounding errors.");
 
         //9. Step: Compute prefix consisting of GRAVITATIONAL_CONSTANT * density
-        const double prefix = util::GRAVITATIONAL_CONSTANT * _density;
+        const double prefix = util::GRAVITATIONAL_CONSTANT * _polyhedron.getDensity() * _polyhedron.getOrientationFactor();
 
         //10. Step: Final expressions after application of the prefix (and a division by 2 for the potential)
         potential = (potential * prefix) / 2.0;
@@ -94,6 +92,7 @@ namespace polyhedralGravity {
     }
 
     // Explicit template instantiation of the multipoint evaluate method
+
     template std::vector<GravityModelResult>
     GravityEvaluable::evaluate<true>(const std::vector<Array3> &computationPoints) const;
 
@@ -232,15 +231,15 @@ namespace polyhedralGravity {
     }
 
     std::string GravityEvaluable::toString() const {
-        std::stringstream ss;
-        ss << "<polyhedral_gravity.GravityEvaluable, density=" << _density << ", vertices= "
+        std::stringstream sstream;
+        sstream << "<polyhedral_gravity.GravityEvaluable, density=" << _polyhedron.getDensity() << ", vertices= "
            << _polyhedron.countVertices() << ", faces= " << _polyhedron.countFaces() << ">";
-        return ss.str();
+        return sstream.str();
     }
 
-    std::tuple<Polyhedron, double, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
+    std::tuple<Polyhedron, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
     GravityEvaluable::getState() const {
-        return std::make_tuple(_polyhedron, _density, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
+        return std::make_tuple(_polyhedron, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
     }
 
 }

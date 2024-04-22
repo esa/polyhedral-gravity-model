@@ -16,7 +16,7 @@
 #include "thrust/transform_reduce.h"
 #include "thrust/execution_policy.h"
 #include "polyhedralGravity/util/UtilityThrust.h"
-#include "polyhedralGravity/calculation/GravityModel.h"
+#include "polyhedralGravity/model/GravityModel.h"
 
 /**
  * Contains additional utility for working with the values of the polyhedrale Gravity Model.
