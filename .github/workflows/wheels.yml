@@ -24,12 +24,17 @@ jobs:
         ############################# LINUX WHEELS #############################
         # In case of Linux we need to install compiler and build tools before building the wheels
         # We further only build the manylinux wheels, but not the musllinux wheels
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+        if: matrix.os == 'ubuntu-latest'
       - name: Build wheels (Linux)
         uses: pypa/cibuildwheel@v2.17.0
         env:
           CIBW_BEFORE_BUILD: yum makecache && yum install -y gcc-c++ cmake && pip install ninja
           CIBW_BUILD: "*manylinux*"
-          CIBW_ARCHS_LINUX: "auto64"
+          CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
           package-dir: .
