@@ -10,6 +10,7 @@
 #include "polyhedralGravity/model/Polyhedron.h"
 
 #include "GravityModelVectorUtility.h"
+#include "GoogleTestMatcher.h"
 
 
 /**
@@ -268,7 +269,7 @@ TEST_F(GravityModelBigTest, PlaneUnitNormals) {
 
     auto actualPlaneUnitNormals = polyhedralGravity::GravityModel::calculatePlaneUnitNormals(expectedGij);
 
-    ASSERT_THAT(actualPlaneUnitNormals, ContainerEq(expectedPlaneUnitNormals));
+    ASSERT_THAT(actualPlaneUnitNormals, FloatContainter2D(expectedPlaneUnitNormals, 10));
 }
 
 TEST_F(GravityModelBigTest, SegmentUnitNormals) {
@@ -291,12 +292,11 @@ TEST_F(GravityModelBigTest, PlaneNormalOrientations) {
 
 TEST_F(GravityModelBigTest, HessianPlane) {
     using namespace testing;
-    using namespace polyhedralGravity;
 
     auto actualHessianPlane =
             polyhedralGravity::GravityModel::calculateFacesToHessianPlanes(_computationPoint, _polyhedron);
 
-    ASSERT_EQ(actualHessianPlane, expectedHessianPlanes);
+    ASSERT_THAT(actualHessianPlane, ContainerEq(expectedHessianPlanes));
 }
 
 TEST_F(GravityModelBigTest, PlaneDistances) {

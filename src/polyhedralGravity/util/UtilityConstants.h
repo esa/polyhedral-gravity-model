@@ -10,7 +10,6 @@ namespace polyhedralGravity::util {
      */
     constexpr double EPSILON = 1e-14;
 
-
     /**
      * PI with enough precision
      */
