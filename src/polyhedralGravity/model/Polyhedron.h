@@ -151,7 +151,7 @@ namespace polyhedralGravity {
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@param integrity} flag
+         * @throws std::invalid_argument dpending on the {@link integrity} flag
          */
         Polyhedron(
                 const std::vector<Array3> &vertices,
@@ -170,7 +170,7 @@ namespace polyhedralGravity {
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@param integrity} flag
+         * @throws std::invalid_argument dpending on the {@link integrity} flag
          */
         Polyhedron(
                 const PolyhedralSource &polyhedralSource,
@@ -188,7 +188,7 @@ namespace polyhedralGravity {
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@param integrity} flag
+         * @throws std::invalid_argument dpending on the {@link integrity} flag
          */
         Polyhedron(const PolyhedralFiles &polyhedralFiles, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
@@ -204,7 +204,7 @@ namespace polyhedralGravity {
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@param integrity} flag
+         * @throws std::invalid_argument dpending on the {@link integrity} flag
          */
         Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,

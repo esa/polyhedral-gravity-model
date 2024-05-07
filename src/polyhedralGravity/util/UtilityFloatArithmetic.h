@@ -18,7 +18,7 @@ namespace polyhedralGravity::util {
     /**
      * This relative EPSILON is utilized ONLY for testing purposes to compare intermediate values to
      * Tsoulis' reference implementation Fortran.
-     * It is used in the {@ref polyhedralGravity::util::almostEqualRelative} function.
+     * It is used in the {@link polyhedralGravity::util::almostEqualRelative} function.
      *
      * @note While in theory no difference at all is observed when compiling this program on Linux using GCC on x86_64,
      *  the intermediate values change when the program is compiled in different environments.
@@ -28,7 +28,7 @@ namespace polyhedralGravity::util {
 
     /**
      * The maximal allowed ULP distance utilized for FloatingPoint comparisons using the
-     * {@ref polyhedralGravity::util::almostEqualUlps} function.
+     * {@link polyhedralGravity::util::almostEqualUlps} function.
      *
      * @see https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
      */
@@ -42,7 +42,7 @@ namespace polyhedralGravity::util {
      * @param lhs The left hand side floating point number to compare.
      * @param rhs The right hand side floating point number to compare.
      * @param ulpDistance The maximum acceptable ULP distance between the two floating points
-     *      for which they would be considered near each other. This is optional and by default, it will be MAX_ULP_DISTANCE.
+     *      for which they would be considered near each other. This is optional and by default, it will be {@link MAX_ULP_DISTANCE}.
      *
      * @return true if the ULP distance between lhs and rhs is less than or equal to the provided ulpDistance value, otherwise, false.
      *  Returns true if both numbers are exactly the same. Returns false if the signs do not match.
@@ -60,7 +60,7 @@ namespace polyhedralGravity::util {
      * @param lhs The first floating-point number to be compared.
      * @param rhs The second floating-point number to be compared.
      * @param epsilon The tolerance for comparison. Two numbers that are less than epsilon apart are considered equal.
-     *                The default value is `EPSILON`.
+     *                The default value is {@link EPSILON_ALMOST_EQUAL}.
      *
      * @return boolean value - Returns `true` if the absolute difference between `lhs` and `rhs` is less than or equal to
      *                         the relative error factored by the larger of the magnitude of `lhs` and `rhs`. Otherwise, `false`.
