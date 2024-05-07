@@ -202,7 +202,7 @@ namespace polyhedralGravity {
         const Array3 rayVector = normal(segmentVector1, segmentVector2);
 
         // The origin of the array has a slight offset in direction of the normal
-        const Array3 rayOrigin = centroid + (rayVector * EPSILON);
+        const Array3 rayOrigin = centroid + (rayVector * EPSILON_ZERO_OFFSET);
 
         // Count every triangular face which is intersected by the ray
         const auto &[begin, end] = this->transformIterator();
@@ -224,7 +224,7 @@ namespace polyhedralGravity {
         const Array3 edge2 = triangle[2] - triangle[0];
         const Array3 h = cross(rayVector, edge2);
         const double a = dot(edge1, h);
-        if (a > -EPSILON && a < EPSILON) {
+        if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
             return nullptr;
         }
 
@@ -242,7 +242,7 @@ namespace polyhedralGravity {
         }
 
         const double t = f * dot(edge2, q);
-        if (t > EPSILON) {
+        if (t > EPSILON_ZERO_OFFSET) {
             return std::make_unique<Array3>(rayOrigin + rayVector * t);
         } else {
             return nullptr;

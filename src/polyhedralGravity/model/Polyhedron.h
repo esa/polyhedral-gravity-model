@@ -22,6 +22,7 @@
 #include "thrust/iterator/transform_iterator.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
+#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
 
 namespace polyhedralGravity {
 

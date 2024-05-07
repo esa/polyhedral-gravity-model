@@ -21,6 +21,7 @@
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityThrust.h"
+#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
 #include "polyhedralGravity/output/Logging.h"
 
 namespace polyhedralGravity::GravityModel::detail {

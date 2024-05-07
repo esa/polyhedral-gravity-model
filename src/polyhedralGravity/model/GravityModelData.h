@@ -84,10 +84,10 @@ namespace polyhedralGravity {
          * @note Just used for testing purpose
          */
         bool operator==(const Distance &rhs) const {
-            return util::floatNear(l1, rhs.l1) &&
-                   util::floatNear(l2, rhs.l2) &&
-                   util::floatNear(s1, rhs.s1) &&
-                   util::floatNear(s2, rhs.s2);
+            return util::almostEqualRelative(l1, rhs.l1) &&
+                   util::almostEqualRelative(l2, rhs.l2) &&
+                   util::almostEqualRelative(s1, rhs.s1) &&
+                   util::almostEqualRelative(s2, rhs.s2);
         }
 
         /**
@@ -141,7 +141,7 @@ namespace polyhedralGravity {
          * @note Just used for testing purpose
          */
         bool operator==(const TranscendentalExpression &rhs) const {
-            return util::floatNear(ln, rhs.ln) && util::floatNear(an, rhs.an);
+            return util::almostEqualRelative(ln, rhs.ln) && util::almostEqualRelative(an, rhs.an);
         }
 
         /**
@@ -202,10 +202,10 @@ namespace polyhedralGravity {
          * @note Just used for testing purpose
          */
         bool operator==(const HessianPlane &rhs) const {
-            return util::floatNear(a, rhs.a) &&
-                   util::floatNear(b, rhs.b) &&
-                   util::floatNear(c, rhs.c) &&
-                   util::floatNear(d, rhs.d);
+            return util::almostEqualRelative(a, rhs.a) &&
+                   util::almostEqualRelative(b, rhs.b) &&
+                   util::almostEqualRelative(c, rhs.c) &&
+                   util::almostEqualRelative(d, rhs.d);
         }
 
         /**

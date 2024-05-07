@@ -3,14 +3,6 @@
 namespace polyhedralGravity::util {
 
     /**
-     * The EPSILON used in the polyhedral gravity model.
-     * @related Used to determine if a floating point number is equal to zero as threshold for rounding errors
-     * @related Used for the sgn() function to determine the sign of a double value. Different compilers
-     * produce different results if no EPSILON is applied for the comparison!
-     */
-    constexpr double EPSILON = 1e-14;
-
-    /**
      * PI with enough precision
      */
     constexpr double PI = 3.1415926535897932384626433832795028841971693993751058209749445923;
