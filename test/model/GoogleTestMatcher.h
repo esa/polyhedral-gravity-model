@@ -21,7 +21,7 @@ MATCHER_P(FloatContainter1D, container, "Comparing 1D Containers") {
 }
 
 // Using the FloatContainter1D would be nice, but this leads to issues with template instatantation
-// Hence, this easy way and a double-for-loop (but at least better fitting messages)
+// Hence, this is the easy way and a double-for-loop (but at least better fitting messages)
 MATCHER_P(FloatContainter2D, container, "Comparing 2D Containers") {
     if (container.size() != arg.size()) {
         *result_listener << "The container sizes do not match. Sizes: " << container.size() << " != " << arg.size();
@@ -43,7 +43,7 @@ MATCHER_P(FloatContainter2D, container, "Comparing 2D Containers") {
 }
 
 // Using the FloatContainter2D would be nice, but this leads to issues with template instatantation
-// Hence, this easy way and a triple-for-loop (but at least better fitting messages)
+// Hence, this is the easy way and a triple-for-loop (but at least better fitting messages)
 MATCHER_P(FloatContainter3D, container, "Comparing 3D Containers") {
     if (container.size() != arg.size()) {
         *result_listener << "The container sizes do not match. Sizes: " << container.size() << " != " << arg.size();

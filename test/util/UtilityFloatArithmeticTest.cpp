@@ -64,7 +64,7 @@ TEST(UtilityFloatArithmeticTest, TestAlmostEqualRelative) {
     ASSERT_TRUE(polyhedralGravity::util::almostEqualRelative(3.0, 3.0 + 1e-11));
 
     // Checking the the sensitivity towards the next floating point
-    // The ULP distnace is really small, this method will always return true
+    // A ULP distance of 4 or 5 is still really small than our relative sensitivity of 1e-10
     const double fourHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, 4.0), 4.0), 4.0), 4.0);
     const double fiveHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, 4.0), 4.0), 4.0), 4.0), 4.0);
     ASSERT_TRUE(polyhedralGravity::util::almostEqualRelative(3.0, fourHops));
