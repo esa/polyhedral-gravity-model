@@ -76,8 +76,8 @@ namespace polyhedralGravity {
         double s2;
 
         /**
-         * Checks two Distance structs for equality with another one by comparing their members values'
-         * ULP distances.
+         * Checks two Distance structs for equality with another one by ensuring that the members are
+         * almost equal.
          * @param rhs the other Distance struct
          * @return true if equal
          *
@@ -91,8 +91,8 @@ namespace polyhedralGravity {
         }
 
         /**
-         * Checks two Distance structs for inequality with another one by comparing their members values'
-         * ULP distances.
+         * Checks two Distance structs for inequality with another one by ensuring that the members are
+         * not almost equal.
          * @param rhs the other Distance struct
          * @return false if unequal
          *
@@ -133,8 +133,8 @@ namespace polyhedralGravity {
         double an;
 
         /**
-        * Checks two TranscendentalExpressions for equality with another one by comparing their members values'
-         * ULP distances.
+         * Checks two TranscendentalExpressions for equality with another one by ensuring that the members are
+         * almost equal.
          * @param rhs the other TranscendentalExpressions
          * @return true if equal
          *
@@ -145,8 +145,8 @@ namespace polyhedralGravity {
         }
 
         /**
-         * Checks two TranscendentalExpressions for inequality with another one by comparing their members values
-         * ULP distances.
+         * Checks two TranscendentalExpressions for inequality with another one by ensuring that the members are
+         * not almost equal.
          * @param rhs the other TranscendentalExpressions
          * @return false if unequal
          *
@@ -194,8 +194,8 @@ namespace polyhedralGravity {
         double d;
 
         /**
-         * Checking the equality of two this Hessian Plane with another one by comparing their members values
-         * ULP distances.
+         * Checking the equality of two this Hessian Plane with another one by ensuring that the members are
+         * almost equal.
          * @param rhs other HessianPlane
          * @return true if equal
          *
@@ -209,8 +209,8 @@ namespace polyhedralGravity {
         }
 
         /**
-         * Checking the inequality of two this Hessian Plane with another one with another one by comparing their members values'
-         * ULP distances.
+         * Checking the inequality of two this Hessian Plane with another one by ensuring that the members are
+         * not almost equal.
          * @param rhs other HessianPlane
          * @return true if unequal
          *
