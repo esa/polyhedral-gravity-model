@@ -8,7 +8,7 @@
 namespace polyhedralGravity::util {
 
     /**
-     * The EPSILON used in the polyhedral gravity model to determine a radius around zero/ to use as sligth offset.
+     * The EPSILON used in the polyhedral gravity model to determine a radius around zero/ to use as slight offset.
      * @related Used to determine if a floating point number is equal to zero as threshold for rounding errors
      * @related Used for the sgn() function to determine the sign of a double value. Different compilers
      * produce different results if no EPSILON is applied for the comparison!
