@@ -79,7 +79,7 @@ and we check the if the plane unit normals are actually outwards pointing
 
         // Returns either a single of vector of results
         // Here, we only have one point. Thus we get a single result
-        Polyhedron polyhedron{vertices, faces, density, PolyhedronIntegrity::VERIFY};
+        Polyhedron polyhedron{vertices, faces, density, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY};
         const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, false);
 
 
@@ -131,12 +131,12 @@ The result will always be fine.
 
         // Reading the configuration from a yaml file
         std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>("config.yaml");
-        Polyhedron poly = config->getDataSource()->getPolyhedron();
+        auto polyhedralSource = config->getDataSource()->getPolyhedralSource();
         double density = config->getDensity();
         std::array<double, 3> point = config->getPointsOfInterest()[0];
 
-        Polyhedron polyhedron{files, density, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL};
-        GravityResult result = GravityModel::evaluate(poly, density, point);
+        Polyhedron polyhedron{polyhedralSource, density, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL};
+        const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point);
 
 
 GravityEvaluable (with caching)

@@ -10,6 +10,7 @@
 #include "polyhedralGravity/model/Polyhedron.h"
 
 #include "GravityModelVectorUtility.h"
+#include "GoogleTestMatcher.h"
 
 
 /**
@@ -268,16 +269,15 @@ TEST_F(GravityModelBigTest, PlaneUnitNormals) {
 
     auto actualPlaneUnitNormals = polyhedralGravity::GravityModel::calculatePlaneUnitNormals(expectedGij);
 
-    ASSERT_THAT(actualPlaneUnitNormals, ContainerEq(expectedPlaneUnitNormals));
+    ASSERT_THAT(actualPlaneUnitNormals, FloatContainter2D(expectedPlaneUnitNormals));
 }
 
 TEST_F(GravityModelBigTest, SegmentUnitNormals) {
     using namespace testing;
 
-    auto actualSegmentUnitNormals = polyhedralGravity::GravityModel::calculateSegmentUnitNormals(expectedGij,
-                                                                                                 expectedPlaneUnitNormals);
+    auto actualSegmentUnitNormals = polyhedralGravity::GravityModel::calculateSegmentUnitNormals(expectedGij, expectedPlaneUnitNormals);
 
-    ASSERT_THAT(actualSegmentUnitNormals, ContainerEq(expectedSegmentUnitNormals));
+    ASSERT_THAT(actualSegmentUnitNormals, FloatContainter3D(expectedSegmentUnitNormals));
 }
 
 TEST_F(GravityModelBigTest, PlaneNormalOrientations) {
@@ -291,12 +291,11 @@ TEST_F(GravityModelBigTest, PlaneNormalOrientations) {
 
 TEST_F(GravityModelBigTest, HessianPlane) {
     using namespace testing;
-    using namespace polyhedralGravity;
 
     auto actualHessianPlane =
             polyhedralGravity::GravityModel::calculateFacesToHessianPlanes(_computationPoint, _polyhedron);
 
-    ASSERT_EQ(actualHessianPlane, expectedHessianPlanes);
+    ASSERT_THAT(actualHessianPlane, ContainerEq(expectedHessianPlanes));
 }
 
 TEST_F(GravityModelBigTest, PlaneDistances) {
@@ -304,7 +303,7 @@ TEST_F(GravityModelBigTest, PlaneDistances) {
 
     auto actualPlaneDistances = polyhedralGravity::GravityModel::calculatePlaneDistances(expectedHessianPlanes);
 
-    ASSERT_THAT(actualPlaneDistances, ContainerEq(expectedPlaneDistances));
+    ASSERT_THAT(actualPlaneDistances, FloatContainter1D(expectedPlaneDistances));
 }
 
 TEST_F(GravityModelBigTest, OrthogonalProjectionPointsOnPlane) {
@@ -363,7 +362,7 @@ TEST_F(GravityModelBigTest, SegmentDistances) {
             polyhedralGravity::GravityModel::calculateSegmentDistances(expectedOrthogonalProjectionPointsOnPlane,
                                                                        expectedOrthogonalProjectionPointsOnSegment);
 
-    ASSERT_THAT(actualSegmentDistances, ContainerEq(expectedSegmentDistances));
+    ASSERT_THAT(actualSegmentDistances, FloatContainter2D(expectedSegmentDistances));
 }
 
 TEST_F(GravityModelBigTest, DistancesPerSegmentEndpoint) {

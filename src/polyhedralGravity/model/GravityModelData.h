@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <tuple>
 #include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/util/UtilityConstants.h"
+#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
 
 namespace polyhedralGravity {
 
@@ -76,20 +76,23 @@ namespace polyhedralGravity {
         double s2;
 
         /**
-         * Checks two Distance structs for equality.
-         * @warning This method compares doubles! So only exact copies will evaluate to true.
+         * Checks two Distance structs for equality with another one by ensuring that the members are
+         * almost equal.
          * @param rhs the other Distance struct
          * @return true if equal
          *
          * @note Just used for testing purpose
          */
         bool operator==(const Distance &rhs) const {
-            return l1 == rhs.l1 && l2 == rhs.l2 && s1 == rhs.s1 && s2 == rhs.s2;
+            return util::almostEqualRelative(l1, rhs.l1) &&
+                   util::almostEqualRelative(l2, rhs.l2) &&
+                   util::almostEqualRelative(s1, rhs.s1) &&
+                   util::almostEqualRelative(s2, rhs.s2);
         }
 
         /**
-         * Checks two Distance structs for inequality.
-         * @warning This method compares doubles! So only exact copies will evaluate to false.
+         * Checks two Distance structs for inequality with another one by ensuring that the members are
+         * not almost equal.
          * @param rhs the other Distance struct
          * @return false if unequal
          *
@@ -130,20 +133,20 @@ namespace polyhedralGravity {
         double an;
 
         /**
-         * Checks two TranscendentalExpressions for equality.
-         * @warning This method compares doubles! So only exact copies will evaluate to true.
+         * Checks two TranscendentalExpressions for equality with another one by ensuring that the members are
+         * almost equal.
          * @param rhs the other TranscendentalExpressions
          * @return true if equal
          *
          * @note Just used for testing purpose
          */
         bool operator==(const TranscendentalExpression &rhs) const {
-            return ln == rhs.ln && an == rhs.an;
+            return util::almostEqualRelative(ln, rhs.ln) && util::almostEqualRelative(an, rhs.an);
         }
 
         /**
-         * Checks two TranscendentalExpressions for inequality.
-         * @warning This method compares doubles! So only exact copies will evaluate to false.
+         * Checks two TranscendentalExpressions for inequality with another one by ensuring that the members are
+         * not almost equal.
          * @param rhs the other TranscendentalExpressions
          * @return false if unequal
          *
@@ -191,20 +194,23 @@ namespace polyhedralGravity {
         double d;
 
         /**
-         * Checking the equality of two this Hessian Plane with another one by comparing their members.
-         * @warning This method compares doubles! So only exact copies will evaluate to true.
+         * Checking the equality of two this Hessian Plane with another one by ensuring that the members are
+         * almost equal.
          * @param rhs other HessianPlane
          * @return true if equal
          *
          * @note Just used for testing purpose
          */
         bool operator==(const HessianPlane &rhs) const {
-            return a == rhs.a && b == rhs.b && c == rhs.c && d == rhs.d;
+            return util::almostEqualRelative(a, rhs.a) &&
+                   util::almostEqualRelative(b, rhs.b) &&
+                   util::almostEqualRelative(c, rhs.c) &&
+                   util::almostEqualRelative(d, rhs.d);
         }
 
         /**
-         * Checking the inequality of two this Hessian Plane with another one by comparing their members.
-         * @warning This method compares doubles! So only exact copies will evaluate to false.
+         * Checking the inequality of two this Hessian Plane with another one by ensuring that the members are
+         * not almost equal.
          * @param rhs other HessianPlane
          * @return true if unequal
          *
@@ -212,6 +218,17 @@ namespace polyhedralGravity {
          */
         bool operator!=(const HessianPlane &rhs) const {
             return !(rhs == *this);
+        }
+
+         /**
+         * Pretty output of this struct on the given ostream.
+         * @param os the ostream
+         * @param hessianPlane a HessianPlane
+         * @return os
+         */
+        friend std::ostream &operator<<(std::ostream &os, const HessianPlane &hessianPlane) {
+            os << "a: " << hessianPlane.a << " b: " << hessianPlane.b << " c: " << hessianPlane.c << " d: " << hessianPlane.d;
+            return os;
         }
     };
 

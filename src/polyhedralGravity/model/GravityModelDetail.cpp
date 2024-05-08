@@ -28,7 +28,7 @@ namespace polyhedralGravity::GravityModel::detail {
         //Calculate N_i * -G_i1 where * is the dot product and then use the inverted sgn
         //We abstain on the double multiplication with -1 in the line above and beyond since two
         //times multiplying with -1 equals no change
-        return sgn(dot(planeUnitNormal, vertex0), util::EPSILON);
+        return sgn(dot(planeUnitNormal, vertex0), util::EPSILON_ZERO_OFFSET);
     }
 
     HessianPlane computeHessianPlane(const Array3 &p, const Array3 &q, const Array3 &r) {
@@ -95,7 +95,7 @@ namespace polyhedralGravity::GravityModel::detail {
                        segmentNormalOrientations.begin(),
                        [&projectionPointOnPlane](const Array3 &segmentUnitNormal, const Array3 &vertex) {
                            using namespace util;
-                           return sgn((dot(segmentUnitNormal, projectionPointOnPlane - vertex)), util::EPSILON) * -1.0;
+                           return sgn((dot(segmentUnitNormal, projectionPointOnPlane - vertex)), util::EPSILON_ZERO_OFFSET) * -1.0;
                        });
         return segmentNormalOrientations;
     }
@@ -190,8 +190,8 @@ namespace polyhedralGravity::GravityModel::detail {
 
                               //4. Option: |s1 - l1| == 0 && |s2 - l2| == 0 Computation point P is located from the beginning on
                               // the direction of a specific segment (P coincides with P' and P'')
-                              if (std::abs(distance.s1 - distance.l1) < EPSILON &&
-                                  std::abs(distance.s2 - distance.l2) < EPSILON) {
+                              if (std::abs(distance.s1 - distance.l1) < EPSILON_ZERO_OFFSET &&
+                                  std::abs(distance.s2 - distance.l2) < EPSILON_ZERO_OFFSET) {
                                   //4. Option - Case 2: P is located on the segment from its right side
                                   // s1 = -|s1|, s2 = -|s2|, l1 = -|l1|, l2 = -|l2|
                                   if (distance.s2 < distance.s1) {
@@ -200,7 +200,7 @@ namespace polyhedralGravity::GravityModel::detail {
                                       distance.l1 *= -1.0;
                                       distance.l2 *= -1.0;
                                       return distance;
-                                  } else if (std::abs(distance.s2 - distance.s1) < EPSILON) {
+                                  } else if (std::abs(distance.s2 - distance.s1) < EPSILON_ZERO_OFFSET) {
                                       //4. Option - Case 1: P is located inside the segment (s2 == s1)
                                       // s1 = -|s1|, s2 = |s2|, l1 = -|l1|, l2 = |l2|
                                       distance.s1 *= -1.0;
@@ -264,9 +264,9 @@ namespace polyhedralGravity::GravityModel::detail {
                               // If sigma_pq == 0 && either of the distances of P' to the two segment endpoints == 0 OR
                               // the 1D and 3D distances are smaller than some EPSILON
                               // then LN_pq can be set to zero
-                              if ((segmentNormalOrientation == 0.0 && (r1Norm < EPSILON || r2Norm < EPSILON)) ||
-                                  (std::abs(distance.s1 + distance.s2) < EPSILON &&
-                                   std::abs(distance.l1 + distance.l2) < EPSILON)) {
+                              if ((segmentNormalOrientation == 0.0 && (r1Norm < EPSILON_ZERO_OFFSET || r2Norm < EPSILON_ZERO_OFFSET)) ||
+                                  (std::abs(distance.s1 + distance.s2) < EPSILON_ZERO_OFFSET &&
+                                   std::abs(distance.l1 + distance.l2) < EPSILON_ZERO_OFFSET)) {
                                   transcendentalExpressionPerSegment.ln = 0.0;
                               } else {
                                   //Implementation of
@@ -277,7 +277,7 @@ namespace polyhedralGravity::GravityModel::detail {
 
                               //Compute AN_pq according to (15)
                               // If h_p == 0 or h_pq == 0 then AN_pq is zero, too (distances are always positive!)
-                              if (planeDistance < EPSILON || segmentDistance < EPSILON) {
+                              if (planeDistance < EPSILON_ZERO_OFFSET || segmentDistance < EPSILON_ZERO_OFFSET) {
                                   transcendentalExpressionPerSegment.an = 0.0;
                               } else {
                                   //Implementation of:
@@ -331,7 +331,7 @@ namespace polyhedralGravity::GravityModel::detail {
             const unsigned int j = thrust::get<2>(tuple);
 
             //segmentNormalOrientation != 0.0
-            if (std::abs(segmentNormalOrientation) > EPSILON) {
+            if (std::abs(segmentNormalOrientation) > EPSILON_ZERO_OFFSET) {
                 return false;
             }
 
@@ -358,14 +358,14 @@ namespace polyhedralGravity::GravityModel::detail {
             j = thrust::get<1>(tuple);
 
             //segmentNormalOrientation != 0.0
-            if (std::abs(segmentNormalOrientation) > EPSILON) {
+            if (std::abs(segmentNormalOrientation) > EPSILON_ZERO_OFFSET) {
                 return false;
             }
 
             r1Norm = projectionPointVertexNorms[(j + 1) % 3];
             r2Norm = projectionPointVertexNorms[j];
             //r1Norm == 0.0 || r2Norm == 0.0
-            return r1Norm < EPSILON || r2Norm < EPSILON;
+            return r1Norm < EPSILON_ZERO_OFFSET || r2Norm < EPSILON_ZERO_OFFSET;
         })) {
             using namespace util;
             //Two segment vectors G_1 and G_2 of this plane

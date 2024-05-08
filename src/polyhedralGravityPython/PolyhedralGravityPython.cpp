@@ -152,8 +152,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
                                         * :code:`AUTOMATIC` (Default): Prints to stdout and throws ValueError if normal_orientation is wrong/ inconsisten
                                         * :code:`VERIFY`: Like :code:`AUTOMATIC`, but does not print to stdout
-                                        * :code:`DISABLE`: Recommened, when you know the mesh to avoid to pay :math:`O(n^2)` runtime. Disables ALL checks
-                                        * :code`HEAL`: Automatically fixes the normal_orientation and vertex ordering to the correct values
+                                        * :code:`DISABLE`: Recommened, when you are familiar with the mesh to avoid :math:`O(n^2)` runtime cost. Disables ALL checks
+                                        * :code:`HEAL`: Automatically fixes the normal_orientation and vertex ordering to the correct values
 
             Raises:
                 ValueError: If the faces array does not contain a reference to vertex 0 indicating an index start at 1
@@ -182,7 +182,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                 This utility is mainly for diagnostics and debugging purposes. If the polyhedron is constrcuted with `integrity_check`
                 set to :code:`AUTOMATIC` or :code:`VERIFY`, the construction fails anyways.
                 If set to :code:`HEAL`, this method should return an empty set (but maybe a different ordering than initially specified)
-                Only if set to code:`DISABLE`, then this method might actually return a set with faulty indices.
+                Only if set to :code:`DISABLE`, then this method might actually return a set with faulty indices.
                 Hence, if you want to know your mesh error. Construct the polyhedron with :code:`integrity_check=DISABLE` and call this method.
             )mydelimiter")
             .def("__getitem__", &Polyhedron::getResolvedFace, R"mydelimiter(

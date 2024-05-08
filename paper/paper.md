@@ -67,7 +67,7 @@ On a mathematical level, the implemented model follows the line integral approac
 
 Implementation-wise, it makes use of the inherent parallelization opportunity of the approach as it iterates over the mesh elements. This parallelization is achieved via *thrust*, which allows utilizing *OpenMP* and *Intel TBB*. On a finer scale, individual, costly operations have been investigated, and, e.g., the \texttt{arctan} operations have been vectorized using *xsimd*. On the application side, the user can choose between the functional interface for evaluating the full gravity tensor or the object-oriented \texttt{GravityEvaluable}, providing the same functionality while implementing a caching mechanism to avoid recomputing mesh properties that can be shared between multipoint evaluation, such as the face normals.
 
-![UML Component Diagram of the implementation. External dependencies are depicted in blue. Internal components are colored in grey.\label{fig:implementation}](figures/PolyhedralGravityModel.png)
+![UML Component Diagram of the implementation. External dependencies are depicted in gray. Components of the polyhedral gravity model are colored in blue and green.\label{fig:implementation}](figures/UML_Component_Diagram_Polyhedral_Gravity_Model.drawio.pdf)
 
 Extensive tests using GoogleTest for the C++ side and pytest for the Python interface are employed via GitHub Actions to ensure the (continued) correctness of the implementation.
 
