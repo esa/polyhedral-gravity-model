@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
 
@@ -32,8 +33,9 @@ TEST(UtilityFloatArithmeticTest, TestAlmostEqualUlps) {
     // Checking the the sensitivity towards the next floating point
     // Note: The default maximal ULPS distance is set to 4
     // The ULP distance is one time higher than 4 leading to false, one time lower equal leading to true
-    const double fourHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, 4.0), 4.0), 4.0), 4.0);
-    const double fiveHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, 4.0), 4.0), 4.0), 4.0), 4.0);
+    const auto inf = std::numeric_limits<double>::infinity();
+    const double fourHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, inf), inf), inf), inf);
+    const double fiveHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, inf), inf), inf), inf), inf);
     ASSERT_TRUE(polyhedralGravity::util::almostEqualUlps(3.0, fourHops));
     ASSERT_FALSE(polyhedralGravity::util::almostEqualUlps(3.0, fiveHops));
 
@@ -65,8 +67,9 @@ TEST(UtilityFloatArithmeticTest, TestAlmostEqualRelative) {
 
     // Checking the the sensitivity towards the next floating point
     // A ULP distance of 4 or 5 is still really small than our relative sensitivity of 1e-10
-    const double fourHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, 4.0), 4.0), 4.0), 4.0);
-    const double fiveHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, 4.0), 4.0), 4.0), 4.0), 4.0);
+    const auto inf = std::numeric_limits<double>::infinity();
+    const double fourHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, inf), inf), inf), inf);
+    const double fiveHops = std::nextafter(std::nextafter(std::nextafter(std::nextafter(std::nextafter(3.0, inf), inf), inf), inf), inf);
     ASSERT_TRUE(polyhedralGravity::util::almostEqualRelative(3.0, fourHops));
     ASSERT_TRUE(polyhedralGravity::util::almostEqualRelative(3.0, fiveHops));
 }
