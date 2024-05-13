@@ -2,7 +2,7 @@ include(FetchContent)
 
 message(STATUS "Setting up spdlog")
 
-find_package(spdlog 1.11.0 QUIET)
+find_package(spdlog 1.14.1 QUIET)
 
 if (${spdlog_FOUND})
 
@@ -12,11 +12,10 @@ else()
 
     message(STATUS "Using spdlog from git repository")
 
-    #Fetches the version 1.11.0 for spdlog
     FetchContent_Declare(spdlog
             GIT_REPOSITORY https://github.com/gabime/spdlog.git
-            GIT_TAG v1.11.0
-            )
+            GIT_TAG v1.14.1
+    )
 
     # Disable stuff we don't need
     option(SPDLOG_BUILD_EXAMPLE "" OFF)

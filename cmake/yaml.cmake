@@ -2,7 +2,7 @@ include(FetchContent)
 
 message(STATUS "Setting up yaml-cpp")
 
-find_package(yaml-cpp 0.7.0 QUIET)
+find_package(yaml-cpp 0.8.0 QUIET)
 
 if (${yaml-cpp_FOUND})
 
@@ -10,10 +10,10 @@ if (${yaml-cpp_FOUND})
 
 else()
 
-    #Fetches the version 0.7.0 for yaml-cpp
+    #Fetches the version 0.8.0 for yaml-cpp
     FetchContent_Declare(yaml-cpp
             GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-            GIT_TAG yaml-cpp-0.7.0
+            GIT_TAG 0.8.0
             )
 
     # Disable everything we don't need
