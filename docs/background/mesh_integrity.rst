@@ -54,13 +54,13 @@ The :code:`Polyhedron` class checks the pointing direction of every single
 normal. This way, the `Polyhedron` ensures correct results even if a mistake occurs during the definition.
 
 Since we are in 3D and might have concave and convex polyhedrons,
-the viable option is the `Möller–Trumbore intersection algorithm <https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm>`__.
-It checks the amount of intersections the plane unit normal has with the polyhedron.
-If its an even number, the normals is :code:`OUTWARDS` pointing, otherwise :code:`INWARDS`.
+the most viable option is the `Möller–Trumbore intersection algorithm <https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm>`__.
+It checks the amount of intersections each plane unit normal has with the polyhedron.
+If this is an even number, the normal is :code:`OUTWARDS` pointing, otherwise :code:`INWARDS`.
 In the *current implementation*, we implement a naiv version
 which takes :math:`O(n^2)` operations - which can get quite expensive for polyhedrons with many faces.
 
-To make this as straightforward to use as possible, we provide four options
+To make this as straightforward to use, we provide four options
 for the construction of a polyhedron in the form of the enum :code:`PolyhedronIntegrity`:
 
 +-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+----------------+
