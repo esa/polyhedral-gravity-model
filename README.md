@@ -258,12 +258,12 @@ The project uses the following dependencies,
 all of them are **automatically** set-up via CMake:
 
 - GoogleTest (1.13.0 or compatible), only required for testing
-- spdlog (1.11.0 or compatible), required for logging
+- spdlog (1.13.0 or compatible), required for logging
 - tetgen (1.6 or compatible), required for I/O
-- yaml-cpp (0.7.0 or compatible), required for I/O
+- yaml-cpp (0.8.0 or compatible), required for I/O
 - thrust (2.1.0 or compatible), required for parallelization and utility
 - xsimd (11.1.0 or compatible), required for vectorization of the `atan(..)`
-- pybind11 (2.10.4 or compatible), required for the Python interface, but not the C++ standalone
+- pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
 
 The module will be build using a C++17 capable compiler,
 CMake. Just execute the following command in
