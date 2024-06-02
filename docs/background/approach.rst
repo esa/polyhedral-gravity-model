@@ -14,8 +14,9 @@ It summarizes application scenarios, related work and the architectural design s
 
 For a detailed dive into the theoretical background, consult the
 `initial project report <https://mediatum.ub.tum.de/doc/1695208/1695208.pdf>`__.
-While theoretical background, core implementation, verification and results are still valid. The implementation's
-interface changed over the course of the time. The initial project report refers to version :code:`1.2.1`.
+Its content about the theoretical background, core implementation, verification, and results is still valid.
+However, the implementation's public interfaces changed over time.
+The initial project report refers to version :code:`1.2.1`.
 Hence, its usage examples will not work with the current version!
 
 Further, the approach is documented by Tsoulis et al. in the following two major publications:
