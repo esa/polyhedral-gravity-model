@@ -39,6 +39,10 @@ get into the use of the polyhedral gravity model.
 
 And for more details, refer to the **Python API** or **C++ API**.
 
+If this implementation proves useful to you, please consider citing the
+`accompanying paper <https://doi.org/10.21105/joss.06384>`__
+published in the *Journal of Open Source Software*.
+
 .. toctree::
    :caption: INSTALLATION & QUICK START
    :maxdepth: 2
