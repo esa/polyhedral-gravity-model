@@ -41,7 +41,22 @@ And for more details, refer to the **Python API** or **C++ API**.
 
 If this implementation proves useful to you, please consider citing the
 `accompanying paper <https://doi.org/10.21105/joss.06384>`__
-published in the *Journal of Open Source Software*.
+published in the *Journal of Open Source Software*:
+
+.. code-block:: bibtex
+
+   @article{Schuhmacher_Efficient_Polyhedral_Gravity_2024,
+      author = {Schuhmacher, Jonas and Blazquez, Emmanuel and Gratl, Fabio and Izzo, Dario and Gómez, Pablo},
+      doi = {10.21105/joss.06384},
+      journal = {Journal of Open Source Software},
+      month = jun,
+      number = {98},
+      pages = {6384},
+      title = {{Efficient Polyhedral Gravity Modeling in Modern C++ and Python}},
+      url = {https://joss.theoj.org/papers/10.21105/joss.06384},
+      volume = {9},
+      year = {2024}
+   }
 
 .. toctree::
    :caption: INSTALLATION & QUICK START
