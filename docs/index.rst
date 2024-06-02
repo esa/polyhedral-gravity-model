@@ -6,12 +6,14 @@
 Welcome to Polyhedral Gravity Model's documentation!
 ====================================================
 
+.. image:: https://joss.theoj.org/papers/10.21105/joss.06384/status.svg
+   :target: https://doi.org/10.21105/joss.06384
+.. image:: https://img.shields.io/github/license/esa/polyhedral-gravity-model
+   :alt: GitHub License
 .. image:: https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fbuild-and-test.yml?logo=GitHub%20Actions&label=Build%20and%20Test
    :alt: GitHub Actions Workflow Status
 .. image:: https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fdocs.yml?logo=gitbook&label=Documentation
    :alt: GitHub Actions Workflow Status
-.. image:: https://img.shields.io/github/license/esa/polyhedral-gravity-model
-   :alt: GitHub License
 
 ..
 

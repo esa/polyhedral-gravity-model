@@ -1,8 +1,9 @@
 # polyhedral-gravity-model
 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06384/status.svg)](https://doi.org/10.21105/joss.06384)
+![GitHub](https://img.shields.io/github/license/esa/polyhedral-gravity-model)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fbuild-and-test.yml?logo=GitHub%20Actions&label=Build%20and%20Test)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fdocs.yml?logo=GitBook&label=Documentation)
-![GitHub](https://img.shields.io/github/license/esa/polyhedral-gravity-model)
 
 ![PyPI](https://img.shields.io/pypi/v/polyhedral-gravity)
 ![Static Badge](https://img.shields.io/badge/platform-linux--64_%7C_win--64_%7C_osx--64_%7C_linux--arm64_%7C_osx--arm64-lightgrey)
