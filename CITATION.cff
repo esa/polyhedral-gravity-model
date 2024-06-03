@@ -1,0 +1,50 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Schuhmacher
+  given-names: Jonas
+  orcid: "https://orcid.org/0009-0005-9693-4530"
+- family-names: Blazquez
+  given-names: Emmanuel
+  orcid: "https://orcid.org/0000-0001-9697-582X"
+- family-names: Gratl
+  given-names: Fabio
+  orcid: "https://orcid.org/0000-0001-5195-7919"
+- family-names: Izzo
+  given-names: Dario
+  orcid: "https://orcid.org/0000-0002-9846-8423"
+- family-names: Gómez
+  given-names: Pablo
+  orcid: "https://orcid.org/0000-0002-5631-8240"
+doi: 10.5281/zenodo.11221939
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Schuhmacher
+    given-names: Jonas
+    orcid: "https://orcid.org/0009-0005-9693-4530"
+  - family-names: Blazquez
+    given-names: Emmanuel
+    orcid: "https://orcid.org/0000-0001-9697-582X"
+  - family-names: Gratl
+    given-names: Fabio
+    orcid: "https://orcid.org/0000-0001-5195-7919"
+  - family-names: Izzo
+    given-names: Dario
+    orcid: "https://orcid.org/0000-0002-9846-8423"
+  - family-names: Gómez
+    given-names: Pablo
+    orcid: "https://orcid.org/0000-0002-5631-8240"
+  date-published: 2024-06-01
+  doi: 10.21105/joss.06384
+  issn: 2475-9066
+  issue: 98
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6384
+  title: Efficient Polyhedral Gravity Modeling in Modern C++ and Python
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06384"
+  volume: 9
+title: Efficient Polyhedral Gravity Modeling in Modern C++ and Python

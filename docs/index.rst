@@ -6,12 +6,14 @@
 Welcome to Polyhedral Gravity Model's documentation!
 ====================================================
 
+.. image:: https://joss.theoj.org/papers/10.21105/joss.06384/status.svg
+   :target: https://doi.org/10.21105/joss.06384
+.. image:: https://img.shields.io/github/license/esa/polyhedral-gravity-model
+   :alt: GitHub License
 .. image:: https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fbuild-and-test.yml?logo=GitHub%20Actions&label=Build%20and%20Test
    :alt: GitHub Actions Workflow Status
 .. image:: https://img.shields.io/github/actions/workflow/status/esa/polyhedral-gravity-model/.github%2Fworkflows%2Fdocs.yml?logo=gitbook&label=Documentation
    :alt: GitHub Actions Workflow Status
-.. image:: https://img.shields.io/github/license/esa/polyhedral-gravity-model
-   :alt: GitHub License
 
 ..
 
@@ -36,6 +38,25 @@ Have a look at the **INSTALLATION & QUICK START** section to quickly
 get into the use of the polyhedral gravity model.
 
 And for more details, refer to the **Python API** or **C++ API**.
+
+If this implementation proves useful to you, please consider citing the
+`accompanying paper <https://doi.org/10.21105/joss.06384>`__
+published in the *Journal of Open Source Software*:
+
+.. code-block:: bibtex
+
+   @article{Schuhmacher_Efficient_Polyhedral_Gravity_2024,
+      author = {Schuhmacher, Jonas and Blazquez, Emmanuel and Gratl, Fabio and Izzo, Dario and Gómez, Pablo},
+      doi = {10.21105/joss.06384},
+      journal = {Journal of Open Source Software},
+      month = jun,
+      number = {98},
+      pages = {6384},
+      title = {{Efficient Polyhedral Gravity Modeling in Modern C++ and Python}},
+      url = {https://joss.theoj.org/papers/10.21105/joss.06384},
+      volume = {9},
+      year = {2024}
+   }
 
 .. toctree::
    :caption: INSTALLATION & QUICK START
