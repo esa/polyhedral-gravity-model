@@ -23,8 +23,8 @@ jobs:
       - uses: actions/checkout@v3
         ############################# LINUX WHEELS #############################
         # In case of Linux we need to install compiler and build tools before building the wheels
-        # We only build the manylinux wheels, but not the musllinux wheels (due to some compile problems)
         # We set-up QEMU to enable aarch64 builds in the GitHub Runner (which is x86_64 based)
+        # We build wheels for manylinux and musllinux for aarch64 and x86_64
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -42,10 +42,10 @@ jobs:
           output-dir: dist
         if: matrix.os == 'ubuntu-latest'
       ############################# MACOS WHEELS #############################
-      # We use Apple Clang, the macOS GitHub Runner is nowadays arm64 based
-      # The GCC compiler installable via brew does not support cross-compiling for x86_64. Hence, also Apple Claang
+      # We use Apple Clang as it is the only compiler offering cross-compiling for x86_64
+      # The macOS GitHub Runner is nowadays arm64 based
       # For the x86_64, we set the MACOSX_DEPLOYMENT_TARGET='10.13' (released 2017) in order to have support for C++17
-      # We don't need this for the arm64 stuff since it works (and macOS on arm64 cam after C++17)
+      # We don't need this for arm64 since macOS arm64 initially supported C++17/ came years later than macOS 10.13
       - name: Build wheels (macOS)
         uses: pypa/cibuildwheel@v2.20.0
         env:
@@ -61,6 +61,7 @@ jobs:
       ############################# WINDOWS WHEELS #############################
       # Set up the Visual Studio environment on Windows (required, so that CMake finds the compiler)
       # We use the Microsoft Visual Studio Compiler to compile the wheel
+      # As of 09.09.2024, it is not yet possible to build free-threaded wheel on Windows
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Build wheels (Windows)
@@ -89,38 +90,38 @@ jobs:
         with:
           path: dist/*.tar.gz
 
-#  # 2. Upload the wheels and the source distribution to testpypi
-#  #    using trusted publishing
-#  upload_testpypi:
-#    needs: [build_wheels, make_sdist]
-#    environment:
-#      name: testpypi
-#      url: https://test.pypi.org/p/polyhedral-gravity
-#    permissions:
-#      id-token: write
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: artifact
-#          path: dist
-#      - uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          repository-url: https://test.pypi.org/legacy/
-#
-#  # 3. Upload the wheels to the actually Python Package Index
-#  #    using trusted publishing
-#  upload_pypi:
-#    needs: [build_wheels, make_sdist, upload_testpypi]
-#    environment:
-#      name: pypi
-#      url: https://pypi.org/p/polyhedral-gravity
-#    permissions:
-#      id-token: write
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: artifact
-#          path: dist
-#      - uses: pypa/gh-action-pypi-publish@release/v1
+  # 2. Upload the wheels and the source distribution to testpypi
+  #    using trusted publishing
+  upload_testpypi:
+    needs: [build_wheels, make_sdist]
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/polyhedral-gravity
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  # 3. Upload the wheels to the actually Python Package Index
+  #    using trusted publishing
+  upload_pypi:
+    needs: [build_wheels, make_sdist, upload_testpypi]
+    environment:
+      name: pypi
+      url: https://pypi.org/p/polyhedral-gravity
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
