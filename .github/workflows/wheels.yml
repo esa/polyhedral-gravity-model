@@ -46,7 +46,7 @@ jobs:
       # The GCC compiler installable via brew does not support cross-compiling for x86_64. Hence, also Apple Claang
       # For the x86_64, we set the MACOSX_DEPLOYMENT_TARGET='10.13' (released 2017) in order to have support for C++17
       # We don't need this for the arm64 stuff since it works (and macOS on arm64 cam after C++17)
-      - name: Build wheels (macOS x86_64)
+      - name: Build wheels (macOS)
         uses: pypa/cibuildwheel@v2.20.0
         env:
           CIBW_BEFORE_BUILD: pipx install ninja cmake
