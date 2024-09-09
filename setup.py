@@ -175,7 +175,7 @@ picture_in_readme = '''<p align="center">
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="3.2.1rc1",
+    version="3.2.1",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "
