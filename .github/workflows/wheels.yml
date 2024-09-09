@@ -67,7 +67,6 @@ jobs:
         uses: pypa/cibuildwheel@v2.20.0
         env:
           CIBW_BEFORE_BUILD: pipx install ninja cmake
-          CIBW_FREE_THREADED_SUPPORT: 1
           CIBW_ARCHS_WINDOWS: "auto64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
