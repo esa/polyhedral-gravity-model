@@ -305,14 +305,14 @@ cmake --build .
 
 The following options are available:
 
-|                             Name (Default) | Options                                                                                    |
-|-------------------------------------------:|:-------------------------------------------------------------------------------------------|
-| POLYHEDRAL_GRAVITY_PARALLELIZATION (`CPP`) | `CPP` = Serial Execution / `OMP` or `TBB` = Parallel Execution with OpenMP or Intel\'s TBB |
-|                        LOGGING_LEVEL (`2`) | `0` = TRACE/ `1` = DEBUG/ `2` = INFO / `3` = WARN/ `4` = ERROR/ `5` = CRITICAL/ `6` = OFF  |
-|                      USE_LOCAL_TBB (`OFF`) | Use a local installation of `TBB` instead of setting it up via `CMake`                     |
-|      BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`) | Build this documentation                                                                   |
-|      BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`) | Build the Tests                                                                            |
-|   BUILD_POLYHEDRAL_PYTHON_INTERFACE (`ON`) | Build the Python interface                                                                 |
+|                             Name (Default) | Options                                                                                     |
+|-------------------------------------------:|:--------------------------------------------------------------------------------------------|
+| POLYHEDRAL_GRAVITY_PARALLELIZATION (`CPP`) | `CPP` = Serial Execution / `OMP` or `TBB` = Parallel Execution with OpenMP or Intel\'s TBB  |
+|                     LOGGING_LEVEL (`INFO`) | `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`, `OFF`                                |
+|                      USE_LOCAL_TBB (`OFF`) | Use a local installation of `TBB` instead of setting it up via `CMake`                      |
+|      BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`) | Build this documentation                                                                    |
+|      BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`) | Build the Tests                                                                             |
+|   BUILD_POLYHEDRAL_PYTHON_INTERFACE (`ON`) | Build the Python interface                                                                  |
 
 During testing POLYHEDRAL_GRAVITY_PARALLELIZATION=`TBB` has been the most performant.
 It is further not recommend to change the LOGGING_LEVEL to something else than `INFO=2`.

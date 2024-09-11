@@ -18,7 +18,7 @@ CMAKE_OPTIONS = {
     # Modify to change the parallelization (Default value: TBB)
     "POLYHEDRAL_GRAVITY_PARALLELIZATION": "TBB",
     # Default value (INFO=2)
-    "LOGGING_LEVEL": 2,
+    "LOGGING_LEVEL": "INFO",
     # Default value (OFF)
     "USE_LOCAL_TBB": "OFF",
     # Not required for the python interface (--> OFF)
