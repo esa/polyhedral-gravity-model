@@ -19,10 +19,16 @@ option(USE_LOCAL_TBB "Uses the local tbb installation rather than on using the a
 GitHub via CMake (Default: OFF)" OFF)
 
 # Set the Logging Level
-set(LOGGING_LEVEL "2" CACHE STRING "Set the Logging level, default (INFO=2), available options:
-TRACE=0, DEBUG=1, INFO=2, WARN=3, ERROR=4, CRITICAL=5, OFF=6")
-set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS 0, 1, 2, 3, 4, 5, 6)
-add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${LOGGING_LEVEL})
+set(LOGGING_LEVEL_LIST "TRACE" "DEBUG" "INFO" "WARN" "ERROR" "CRITICAL" "OFF")
+set(LOGGING_LEVEL "INFO" CACHE STRING "Set the Logging level, default (INFO), available options: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL, OFF")
+set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS ${LOGGING_LEVEL_LIST})
+# Convert the logging level string to its corresponding number
+list(FIND LOGGING_LEVEL_LIST ${LOGGING_LEVEL} LOGGING_LEVEL_INDEX)
+if (${LOGGING_LEVEL_INDEX} EQUAL -1)
+    message(FATAL_ERROR "Invalid logging level: ${LOGGING_LEVEL}")
+endif ()
+add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${LOGGING_LEVEL_INDEX})
+message(STATUS "Logging level set to ${LOGGING_LEVEL} (=${LOGGING_LEVEL_INDEX})")
 
 ###################################
 # What actually to build? - Options

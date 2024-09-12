@@ -91,7 +91,7 @@ The available options are the following:
 Name (Default)                                   Options
 ================================================ ===================================================================================================================================
 POLYHEDRAL_GRAVITY_PARALLELIZATION (:code:`CPP`) :code:`CPP` = Serial Execution / :code:`OMP` or :code:`TBB`  = Parallel Execution with OpenMP or Intel's TBB
-LOGGING_LEVEL (:code:`2`)                        :code:`0` = TRACE/ :code:`1` = DEBUG/ :code:`2` = INFO / :code:`3` = WARN/ :code:`4` = ERROR/ :code:`5` = CRITICAL/ :code:`6` = OFF
+LOGGING_LEVEL (:code:`INFO`)                     :code:`TRACE`, :code:`DEBUG`, :code:`INFO`, :code:`WARN`, :code:`ERROR`, :code:`CRITICAL`, :code:`OFF`
 USE_LOCAL_TBB (:code:`OFF`)                      Use a local installation of :code:`TBB` instead of setting it up via :code:`CMake`
 BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)      Build this documentation
 BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)      Build the Tests

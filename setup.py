@@ -18,7 +18,7 @@ CMAKE_OPTIONS = {
     # Modify to change the parallelization (Default value: TBB)
     "POLYHEDRAL_GRAVITY_PARALLELIZATION": "TBB",
     # Default value (INFO=2)
-    "LOGGING_LEVEL": 2,
+    "LOGGING_LEVEL": "INFO",
     # Default value (OFF)
     "USE_LOCAL_TBB": "OFF",
     # Not required for the python interface (--> OFF)
@@ -175,7 +175,7 @@ picture_in_readme = '''<p align="center">
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="3.2",
+    version="3.2.1",
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "

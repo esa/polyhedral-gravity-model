@@ -23,18 +23,18 @@ jobs:
       - uses: actions/checkout@v3
         ############################# LINUX WHEELS #############################
         # In case of Linux we need to install compiler and build tools before building the wheels
-        # We only build the manylinux wheels, but not the musllinux wheels (due to some compile problems)
         # We set-up QEMU to enable aarch64 builds in the GitHub Runner (which is x86_64 based)
+        # We build wheels for manylinux and musllinux for aarch64 and x86_64
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
         if: matrix.os == 'ubuntu-latest'
       - name: Build wheels (Linux)
-        uses: pypa/cibuildwheel@v2.17.0
+        uses: pypa/cibuildwheel@v2.20.0
         env:
-          CIBW_BEFORE_BUILD: yum makecache && yum install -y gcc-c++ cmake && pip install ninja
-          CIBW_BUILD: "*manylinux*"
+          CIBW_BEFORE_BUILD: pipx install ninja cmake
+          CIBW_FREE_THREADED_SUPPORT: 1
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
@@ -42,26 +42,17 @@ jobs:
           output-dir: dist
         if: matrix.os == 'ubuntu-latest'
       ############################# MACOS WHEELS #############################
-      # We use Apple Clang, the macOS GitHub Runner is nowadays arm64 based
-      # The GCC compiler installable via brew does not support cross-compiling for x86_64. Hence, also Apple Claang
+      # We use Apple Clang as it is the only compiler offering cross-compiling for x86_64
+      # The macOS GitHub Runner is nowadays arm64 based
       # For the x86_64, we set the MACOSX_DEPLOYMENT_TARGET='10.13' (released 2017) in order to have support for C++17
-      # We don't need this for the arm64 stuff since it works (and macOS on arm64 cam after C++17)
-      - name: Build wheels (macOS ARM)
-        uses: pypa/cibuildwheel@v2.17.0
+      # We don't need this for arm64 since macOS arm64 initially supported C++17/ came years later than macOS 10.13
+      - name: Build wheels (macOS)
+        uses: pypa/cibuildwheel@v2.20.0
         env:
-          CIBW_BEFORE_BUILD: brew install ninja
-          CIBW_ARCHS_MACOS: "arm64"
-          CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
-        with:
-          package-dir: .
-          output-dir: dist
-        if: matrix.os == 'macos-latest'
-      - name: Build wheels (macOS x86_64)
-        uses: pypa/cibuildwheel@v2.17.0
-        env:
-          CIBW_BEFORE_BUILD: brew install ninja
+          CIBW_BEFORE_BUILD: pipx install ninja cmake
+          CIBW_FREE_THREADED_SUPPORT: 1
           CIBW_ENVIRONMENT: 'MACOSX_DEPLOYMENT_TARGET="10.13"'
-          CIBW_ARCHS_MACOS: "x86_64"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
           package-dir: .
@@ -70,12 +61,13 @@ jobs:
       ############################# WINDOWS WHEELS #############################
       # Set up the Visual Studio environment on Windows (required, so that CMake finds the compiler)
       # We use the Microsoft Visual Studio Compiler to compile the wheel
+      # As of 09.09.2024, it is not yet possible to build free-threaded wheel on Windows
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Build wheels (Windows)
-        uses: pypa/cibuildwheel@v2.17.0
+        uses: pypa/cibuildwheel@v2.20.0
         env:
-          CIBW_BEFORE_BUILD: choco install -y ninja cmake
+          CIBW_BEFORE_BUILD: pipx install ninja cmake
           CIBW_ARCHS_WINDOWS: "auto64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
