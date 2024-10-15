@@ -92,7 +92,6 @@ Name (Default)                                   Options
 ================================================ ===================================================================================================================================
 POLYHEDRAL_GRAVITY_PARALLELIZATION (:code:`CPP`) :code:`CPP` = Serial Execution / :code:`OMP` or :code:`TBB`  = Parallel Execution with OpenMP or Intel's TBB
 LOGGING_LEVEL (:code:`INFO`)                     :code:`TRACE`, :code:`DEBUG`, :code:`INFO`, :code:`WARN`, :code:`ERROR`, :code:`CRITICAL`, :code:`OFF`
-USE_LOCAL_TBB (:code:`OFF`)                      Use a local installation of :code:`TBB` instead of setting it up via :code:`CMake`
 BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)      Build this documentation
 BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)      Build the Tests
 BUILD_POLYHEDRAL_PYTHON_INTERFACE (:code:`ON`)   Build the Python interface
@@ -104,7 +103,7 @@ Dependencies (automatically set-up)
 
 Dependencies (all of them are automatically set-up via :code:`CMake`):
 
-- GoogleTest (1.13.0 or compatible), only required for testing
+- GoogleTest (1.15.2 or compatible), only required for testing
 - spdlog (1.13.0 or compatible), required for logging
 - tetgen (1.6 or compatible), required for I/O
 - yaml-cpp (0.8.0 or compatible), required for I/O

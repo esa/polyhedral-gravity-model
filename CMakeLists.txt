@@ -14,10 +14,6 @@ set(POLYHEDRAL_GRAVITY_PARALLELIZATION "CPP" CACHE STRING "Host parallelization 
  (CPP= Serial, OMP = OpenMP, TBB = Intel Threading Building Blocks")
 set_property(CACHE POLYHEDRAL_GRAVITY_PARALLELIZATION PROPERTY STRINGS CPP, OMP, TBB)
 
-# Enforce to use an already installed tbb library instead of compiling from source
-option(USE_LOCAL_TBB "Uses the local tbb installation rather than on using the automatically fetched version from
-GitHub via CMake (Default: OFF)" OFF)
-
 # Set the Logging Level
 set(LOGGING_LEVEL_LIST "TRACE" "DEBUG" "INFO" "WARN" "ERROR" "CRITICAL" "OFF")
 set(LOGGING_LEVEL "INFO" CACHE STRING "Set the Logging level, default (INFO), available options: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL, OFF")
@@ -77,9 +73,9 @@ include(clang_format)
 # Get a version of tbb from the github repository, simplifies compilation for the user since tbb does not need to be
 # preinstalled but rather gets automatically set up via CMake
 # Nevertheless, there is still the option to enforce to use a local installation if one exists
-if (NOT USE_LOCAL_TBB AND ${POLYHEDRAL_GRAVITY_PARALLELIZATION} STREQUAL "TBB")
+if (${POLYHEDRAL_GRAVITY_PARALLELIZATION} STREQUAL "TBB")
     include(tbb)
-    thrust_set_TBB_target(tbb)
+    thrust_set_TBB_target(TBB::tbb)
 endif ()
 
 # Thrust set-up i.e. the parallelization library, create targets according to the users specification
