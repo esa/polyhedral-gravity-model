@@ -46,14 +46,17 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v1
         with:
+          micromamba-version: '1.5.6-0'
           environment-file: environment.yml
           cache-downloads: true
-          cache-env: true
+          cache-environment: true
+          init-shell: bash powershell
       - name: Install & Test polyhedral-gravity
-        shell: bash -l {0}
         run: |
           pip install . -vv --no-build-isolation
           pytest -n 3
+        shell: bash -el {0}
+
           
