@@ -1,33 +1,24 @@
 include(FetchContent)
 
 message(STATUS "Setting up spdlog")
+set(SPDLOG_VERSION 1.14.1)
 
-find_package(spdlog 1.13.0 QUIET)
+# Known Issue:
+# If you install spdlog@1.14.1 via homebrew on ARM macOS, CMake will find spdlog
+# However, there is a version mismatch between the `fmt` library installed as dependency, and the one actually
+# being required leading to a linking error (i.e. missing symbols) while compiling!
+find_package(spdlog ${SPDLOG_VERSION} QUIET)
 
-if (${spdlog_FOUND})
-
-    message(STATUS "Using existing spdlog installation")
-
+if(${spdlog_FOUND})
+    message(STATUS "Found existing spdlog Library: ${spdlog_DIR}")
 else()
-
-    message(STATUS "Using spdlog from git repository")
-
+    message(STATUS "Using Spdlog Library from GitHub Release ${SPDLOG_VERSION}")
     FetchContent_Declare(spdlog
             GIT_REPOSITORY https://github.com/gabime/spdlog.git
-            GIT_TAG v1.13.0
+            GIT_TAG v${SPDLOG_VERSION}
     )
-
-    # Disable stuff we don't need
-    option(SPDLOG_BUILD_EXAMPLE "" OFF)
-    option(SPDLOG_BUILD_TESTS "" OFF)
-    option(SPDLOG_INSTALL "" OFF)
-
+    set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_INSTALL OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(spdlog)
-
-    # Disable warnings from the library target
-    target_compile_options(spdlog PRIVATE -w)
-    # Disable warnings from included headers
-    get_target_property(propval spdlog INTERFACE_INCLUDE_DIRECTORIES)
-    target_include_directories(spdlog SYSTEM PUBLIC "${propval}")
-
 endif()

@@ -69,6 +69,7 @@ include(thrust)
 include(spdlog)
 include(tetgen)
 include(xsimd)
+include(clang_format)
 
 ###############################
 # Thrust Parallelization Set-Up
