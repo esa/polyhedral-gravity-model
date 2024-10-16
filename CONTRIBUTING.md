@@ -109,7 +109,10 @@ Have you found an issue you would like to work on? Or do you have a great idea f
 
 - Ensure that you work on a new branch for your contribution. The name does not need to follow a specific pattern, but it should be descriptive (e.g. `fix-issue-123` or `fancy-feature-xyz`).
 - Make sure that you are using the latest version from `main`. Instructions on how to set up the project can be found in the [documentation](https://esa.github.io/polyhedral-gravity-model/) or in the [README](README.md).
-- Please try to follow the existing code style and conventions.
+- Please try to follow the existing code style and conventions. You can apply our clang-format via CMake by executing in the build-folder:
+  ```bash
+  cmake --build . --target format 
+  ```
 - Please try to follow the best practices and guidelines for your code's quality and documentation. This includes writing tests for your code. We do not enforce a specific coverage, but we expect reasonable tests for new code.
 - Please try to be short and concise with your commit messages. In case you want to provide more information, you can use the commit description.
 

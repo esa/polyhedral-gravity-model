@@ -259,7 +259,7 @@ you have a C++17 capable compiler and CMake installed.
 The project uses the following dependencies,
 all of them are **automatically** set-up via CMake:
 
-- GoogleTest (1.13.0 or compatible), only required for testing
+- GoogleTest (1.15.2 or compatible), only required for testing
 - spdlog (1.13.0 or compatible), required for logging
 - tetgen (1.6 or compatible), required for I/O
 - yaml-cpp (0.8.0 or compatible), required for I/O
@@ -309,7 +309,6 @@ The following options are available:
 |-------------------------------------------:|:--------------------------------------------------------------------------------------------|
 | POLYHEDRAL_GRAVITY_PARALLELIZATION (`CPP`) | `CPP` = Serial Execution / `OMP` or `TBB` = Parallel Execution with OpenMP or Intel\'s TBB  |
 |                     LOGGING_LEVEL (`INFO`) | `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`, `OFF`                                |
-|                      USE_LOCAL_TBB (`OFF`) | Use a local installation of `TBB` instead of setting it up via `CMake`                      |
 |      BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`) | Build this documentation                                                                    |
 |      BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`) | Build the Tests                                                                             |
 |   BUILD_POLYHEDRAL_PYTHON_INTERFACE (`ON`) | Build the Python interface                                                                  |

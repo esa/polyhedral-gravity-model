@@ -17,7 +17,7 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
     # Link libraries needed in all targets
     target_link_libraries(${PROJECT_NAME}_lib
             spdlog::spdlog
-            yaml-cpp
+            yaml-cpp::yaml-cpp
             tetgen
             xsimd
             Thrust
