@@ -6,9 +6,9 @@
 #include <utility>
 #include <memory>
 #include "polyhedralGravity/model/GravityModelData.h"
+#include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/fmt/ostr.h"
-#include "spdlog/spdlog.h"
 
 namespace polyhedralGravity {
 

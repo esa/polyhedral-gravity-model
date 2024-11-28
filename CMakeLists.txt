@@ -53,6 +53,10 @@ IF(_LIBCPP_DISABLE_AVAILABILITY)
     add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
 endif ()
 
+# Resolves missing fmt symbols when working with spdlog (bundled via brew/ conda on Arm architecture)
+# Refer to https://github.com/gabime/spdlog/issues/660
+add_compile_definitions(FMT_HEADER_ONLY)
+
 #######################################################
 # Including dependencies needed across multiple targets
 #######################################################

@@ -8,7 +8,6 @@
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
-#include "spdlog/spdlog.h"
 #include "thrust/iterator/zip_iterator.h"
 #include "thrust/iterator/transform_iterator.h"
 #include "thrust/iterator/counting_iterator.h"
