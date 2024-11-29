@@ -7,6 +7,7 @@ set(SPDLOG_VERSION 1.14.1)
 # If you install spdlog@1.14.1 via homebrew on ARM macOS, CMake will find spdlog
 # However, there is a version mismatch between the `fmt` library installed as dependency, and the one actually
 # being required leading to a linking error (i.e. missing symbols) while compiling!
+# Update 29.11.2024: We fixed this by using spdlog has header library (--> top-level CMake file)
 find_package(spdlog ${SPDLOG_VERSION} QUIET)
 
 if(${spdlog_FOUND})
