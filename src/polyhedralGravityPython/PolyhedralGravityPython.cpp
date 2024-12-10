@@ -10,6 +10,7 @@
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/GravityEvaluable.h"
+#include "polyhedralGravity/Version.h"
 
 
 namespace py = pybind11;
@@ -43,12 +44,10 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
     .. note::
 
         *Tsoulis et al.*'s formulation requires that the normals point :code:`OUTWARDS`.
-        The implementation **can handle both cases and also can automatically determine the property** if initiall set wrong.
+        The implementation **can handle both cases and also can automatically determine the property** if initially set wrong.
         Using :code:`AUTOMATIC` (default for first-time-user) or :code:`VERIFY` raises a :code:`ValueError` if the :py:class:`polyhedral_gravity.NormalOrientation` is wrong.
         Using :code:`HEAL` will re-order the vertex sorting to fix errors.
-        Using :code:`DISABLE` will turn this check off and avoid :math:`O(n^2)` runtime complexcity of this check! Highly recommened, when you "know your mesh"!
-
-
+        Using :code:`DISABLE` will turn this check off and avoid :math:`O(n^2)` runtime complexity of this check! Highly recommended, when you "know your mesh"!
 
     The polyhedron's mesh's units must match with the constant density!
     For example, if the mesh is in :math:`[m]`, then the constant density should be in :math:`[\frac{kg}{m^3}]`.
@@ -63,7 +62,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             parallel=True,
         )
 
-    or via use the cached approach :py:class:`polyhedral_gravity.GravityEvaluable` (desriable for subsequent evaluations using the same :py:class:`polyhedral_gravity.Polyhedron`)
+    or via use the cached approach :py:class:`polyhedral_gravity.GravityEvaluable` (desirable for subsequent evaluations using the same :py:class:`polyhedral_gravity.Polyhedron`)
 
     .. code-block:: python
 
@@ -103,6 +102,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
     Accordingly, the second derivative tensor is defined as the derivative of :math:`\textbf{g}`.
     )mydelimiter";
+    m.attr("__version__") = POLYHEDRAL_GRAVITY_VERSION;
 
     py::enum_<NormalOrientation>(m, "NormalOrientation", R"mydelimiter(
         The orientation of the plane unit normals of the polyhedron.

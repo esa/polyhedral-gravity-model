@@ -4,6 +4,18 @@ project(polyhedralGravity)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Appends the the module path to contain additional CMake modules for this project
+# and include everything necessary
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+include(version)
+include(git)
+
+# Set and Print the Version number
+polyhedral_gravity_parse_version(POLYHEDRAL_GRAVITY_VERSION)
+get_git_commit_hash(POLYHEDRAL_GRAVITY_GIT_HASH)
+message(STATUS "Polyhedral Gravity Version ${POLYHEDRAL_GRAVITY_VERSION}")
+message(STATUS "Polyhedral Gravity Git Hash ${POLYHEDRAL_GRAVITY_GIT_HASH}")
+
 include(CMakeDependentOption)
 
 #####################################
@@ -60,11 +72,7 @@ add_compile_definitions(FMT_HEADER_ONLY)
 #######################################################
 # Including dependencies needed across multiple targets
 #######################################################
-# Appends the the module path to contain additional CMake modules for this project
-# and include everything necessary
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Include dependecies
 include(thrust)
 include(spdlog)
 include(tetgen)

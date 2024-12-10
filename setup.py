@@ -53,6 +53,27 @@ def get_cmake_generator():
     else:
         return None
 
+def get_version():
+    """Returns the version of the polyhedral gravity package by reading Version.h."""
+    # Construct the path to Version.h relative to the current file
+    version_file = os.path.join(os.path.dirname(__file__), "src", "polyhedralGravity", "Version.h")
+
+    # Check if the Version.h file exists
+    if not os.path.exists(version_file):
+        raise FileNotFoundError(f"Version file not found: {version_file}")
+
+    # Open and read the file
+    with open(version_file, "r") as file:
+        content = file.read()
+
+    # Use regex to extract the version string
+    version_match = re.search(r'POLYHEDRAL_GRAVITY_VERSION\s*=\s*\"([^\"]+)\"', content)
+    if version_match:
+        return version_match.group(1)
+    else:
+        raise ValueError("Version string not found in Version.h")
+
+
 # -----------------------------------------------------------------------------------------
 # The following is adapted from https://github.com/pybind/cmake_example/blob/master/setup.py
 # -----------------------------------------------------------------------------------------
@@ -173,7 +194,7 @@ picture_in_readme = '''<p align="center">
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="3.2.1",
+    version=get_version(),
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "
