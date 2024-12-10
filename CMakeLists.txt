@@ -88,6 +88,9 @@ include(clang_format)
 if (${POLYHEDRAL_GRAVITY_PARALLELIZATION} STREQUAL "TBB")
     include(tbb)
     thrust_set_TBB_target(TBB::tbb)
+    add_compile_definitions(POLYHEDRAL_GRAVITY_TBB)
+elseif (${POLYHEDRAL_GRAVITY_PARALLELIZATION} STREQUAL "OMP")
+    add_compile_definitions(POLYHEDRAL_GRAVITY_OMP)
 endif ()
 
 # Thrust set-up i.e. the parallelization library, create targets according to the users specification

@@ -103,6 +103,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
     Accordingly, the second derivative tensor is defined as the derivative of :math:`\textbf{g}`.
     )mydelimiter";
     m.attr("__version__") = POLYHEDRAL_GRAVITY_VERSION;
+    m.attr("__parallelization__") = POLYHEDRAL_GRAVITY_PARALLELIZATION;
 
     py::enum_<NormalOrientation>(m, "NormalOrientation", R"mydelimiter(
         The orientation of the plane unit normals of the polyhedron.

@@ -4,9 +4,14 @@
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/output/CSVWriter.h"
+#include "polyhedralGravity/Version.h"
 
 int main(int argc, char *argv[]) {
     using namespace polyhedralGravity;
+
+    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Model Version " + std::string(POLYHEDRAL_GRAVITY_VERSION));
+    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Model Parallelization Backend: " + std::string(POLYHEDRAL_GRAVITY_PARALLELIZATION));
+
     if (argc != 2) {
         SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Wrong program call! "
                                                                                 "Please use the program like this:\n"
