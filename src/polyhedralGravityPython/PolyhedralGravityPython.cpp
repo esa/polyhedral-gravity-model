@@ -6,11 +6,11 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "polyhedralGravity/model/Polyhedron.h"
-#include "polyhedralGravity/model/GravityModelData.h"
-#include "polyhedralGravity/model/GravityModel.h"
+#include "polyhedralGravity/Info.h"
 #include "polyhedralGravity/model/GravityEvaluable.h"
-#include "polyhedralGravity/Version.h"
+#include "polyhedralGravity/model/GravityModel.h"
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/Polyhedron.h"
 
 
 namespace py = pybind11;
@@ -102,8 +102,12 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
     Accordingly, the second derivative tensor is defined as the derivative of :math:`\textbf{g}`.
     )mydelimiter";
+
+    // We embedded the version & compilation information into the Python Interface
     m.attr("__version__") = POLYHEDRAL_GRAVITY_VERSION;
     m.attr("__parallelization__") = POLYHEDRAL_GRAVITY_PARALLELIZATION;
+    m.attr("__commit__") = POLYHEDRAL_GRAVITY_COMMIT_HASH;
+    m.attr("__logging__") = POLYHEDRAL_GRAVITY_LOGGING_LEVEL;
 
     py::enum_<NormalOrientation>(m, "NormalOrientation", R"mydelimiter(
         The orientation of the plane unit normals of the polyhedron.

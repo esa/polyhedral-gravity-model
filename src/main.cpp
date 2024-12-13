@@ -1,16 +1,18 @@
-#include <chrono>
+#include "polyhedralGravity/Info.h"
 #include "polyhedralGravity/input/ConfigSource.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/model/GravityModel.h"
-#include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/output/CSVWriter.h"
-#include "polyhedralGravity/Version.h"
+#include "polyhedralGravity/output/Logging.h"
+#include <chrono>
 
 int main(int argc, char *argv[]) {
     using namespace polyhedralGravity;
 
-    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Model Version " + std::string(POLYHEDRAL_GRAVITY_VERSION));
+    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Model Version:                 " + std::string(POLYHEDRAL_GRAVITY_VERSION));
+    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Commit Hash:                   " + std::string(POLYHEDRAL_GRAVITY_COMMIT_HASH));
     SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Model Parallelization Backend: " + std::string(POLYHEDRAL_GRAVITY_PARALLELIZATION));
+    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Logging Level:                 " + std::string(POLYHEDRAL_GRAVITY_LOGGING_LEVEL));
 
     if (argc != 2) {
         SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Wrong program call! "

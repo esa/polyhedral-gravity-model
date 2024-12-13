@@ -18,7 +18,7 @@ CMAKE_OPTIONS = {
     # Modify to change the parallelization (Default value: TBB)
     "POLYHEDRAL_GRAVITY_PARALLELIZATION": "TBB",
     # Default value (INFO=2)
-    "LOGGING_LEVEL": "INFO",
+    "POLYHEDRAL_GRAVITY_LOGGING_LEVEL": "INFO",
     # Not required for the python interface (--> OFF)
     "BUILD_POLYHEDRAL_GRAVITY_DOCS": "OFF",
     # Not required for the python interface (--> OFF)
@@ -54,24 +54,24 @@ def get_cmake_generator():
         return None
 
 def get_version():
-    """Returns the version of the polyhedral gravity package by reading Version.h."""
-    # Construct the path to Version.h relative to the current file
-    version_file = os.path.join(os.path.dirname(__file__), "src", "polyhedralGravity", "Version.h")
+    """Returns the version of the polyhedral gravity package by reading the CMake file."""
+    # Path to the CMake file
+    cmake_file = os.path.join(os.path.dirname(__file__), "version.cmake" )
 
-    # Check if the Version.h file exists
-    if not os.path.exists(version_file):
-        raise FileNotFoundError(f"Version file not found: {version_file}")
+    # Check if the CMake file exists
+    if not os.path.exists(cmake_file):
+        raise FileNotFoundError(f"CMake file not found: {cmake_file}")
 
     # Open and read the file
-    with open(version_file, "r") as file:
+    with open(cmake_file, "r") as file:
         content = file.read()
 
-    # Use regex to extract the version string
-    version_match = re.search(r'POLYHEDRAL_GRAVITY_VERSION\s*=\s*\"([^\"]+)\"', content)
+    # Use regex to extract the PROJECT_VERSION
+    version_match = re.search(r'set\(PROJECT_VERSION\s+([^\s)]+)\)', content)
     if version_match:
         return version_match.group(1)
     else:
-        raise ValueError("Version string not found in Version.h")
+        raise ValueError("Version string not found in CMakeLists.txt")
 
 
 # -----------------------------------------------------------------------------------------

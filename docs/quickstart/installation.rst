@@ -91,7 +91,7 @@ The available options are the following:
 Name (Default)                                         Options
 ====================================================== ============================================================================================================
 POLYHEDRAL_GRAVITY_PARALLELIZATION (:code:`CPP`)       :code:`CPP` = Serial Execution / :code:`OMP` or :code:`TBB`  = Parallel Execution with OpenMP or Intel's TBB
-LOGGING_LEVEL (:code:`INFO`)                           :code:`TRACE`, :code:`DEBUG`, :code:`INFO`, :code:`WARN`, :code:`ERROR`, :code:`CRITICAL`, :code:`OFF`
+POLYHEDRAL_GRAVITY_LOGGING_LEVEL (:code:`INFO`)        :code:`TRACE`, :code:`DEBUG`, :code:`INFO`, :code:`WARN`, :code:`ERROR`, :code:`CRITICAL`, :code:`OFF`
 BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)            Build this documentation
 BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)            Build the Tests
 BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (:code:`ON`) Build the Python interface
