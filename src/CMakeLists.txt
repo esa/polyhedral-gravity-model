@@ -18,7 +18,7 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
     target_link_libraries(${PROJECT_NAME}_lib
             spdlog::spdlog
             yaml-cpp::yaml-cpp
-            tetgen
+            tetgen_lib
             xsimd
             Thrust
             )
@@ -60,7 +60,7 @@ if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
 
     target_link_libraries(polyhedral_gravity PUBLIC
             spdlog::spdlog
-            tetgen
+            tetgen_lib
             xsimd
             Thrust
             )

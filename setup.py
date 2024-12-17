@@ -18,7 +18,7 @@ CMAKE_OPTIONS = {
     # Modify to change the parallelization (Default value: TBB)
     "POLYHEDRAL_GRAVITY_PARALLELIZATION": "TBB",
     # Default value (INFO=2)
-    "LOGGING_LEVEL": "INFO",
+    "POLYHEDRAL_GRAVITY_LOGGING_LEVEL": "INFO",
     # Not required for the python interface (--> OFF)
     "BUILD_POLYHEDRAL_GRAVITY_DOCS": "OFF",
     # Not required for the python interface (--> OFF)
@@ -52,6 +52,27 @@ def get_cmake_generator():
         return "Ninja"
     else:
         return None
+
+def get_version():
+    """Returns the version of the polyhedral gravity package by reading the CMake file."""
+    # Path to the CMake file
+    cmake_file = os.path.join(os.path.dirname(__file__), "version.cmake" )
+
+    # Check if the CMake file exists
+    if not os.path.exists(cmake_file):
+        raise FileNotFoundError(f"CMake file not found: {cmake_file}")
+
+    # Open and read the file
+    with open(cmake_file, "r") as file:
+        content = file.read()
+
+    # Use regex to extract the PROJECT_VERSION
+    version_match = re.search(r'set\(PROJECT_VERSION\s+([^\s)]+)\)', content)
+    if version_match:
+        return version_match.group(1)
+    else:
+        raise ValueError("Version string not found in CMakeLists.txt")
+
 
 # -----------------------------------------------------------------------------------------
 # The following is adapted from https://github.com/pybind/cmake_example/blob/master/setup.py
@@ -173,7 +194,7 @@ picture_in_readme = '''<p align="center">
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version="3.2.1",
+    version=get_version(),
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "
