@@ -1,6 +1,9 @@
 #include "TetgenAdapter.h"
 
 namespace polyhedralGravity {
+    TetgenAdapter::TetgenAdapter(const std::vector<std::string> &fileNames)
+        : _tetgenio{}, _fileNames{fileNames}, _vertices{}, _faces{}
+    {}
 
     std::tuple<std::vector<Array3>, std::vector<IndexArray3>> TetgenAdapter::getPolyhedralSource() {
         //1. Step: Read in from files
@@ -74,7 +77,7 @@ namespace polyhedralGravity {
     }
 
     void TetgenAdapter::readMesh(const std::string &filename) {
-        POLYHEDRAL_GRAVITY_LOG_DEBUG("Reading the file {}.mesh");
+        POLYHEDRAL_GRAVITY_LOG_DEBUG("Reading the file {}.mesh", filename);
         this->checkIntegrity(filename, 'a');
         try {
             _tetgenio.load_medit(const_cast<char *>(filename.c_str()), 0);

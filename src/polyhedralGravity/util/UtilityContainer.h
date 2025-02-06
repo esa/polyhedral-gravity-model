@@ -131,12 +131,11 @@ namespace polyhedralGravity::util {
     * @param lhs minuend
     * @param scalar subtrahend
     * @return a Container
-     * TODO This method causes issues with the MVSC 19.31.31107.0? Although it is never used...
     */
-    //    template<typename Container, typename Scalar>
-    //    Container operator-(const Container &lhs, const Scalar &scalar) {
-    //        return applyBinaryFunction(lhs, scalar, std::minus<>());
-    //    }
+    template<typename Container, typename Scalar>
+    Container operator-(const Container &lhs, const Scalar &scalar) {
+        return applyBinaryFunction(lhs, scalar, std::minus<>());
+    }
 
     /**
     * Applies the Operation to a Container and a Scalar.

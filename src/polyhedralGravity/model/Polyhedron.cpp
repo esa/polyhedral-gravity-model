@@ -11,13 +11,13 @@ namespace polyhedralGravity {
           _faces{faces},
           _density{density},
           _orientation{orientation} {
+        using util::operator-;
         //Checks that the node with index zero is actually used
         if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;
             })) {
-            throw std::invalid_argument("The node with index zero (0) was never used in any face! This is "
-                                        "no valid polyhedron. Probable issue: Started numbering the vertices of "
-                                        "the polyhedron at one (1).");
+            POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
+            std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) {return face - 1;});
         }
         this->runIntegrityMeasures(integrity);
     }

@@ -3,9 +3,10 @@
 #include "ConfigSource.h"
 #include "TetgenAdapter.h"
 #include "yaml-cpp/yaml.h"
-#include <string>
-#include <vector>
 #include <array>
+#include <string>
+#include <tuple>
+#include <vector>
 
 namespace polyhedralGravity {
 
@@ -89,7 +90,7 @@ namespace polyhedralGravity {
          * Reads the DataSource from the yaml configuration file.
          * @return shared_ptr to the DataSource Object created
          */
-        std::shared_ptr<DataSource> getDataSource() override;
+        std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedralSource() override;
 
 
     };

@@ -1,9 +1,10 @@
 #pragma once
 
-#include <vector>
-#include <memory>
 #include <string>
-#include "DataSource.h"
+#include <tuple>
+#include <vector>
+#include <array>>
+#include <tuple>
 
 namespace polyhedralGravity {
 
@@ -45,10 +46,10 @@ namespace polyhedralGravity {
         virtual bool getMeshInputCheckStatus() = 0;
 
         /**
-         * The DataSource of the given Polyhedron.
-         * @return data source (e. g. a file reader)
+         * The source structure of a Polyhedron consisting of vertices and faces
+         * @return a polyhedral source consisting of vertices and faces
          */
-        virtual std::shared_ptr<DataSource> getDataSource() = 0;
+        virtual std::tuple<std::vector<std::array<double, 3>>, std::vector<std::array<size_t, 3>>> getPolyhedralSource() = 0;
 
     };
 

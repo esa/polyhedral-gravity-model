@@ -23,7 +23,7 @@ namespace polyhedralGravity {
 
     /**
      * The commit hash of the currently compiled version.
-     * This is appened with '+modified' in case the working tree is not clean.
+     * This is appended with '+modified' in case the working tree is not clean.
      * The value is set by the CMake configuration.
      */
     constexpr std::string_view POLYHEDRAL_GRAVITY_COMMIT_HASH = "@POLYHEDRAL_GRAVITY_COMMIT_HASH@";
