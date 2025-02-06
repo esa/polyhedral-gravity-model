@@ -24,6 +24,22 @@ protected:
             {-1.0, 1.0, 1.0}
     };
 
+    // The indexing starts at 1 rather than at zero
+    const std::vector<polyhedralGravity::IndexArray3> _facesCorrection{
+                {2, 4, 3},
+                {1, 4, 2},
+                {1, 2, 6},
+                {1, 6, 5},
+                {1, 8, 4},
+                {1, 5, 8},
+                {2, 3, 7},
+                {2, 7, 6},
+                {3, 4, 7},
+                {4, 8, 7},
+                {5, 6, 7},
+                {5, 7, 8}
+    };
+
     const std::vector<polyhedralGravity::IndexArray3> _facesOutwards{
             {1, 3, 2},
             {0, 3, 1},
@@ -143,6 +159,15 @@ protected:
             {6, 2, 7}
     };
 };
+
+TEST_F(PolyhedronTest, FaceCorrection) {
+    using namespace polyhedralGravity;
+    using namespace testing;
+
+    const auto polyhedron = Polyhedron(_cubeVertices, _facesCorrection, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE);
+    // The faces indices need to be shifted by -1, i.e., the indexing starts with vertex 0 not 1
+    ASSERT_THAT(polyhedron.getFaces(), ContainerEq(_facesOutwards));
+}
 
 TEST_F(PolyhedronTest, CubeOutwardNormals) {
     using namespace polyhedralGravity;
