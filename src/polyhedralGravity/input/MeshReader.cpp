@@ -10,7 +10,7 @@ namespace polyhedralGravity {
             case 0:
                 throw std::runtime_error("No mesh file given");
             case 1:
-                if (util::ends_with(fileNames[0], ".obj")) {
+                if (util::ends_with(fileNames[0], ".obj", ".tab")) {
                     return MeshReader::readObj(fileNames[0]);
                 } else {
                     return MeshReader::readTetgenFormat(fileNames);

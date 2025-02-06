@@ -128,3 +128,16 @@ TEST_F(MeshReaderTest, readSimpleObj) {
     }
     ASSERT_EQ(_expectedFaces.size(), actualFaces.size());
 }
+
+TEST_F(MeshReaderTest, readSimpleTab) {
+    using namespace testing;
+    using namespace ::polyhedralGravity;
+
+    const std::vector<std::string> simpleFiles{"resources/MeshReaderTestReadSimple.tab"};
+    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+
+    for (const auto &actualVertice: actualVertices) {
+        ASSERT_THAT(_expectedVertices, Contains(actualVertice));
+    }
+    ASSERT_EQ(_expectedFaces.size(), actualFaces.size());
+}
