@@ -11,7 +11,7 @@
 
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/model/Polyhedron.h"
+#include "polyhedralGravity/model/Definitions.h"
 #include <exception>
 #include <stdexcept>
 
@@ -69,7 +69,7 @@ namespace polyhedralGravity {
          * converted to a Polyhedron.
          * @return a Polyhedron
          */
-        std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedralSource();
+        PolyhedralSource getPolyhedralSource();
 
         /**
          * Reads nodes from a .node file

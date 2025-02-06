@@ -5,7 +5,7 @@ namespace polyhedralGravity {
         : _tetgenio{}, _fileNames{fileNames}, _vertices{}, _faces{}
     {}
 
-    std::tuple<std::vector<Array3>, std::vector<IndexArray3>> TetgenAdapter::getPolyhedralSource() {
+    PolyhedralSource TetgenAdapter::getPolyhedralSource() {
         //1. Step: Read in from files
         for (const auto &fileName: _fileNames) {
             size_t pos = fileName.find_last_of('.');

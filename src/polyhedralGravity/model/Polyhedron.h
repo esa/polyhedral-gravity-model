@@ -14,12 +14,14 @@
 #include <memory>
 #include "thrust/copy.h"
 #include "thrust/device_vector.h"
-#include "polyhedralGravity/output/Logging.h"
 #include "thrust/transform_reduce.h"
 #include "thrust/execution_policy.h"
 #include "thrust/iterator/counting_iterator.h"
-#include "polyhedralGravity/model/GravityModelData.h"
 #include "thrust/iterator/transform_iterator.h"
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/Definitions.h"
+#include "polyhedralGravity/input/MeshReader.h"
+#include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
@@ -28,12 +30,6 @@ namespace polyhedralGravity {
 
     /* Forward declaration of Polyhedron */
     class Polyhedron;
-
-    /** A polyhedron defined by a set of filenames, as available in {@link TetgenAdapter} */
-    using PolyhedralFiles = std::vector<std::string>;
-
-    /** A polyhedron defined by a set of vertices and face indices */
-    using PolyhedralSource = std::tuple<std::vector<Array3>, std::vector<IndexArray3>>;
 
     /**
      * The orientation of the plane unit normals of the polyhedron.

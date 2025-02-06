@@ -1,8 +1,5 @@
 #include "Polyhedron.h"
 
-#include "polyhedralGravity/input/TetgenAdapter.h"
-
-
 namespace polyhedralGravity {
 
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
@@ -27,11 +24,11 @@ namespace polyhedralGravity {
     }
 
     Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
-        : Polyhedron{TetgenAdapter{polyhedralFiles}.getPolyhedralSource(), density, orientation, integrity} {
+        : Polyhedron{MeshReader::getPolyhedralSource(polyhedralFiles), density, orientation, integrity} {
     }
 
     Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
-        : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : TetgenAdapter{std::get<PolyhedralFiles>(polyhedralSource)}.getPolyhedralSource(),
+        : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : MeshReader::getPolyhedralSource(std::get<PolyhedralFiles>(polyhedralSource)),
                      density, orientation, integrity} {
     }
 

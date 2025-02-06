@@ -5,7 +5,7 @@
 
 namespace polyhedralGravity {
 
-    std::tuple<std::vector<Array3>, std::vector<IndexArray3>> MeshReader::getPolyhedralSource(const std::vector<std::string> &fileNames) {
+    PolyhedralSource MeshReader::getPolyhedralSource(const std::vector<std::string> &fileNames) {
         switch (fileNames.size()) {
             case 0:
                 throw std::runtime_error("No mesh file given");
@@ -23,11 +23,11 @@ namespace polyhedralGravity {
         }
     }
 
-    std::tuple<std::vector<Array3>, std::vector<IndexArray3>> MeshReader::readTetgenFormat(const std::vector<std::string> &fileNames) {
+    PolyhedralSource MeshReader::readTetgenFormat(const std::vector<std::string> &fileNames) {
         return TetgenAdapter{fileNames}.getPolyhedralSource();
     }
 
-    std::tuple<std::vector<Array3>, std::vector<IndexArray3>> MeshReader::readObj(const std::string &filename) {
+    PolyhedralSource MeshReader::readObj(const std::string &filename) {
         std::vector<Array3> vertices{};
         std::vector<IndexArray3> faces{};
         POLYHEDRAL_GRAVITY_LOG_DEBUG("Reading the file {}", filename);
