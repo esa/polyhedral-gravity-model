@@ -11,7 +11,11 @@ namespace polyhedralGravity {
             size_t pos = fileName.find_last_of('.');
             std::string name = fileName.substr(0, pos);
             std::string suffix = fileName.substr(pos + 1);
-            _suffixToOperation.at(suffix)(name);
+            try {
+                _suffixToOperation.at(suffix)(name);
+            } catch (const std::out_of_range &e) {
+                throw std::runtime_error("The TetGen Adapter does not support the requested file. " + fileName + " has an unknown suffix.");
+            }
         }
 
         //2. Convert tetgenio to Polyhedron
