@@ -1,10 +1,10 @@
 #!python3
 from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable
+import polyhedral_gravity
 import numpy as np
 import matplotlib.pyplot as plt
 import mesh_utility
 import timeit
-import pickle
 from typing import Dict
 
 
@@ -91,7 +91,7 @@ def create_plot(runtime_results: Dict[str, float], sample_size: int = 1000) -> N
     ax.grid(True)
     ax.set_xticks(x_pos)
     ax.set_xticklabels(configurations)
-    ax.set_ylabel('Runtime per Point $[\mu s]$')
+    ax.set_ylabel(r'Runtime per Point $[\mu s]$')
     ax.set_title(f'Runtime Measurements (Sample Size = ${sample_size}$) of the Python Interface v3.0')
 
     # Save the figure
@@ -99,5 +99,9 @@ def create_plot(runtime_results: Dict[str, float], sample_size: int = 1000) -> N
 
 
 if __name__ == '__main__':
+    print(f"Version:                 {polyhedral_gravity.__version__}")
+    print(f"Parallelization Backend: {polyhedral_gravity.__parallelization__}")
+    print(f"Commit Hash:             {polyhedral_gravity.__commit__}")
+    print(f"Logging Level:           {polyhedral_gravity.__logging__}")
     results = run_time_measurements()
     create_plot(results)

@@ -7,7 +7,6 @@
 
 
 namespace polyhedralGravity {
-
     class PolyhedralGravityLogger;
 
     /**
@@ -45,5 +44,12 @@ namespace polyhedralGravity {
 
 
     };
+
+#define POLYHEDRAL_GRAVITY_LOG_TRACE(msg, ...) SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_DEBUG(msg, ...) SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_INFO(msg, ...) SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_WARN(msg, ...) SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_ERROR(msg, ...) SPDLOG_LOGGER_ERROR(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_CRITICAL(msg, ...) SPDLOG_LOGGER_CRITICAL(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
 
 }

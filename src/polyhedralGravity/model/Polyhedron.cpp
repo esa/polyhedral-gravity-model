@@ -6,31 +6,34 @@
 namespace polyhedralGravity {
 
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
-            const std::vector<IndexArray3> &faces, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
+                           const std::vector<IndexArray3> &faces, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
         : _vertices{vertices},
           _faces{faces},
           _density{density},
           _orientation{orientation} {
         //Checks that the node with index zero is actually used
         if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
-            return face[0] == 0 || face[1] == 0 || face[2] == 0;
-        })) {
+                return face[0] == 0 || face[1] == 0 || face[2] == 0;
+            })) {
             throw std::invalid_argument("The node with index zero (0) was never used in any face! This is "
-                    "no valid polyhedron. Probable issue: Started numbering the vertices of "
-                    "the polyhedron at one (1).");
+                                        "no valid polyhedron. Probable issue: Started numbering the vertices of "
+                                        "the polyhedron at one (1).");
         }
         this->runIntegrityMeasures(integrity);
     }
 
     Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
-        : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity} {}
+        : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity} {
+    }
 
     Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
-        : Polyhedron{TetgenAdapter{polyhedralFiles}.getPolyhedralSource(), density, orientation, integrity} {}
+        : Polyhedron{TetgenAdapter{polyhedralFiles}.getPolyhedralSource(), density, orientation, integrity} {
+    }
 
     Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
-    : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : TetgenAdapter{std::get<PolyhedralFiles>(polyhedralSource)}.getPolyhedralSource(),
-        density, orientation, integrity} {}
+        : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : TetgenAdapter{std::get<PolyhedralFiles>(polyhedralSource)}.getPolyhedralSource(),
+                     density, orientation, integrity} {
+    }
 
     const std::vector<Array3> &Polyhedron::getVertices() const {
         return _vertices;
@@ -79,7 +82,7 @@ namespace polyhedralGravity {
     std::string Polyhedron::toString() const {
         std::stringstream sstream{};
         sstream << "<polyhedral_gravity.Polyhedron, density = " << _density << ", vertices = "
-           << countVertices() << ", faces = " << countFaces() << ", orientation = " << _orientation << ">";
+                << countVertices() << ", faces = " << countFaces() << ", orientation = " << _orientation << ">";
         return sstream.str();
     }
 
@@ -89,13 +92,13 @@ namespace polyhedralGravity {
 
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
         // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
-        const auto&[polyBegin, polyEnd] = this->transformIterator();
+        const auto &[polyBegin, polyEnd] = this->transformIterator();
         const size_t n = this->countFaces();
         // Vector contains TRUE if the corrspeonding index VIOLATES the OUTWARDS cirteria
         // Vector contains FALSE if the cooresponding index FULFILLS the OUTWARDS criteria
         thrust::device_vector<bool> violatingBoolOutwards(n, false);
         thrust::transform(
-            thrust::device,
+                thrust::device,
                 polyBegin,
                 polyEnd,
                 violatingBoolOutwards.begin(),
@@ -133,12 +136,11 @@ namespace polyhedralGravity {
             case PolyhedronIntegrity::DISABLE:
                 return;
             case PolyhedronIntegrity::AUTOMATIC:
-                SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                                   "The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
-                                   "that all plane unit normals point in the specified direction. This checks requires "
-                                   "a quadratic runtime cost which is most of the time not desirable. "
-                                   "Please explicitly set the integrity_check to either VERIFY, HEAL or DISABLE."
-                                   "You can find further details in the documentation!");
+                POLYHEDRAL_GRAVITY_LOG_WARN("The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
+                                            "that all plane unit normals point in the specified direction. This checks requires "
+                                            "a quadratic runtime cost which is most of the time not desirable. "
+                                            "Please explicitly set the integrity_check to either VERIFY, HEAL or DISABLE."
+                                            "You can find further details in the documentation!");
             // NO BREAK! AUTOMATIC implies VERIFY, but with a info mesage to explcitly set the option
             case PolyhedronIntegrity::VERIFY:
             // NO BREAK! VERIFY terminates earlier, but does in the beginning the same as HEAL
@@ -178,7 +180,8 @@ namespace polyhedralGravity {
                 thrust::device,
                 begin, end, [](const Array3Triplet &face) {
                     return util::surfaceArea(face) > 0.0;
-                }, true, thrust::logical_and<bool>());
+                },
+                true, thrust::logical_and<bool>());
     }
 
     void Polyhedron::healPlaneUnitNormalOrientation(const NormalOrientation &actualOrientation, const std::set<size_t> &violatingIndices) {
@@ -249,4 +252,4 @@ namespace polyhedralGravity {
         }
     }
 
-}
+}// namespace polyhedralGravity
