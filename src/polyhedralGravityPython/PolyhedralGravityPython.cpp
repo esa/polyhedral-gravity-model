@@ -103,7 +103,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
     Accordingly, the second derivative tensor is defined as the derivative of :math:`\textbf{g}`.
     )mydelimiter";
 
-    // We embedded the version & compilation information into the Python Interface
+    // We embedded the version and compilation information into the Python Interface
     m.attr("__version__") = POLYHEDRAL_GRAVITY_VERSION;
     m.attr("__parallelization__") = POLYHEDRAL_GRAVITY_PARALLELIZATION;
     m.attr("__commit__") = POLYHEDRAL_GRAVITY_COMMIT_HASH;
@@ -131,8 +131,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                "Like :code:`VERIFY`, but also informs the user about the option in any case on the runtime costs. "
                "This is the implicit default option. Runtime Cost: :math:`O(n^2)` and output to stdout in every case!")
         .value("HEAL", PolyhedronIntegrity::HEAL,
-               "Verification and Autmatioc Healing of the NormalOrientation. "
-               "A misalignemt does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: :math:`O(n^2)`");
+               "Verification and Automatic Healing of the NormalOrientation. "
+               "A misalignment does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: :math:`O(n^2)`");
 
     py::class_<Polyhedron>(m, "Polyhedron", R"mydelimiter(
             A constant density Polyhedron stores the mesh data consisting of vertices and triangular faces.
@@ -155,18 +155,19 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                                     (default: :code:`OUTWARDS`)
                 integrity_check:    Conducts an Integrity Check (degenerated faces/ vertex ordering) depending on the values. One of :py:class:`polyhedral_gravity.PolyhedronIntegrity`:
 
-                                        * :code:`AUTOMATIC` (Default): Prints to stdout and throws ValueError if normal_orientation is wrong/ inconsisten
+                                        * :code:`AUTOMATIC` (Default): Prints to stdout and throws ValueError if normal_orientation is wrong/ inconsistent
                                         * :code:`VERIFY`: Like :code:`AUTOMATIC`, but does not print to stdout
-                                        * :code:`DISABLE`: Recommened, when you are familiar with the mesh to avoid :math:`O(n^2)` runtime cost. Disables ALL checks
+                                        * :code:`DISABLE`: Recommend, when you are familiar with the mesh to avoid :math:`O(n^2)` runtime cost. Disables ALL checks
                                         * :code:`HEAL`: Automatically fixes the normal_orientation and vertex ordering to the correct values
 
             Raises:
-                ValueError: If the faces array does not contain a reference to vertex 0 indicating an index start at 1
                 ValueError: If :code:`integrity_check` is set to :code:`AUTOMATIC` or :code:`VERIFY` and the mesh is inconsistent
 
             Note:
                 The :code:`integrity_check` is automatically enabled to avoid wrong results due to the wrong vertex ordering.
                 The check requires :math:`O(n^2)` operations. You want to turn this off, when you know you mesh!
+                The faces array's indexing is shifted by -1 if the indexing started previously from vertex one (i.e., the first index is referred to as one).
+                In other words, the first vertex is always referred to as vertex zero not one!
             )mydelimiter",
                  py::arg("polyhedral_source"),
                  py::arg("density"),
@@ -177,21 +178,21 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             Returns a tuple consisting of majority plane unit normal orientation,
             i.e. the direction in which at least more than half of the plane unit normals point,
             and the indices of the faces violating this orientation, i.e. the faces whose plane unit normals point in the other direction.
-            The set of incides vioalting the property is empty if the mesh has a clear ordering.
-            The set contains values if the mesh is incosistent.
+            The set of indices violating the property is empty if the mesh has a clear ordering.
+            The set contains values if the mesh is inconsistent.
 
             Returns:
                 Tuple consisting consisting of majority plane unit normal orientation and the indices of the faces violating this orientation.
 
             Note:
-                This utility is mainly for diagnostics and debugging purposes. If the polyhedron is constrcuted with `integrity_check`
+                This utility is mainly for diagnostics and debugging purposes. If the polyhedron is constructed with `integrity_check`
                 set to :code:`AUTOMATIC` or :code:`VERIFY`, the construction fails anyways.
                 If set to :code:`HEAL`, this method should return an empty set (but maybe a different ordering than initially specified)
                 Only if set to :code:`DISABLE`, then this method might actually return a set with faulty indices.
                 Hence, if you want to know your mesh error. Construct the polyhedron with :code:`integrity_check=DISABLE` and call this method.
             )mydelimiter")
             .def("__getitem__", &Polyhedron::getResolvedFace, R"mydelimiter(
-            Returns the the three cooridnates of the vertices making the face at the requested index.
+            Returns the the three coordinates of the vertices making the face at the requested index.
             This does not return the face as list of vertex indices, but resolved with the actual coordinates.
 
             Args:
@@ -238,12 +239,12 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
     py::class_<GravityEvaluable>(m, "GravityEvaluable", R"mydelimiter(
              A class to evaluate the polyhedral gravity model for a given constant density polyhedron at a given computation point.
-             It provides a :py:meth:`poylhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
+             It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
              )mydelimiter")
             .def(py::init<const Polyhedron &>(),R"mydelimiter(
              Creates a new GravityEvaluable for a given constant density polyhedron.
-             It provides a :py:meth:`poylhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
+             It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
 
              Args:
