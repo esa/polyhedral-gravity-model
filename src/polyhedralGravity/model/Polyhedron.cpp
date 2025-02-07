@@ -9,7 +9,9 @@ namespace polyhedralGravity {
           _density{density},
           _orientation{orientation} {
         using util::operator-;
-        //Checks that the node with index zero is actually used
+        // Checks that the node with index zero is actually used
+        // In case it is not used, the indexing presumably starts mathematically at one
+        // In this case, we shift it by -1, so that the indexing start with zero
         if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;
             })) {

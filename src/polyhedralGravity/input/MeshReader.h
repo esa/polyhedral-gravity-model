@@ -34,7 +34,7 @@ namespace polyhedralGravity {
          * https://pds.nasa.gov/ds-view/pds/viewDataset.jsp?dsid=EAR-A-5-DDR-RADARSHAPE-MODELS-V2.0
          * However, the suffix for these files is .tab
          * @param filename of the input source without suffix
-         * @see https://de.wikipedia.org/wiki/Wavefront_OBJ
+         * @see Refer to https://de.wikipedia.org/wiki/Wavefront_OBJ for further help with the format
          */
         PolyhedralSource readObj(const std::string &filename);
 

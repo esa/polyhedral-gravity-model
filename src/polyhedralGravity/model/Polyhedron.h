@@ -139,15 +139,14 @@ namespace polyhedralGravity {
     public:
         /**
          * Generates a polyhedron from nodes and faces.
+         * If the indexing of the polyhedron's vertices in the faces array starts with one, it is shifted so that it starts with zero.
          * @param vertices a vector of nodes
          * @param faces a vector of faces containing the formation of faces off vertices
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          *
-         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
-         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@link integrity} flag
+         * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(
                 const std::vector<Array3> &vertices,
@@ -159,14 +158,13 @@ namespace polyhedralGravity {
 
         /**
          * Generates a polyhedron from nodes and faces.
+         * If the indexing of the polyhedron's vertices in the faces array starts with one, it is shifted so that it starts with zero.
          * @param polyhedralSource a tuple of vector containing the nodes and trianglular faces.
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          *
-         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
-         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@link integrity} flag
+         * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(
                 const PolyhedralSource &polyhedralSource,
@@ -177,14 +175,13 @@ namespace polyhedralGravity {
 
         /**
          * Generates a polyhedron from nodes and faces.
+         * If the indexing of the polyhedron's vertices in the faces array starts with one, it is shifted so that it starts with zero.
          * @param polyhedralFiles a list of files (see {@link TetgenAdapter}
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          *
-         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
-         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@link integrity} flag
+         * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(const PolyhedralFiles &polyhedralFiles, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
@@ -192,15 +189,14 @@ namespace polyhedralGravity {
 
         /**
          * Generates a polyhedron from nodes and faces.
-         * This constructor using a variant is maninly utilized from the Python Interface.
+         * If the indexing of the polyhedron's vertices in the faces array starts with one, it is shifted so that it starts with zero.
+         * This constructor using a variant is mainly utilized from the Python Interface.
          * @param polyhedralSource a list of files (see {@link TetgenAdapter} or a tuple of vector containing the nodes and trianglular faces.
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          *
-         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
-         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@link integrity} flag
+         * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,

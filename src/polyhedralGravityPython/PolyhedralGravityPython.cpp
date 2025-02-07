@@ -136,7 +136,10 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
     py::class_<Polyhedron>(m, "Polyhedron", R"mydelimiter(
             A constant density Polyhedron stores the mesh data consisting of vertices and triangular faces.
+
             The density and the coordinate system in which vertices and faces are defined need to have the same scale/ units.
+            The vertices are indexed starting with zero, not one. If the polyhedral source starts indexing with one, the counting is shifted by -1.
+
             Tsoulis et al.'s polyhedral gravity model requires that the plane unit normals of every face are pointing outwards
             of the polyhedron. Otherwise the results are negated.
             The class by default enforces this constraints and offers utility to (automatically) make the input data obey to this constraint.
