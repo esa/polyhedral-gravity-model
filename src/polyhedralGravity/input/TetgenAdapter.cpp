@@ -14,7 +14,7 @@ namespace polyhedralGravity {
             try {
                 _suffixToOperation.at(suffix)(name);
             } catch (const std::out_of_range &e) {
-                throw std::runtime_error("The TetGen Adapter does not support the requested file. " + fileName + " has an unknown suffix.");
+                throw std::invalid_argument("The TetGen Adapter does not support the requested file. " + fileName + " has an unknown suffix.");
             }
         }
 

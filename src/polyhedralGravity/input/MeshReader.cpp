@@ -11,15 +11,19 @@ namespace polyhedralGravity {
                 throw std::runtime_error("No mesh file given");
             case 1:
                 if (util::ends_with(fileNames[0], ".obj", ".tab")) {
-                    return MeshReader::readObj(fileNames[0]);
+                    return readObj(fileNames[0]);
                 } else {
-                    return MeshReader::readTetgenFormat(fileNames);
+                    // The TetGen Adapter complains if the suffix is unknown
+                    // No need to check for suffices here, as this happens later anyway
+                    return readTetgenFormat(fileNames);
                 }
             case 2:
-                return MeshReader::readTetgenFormat(fileNames);
+                // The TetGen Adapter complains if the suffix is unknown
+                // No need to check for suffices here, as this happens later anyway
+                return readTetgenFormat(fileNames);
             default:
-                throw std::runtime_error("More than two mesh files given. There is no known mesh-format consisting of three files. "
-                                         "The polyhedron will be over-specified!");
+                throw std::invalid_argument("More than two mesh files given. There is no known mesh-format consisting of three files. "
+                                            "The polyhedron will be over-specified!");
         }
     }
 

@@ -23,6 +23,7 @@ namespace polyhedralGravity {
          * Returns a polyhedral source consisting of vertices and faces by reading mesh input files.
          * @param fileNames files specifying a polyhedron
          * @return polyhedral source consisting of vertices and faces
+         * @throws std::invalid_argument exception if the file type is unsupported by the implementation
          */
         PolyhedralSource getPolyhedralSource(const std::vector<std::string> &fileNames);
 
@@ -40,6 +41,8 @@ namespace polyhedralGravity {
 
         /**
          * Reads elements from a file format supported by Tegen (.node/.face, .off, .ply, .stl, .mesh)
+         *
+         * Delegates the processing to a TetgenAdapter.
          * @param fileNames two files (.node/.face) or one file supported by Tetgen
          * @return Polyhedral Source consisting of vertices and faces
          */

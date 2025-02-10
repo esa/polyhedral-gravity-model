@@ -20,9 +20,9 @@ namespace polyhedralGravity {
     /**
      * An adapter to the Tetgen Library. This is the interface between tetgen's data structures and I/O
      * capabilities and the here implemented polyhedral gravity model.
-     * The adapter always converts tetgen's datastructure into the structure utilized by the Polyhedral Gravity Model.
+     * The adapter always converts tetgen's data structure into the structure utilized by the Polyhedral Gravity Model.
      *
-     * The Adapter further keeps en eye on the already read in files in order to give feedback if data is in conflict.
+     * The Adapter further keeps en eye on the already read-in files in order to give feedback if data is in conflict.
      */
     class TetgenAdapter {
 
@@ -64,10 +64,11 @@ namespace polyhedralGravity {
 
         /**
          * Use this function to get a Polyhedron.
-         * This functions consists of two steps. First, the Adapter will delegate I/O to the tetgen library and
-         * read in the Polyhedron data in the library's datastructure. Second, tetgen's datastructure is then
+         * This function consists of two steps. First, the Adapter will delegate I/O to the tetgen library and
+         * read in the Polyhedron data in the library's data structure. Second, tetgen's data structure is then
          * converted to a Polyhedron.
          * @return a Polyhedron
+         * @throws std::invalid_argument exception in case the filetype is not supported!
          */
         PolyhedralSource getPolyhedralSource();
 
