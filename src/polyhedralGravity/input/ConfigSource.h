@@ -5,6 +5,7 @@
 #include <vector>
 #include <array>>
 #include <tuple>
+#include "polyhedralGravity/model/Definitions.h"
 
 namespace polyhedralGravity {
 
@@ -49,7 +50,7 @@ namespace polyhedralGravity {
          * The source structure of a Polyhedron consisting of vertices and faces
          * @return a polyhedral source consisting of vertices and faces
          */
-        virtual std::tuple<std::vector<std::array<double, 3>>, std::vector<std::array<size_t, 3>>> getPolyhedralSource() = 0;
+        virtual PolyhedralSource getPolyhedralSource() = 0;
 
     };
 
