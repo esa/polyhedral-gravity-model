@@ -10,7 +10,9 @@ namespace polyhedralGravity {
     class PolyhedralGravityLogger;
 
     /**
-     * Wrapper Class for spdlog logger
+     * Wrapper Class for a spdlog logger.
+     * It is used to configure the static DEFAULT_LOGGER of the polyhedral gravity model
+     * within the constructor.
      */
     class PolyhedralGravityLogger {
 
@@ -38,6 +40,10 @@ namespace polyhedralGravity {
             _logger->set_level(spdlog::level::trace);
         }
 
+        /**
+         * Returns the underlying pointer to spdlog's logger object.
+         * @return a shared pointer to a spdlog's logger object
+         */
         [[nodiscard]] inline std::shared_ptr<spdlog::logger> getLogger() const {
             return _logger;
         }

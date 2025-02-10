@@ -10,9 +10,9 @@ find_program(CLANG_FORMAT clang-format)
 
 # Ensure clang-format was found
 if(NOT CLANG_FORMAT)
-    message(STATUS "HPCLab: clang-format not found. Please install it to use clang-format via CMake")
+    message(STATUS "clang-format not found. Please install it to use clang-format via CMake")
 else()
-    message(STATUS "HPCLab: clang-format found. You can format all source files via `cmake --build . --target format`")
+    message(STATUS "clang-format found. You can format all source files via `cmake --build . --target format`")
     add_custom_command(
             OUTPUT format_all_files
             COMMAND ${CLANG_FORMAT} -i ${CLANG_FORMAT_SRC}

@@ -118,9 +118,9 @@ namespace polyhedralGravity {
         /**
          * A vector containing the faces (triangles) of the polyhedron.
          * Each face is an array of size three containing the indices of the nodes forming the face.
-         * Since every face consist of three nodes, every face consist of three segments. Each segment consists of
+         * Since every face consists of three nodes, every face consist of three segments. Each segment consists of
          * two nodes.
-         * @example face consisting of {1, 2, 3} --> segments: {1, 2}, {2, 3}, {3, 1}
+         * For example, a face consisting of {1, 2, 3} --> segments: {1, 2}, {2, 3}, {3, 1}
          */
         std::vector<IndexArray3> _faces;
 

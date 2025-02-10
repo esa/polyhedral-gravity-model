@@ -17,6 +17,7 @@ namespace polyhedralGravity {
 
     public:
 
+        /** Default Virtual Destructor */
         virtual ~ConfigSource() = default;
 
         /**
