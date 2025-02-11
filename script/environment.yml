@@ -6,4 +6,5 @@ dependencies:
   - numpy
   - matplotlib
   - sympy
+  - loguru
   - polyhedral-gravity-model
