@@ -33,18 +33,16 @@ namespace polyhedralGravity {
     GravityModelResult GravityEvaluable::evaluate(const Array3 &computationPoint) const {
         using namespace GravityModel::detail;
         using namespace util;
-        POLYHEDRAL_GRAVITY_LOG_DEBUG(
-                "Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
+        POLYHEDRAL_GRAVITY_LOG_DEBUG("Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
                 computationPoint[0], computationPoint[1], computationPoint[2], _polyhedron.getDensity());
         /*
          * Calculate V and Vx, Vy, Vz and Vxx, Vyy, Vzz, Vxy, Vxz, Vyz
          */
         const auto &[polyBegin, polyEnd] = _polyhedron.transformIterator(computationPoint);
-        auto zip1 = util::zip(polyBegin, _segmentVectors.begin(), _planeUnitNormals.begin(), _segmentUnitNormals.begin());
-        auto zip2 = util::zip(polyEnd, _segmentVectors.end(), _planeUnitNormals.end(), _segmentUnitNormals.end());
+        const auto zip1 = zip(polyBegin, _segmentVectors.begin(), _planeUnitNormals.begin(), _segmentUnitNormals.begin());
+        const auto zip2 = zip(polyEnd, _segmentVectors.end(), _planeUnitNormals.end(), _segmentUnitNormals.end());
 
-        POLYHEDRAL_GRAVITY_LOG_DEBUG(
-                "Starting to iterate over the planes...");
+        POLYHEDRAL_GRAVITY_LOG_DEBUG("Starting to iterate over the planes...");
         GravityModelResult result{};
         auto &[potential, acceleration, gradiometricTensor] = result;
 
@@ -56,11 +54,10 @@ namespace polyhedralGravity {
                                               util::operator+ <double, Array3, Array6>);
         }
 
-        POLYHEDRAL_GRAVITY_LOG_DEBUG(
-                "Finished the sums. Applying final prefix and eliminating rounding errors.");
+        POLYHEDRAL_GRAVITY_LOG_DEBUG("Finished the sums. Applying final prefix.");
 
         //9. Step: Compute prefix consisting of GRAVITATIONAL_CONSTANT * density
-        const double prefix = util::GRAVITATIONAL_CONSTANT * _polyhedron.getDensity() * _polyhedron.getOrientationFactor();
+        const double prefix = GRAVITATIONAL_CONSTANT * _polyhedron.getDensity() * _polyhedron.getOrientationFactor();
 
         //10. Step: Final expressions after application of the prefix (and a division by 2 for the potential)
         potential = (potential * prefix) / 2.0;

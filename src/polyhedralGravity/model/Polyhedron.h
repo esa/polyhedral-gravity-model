@@ -33,9 +33,9 @@ namespace polyhedralGravity {
 
     /**
      * The orientation of the plane unit normals of the polyhedron.
-     * We use this property as the concret definition of the vertices ordering depends on the
-     * utilized cooridnate system.
-     * However, the normal alignement is independent. Tsoulis et al. equations require the
+     * We use this property as the precise definition of the vertices ordering depends on the
+     * utilized coordinate system.
+     * However, the normal alignment is independent. Tsoulis et al. equations require the
      * normals to point outwards of the polyhedron. If the opposite hold, the result is
      * negated.
      */
@@ -70,9 +70,9 @@ namespace polyhedralGravity {
     }
 
     /**
-     * The three mode the poylhedron class takes in
-     * the constructor in order to determine what initilaization checks to conduct.
-     * This enum is exclusivly utilized in the constrcutor of a {@link Polyhedron} and its private method
+     * The three mode the polyhedron class takes in
+     * the constructor in order to determine what initialization checks to conduct.
+     * This enum is exclusively utilized in the constructor of a {@link Polyhedron} and its private method
      * {@link runIntegrityMeasures}
      */
     enum class PolyhedronIntegrity: char {
@@ -83,7 +83,7 @@ namespace polyhedralGravity {
         DISABLE,
         /**
          * Only verification of the NormalOrientation.
-         * A misalignment (e.g. specified OUTWARDS, but is not) leads to a runtime_error.
+         * A misalignment (e.g., specified OUTWARDS, but is not) leads to a runtime_error.
          * Runtime Cost O(n^2)
          */
         VERIFY,
@@ -94,8 +94,8 @@ namespace polyhedralGravity {
          */
         AUTOMATIC,
         /**
-         * Verification and Autmatioc Healing of the NormalOrientation.
-         * A misalignemt does not lead to a runtime_error, but to an internal correction.
+         * Verification and Automatic Healing of the NormalOrientation.
+         * A misalignment does not lead to a runtime_error, but to an internal correction.
          * Runtime Cost: O(n^2) and a modification of the mesh input!
          */
         HEAL,
@@ -118,7 +118,7 @@ namespace polyhedralGravity {
         /**
          * A vector containing the faces (triangles) of the polyhedron.
          * Each face is an array of size three containing the indices of the nodes forming the face.
-         * Since every face consists of three nodes, every face consist of three segments. Each segment consists of
+         * Since every face consists of three nodes, every face consists of three segments. Each segment consists of
          * two nodes.
          * For example, a face consisting of {1, 2, 3} --> segments: {1, 2}, {2, 3}, {3, 1}
          */
@@ -139,11 +139,11 @@ namespace polyhedralGravity {
     public:
         /**
          * Generates a polyhedron from nodes and faces.
-         * If the indexing of the polyhedron's vertices in the faces array starts with one, it is shifted so that it starts with zero.
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
          * @param vertices a vector of nodes
          * @param faces a vector of faces containing the formation of faces off vertices
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
@@ -158,10 +158,10 @@ namespace polyhedralGravity {
 
         /**
          * Generates a polyhedron from nodes and faces.
-         * If the indexing of the polyhedron's vertices in the faces array starts with one, it is shifted so that it starts with zero.
-         * @param polyhedralSource a tuple of vector containing the nodes and trianglular faces.
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
+         * @param polyhedralSource a tuple of vector containing the nodes and triangular faces.
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
@@ -175,10 +175,10 @@ namespace polyhedralGravity {
 
         /**
          * Generates a polyhedron from nodes and faces.
-         * If the indexing of the polyhedron's vertices in the faces array starts with one, it is shifted so that it starts with zero.
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
          * @param polyhedralFiles a list of files (see {@link TetgenAdapter}
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
@@ -189,11 +189,11 @@ namespace polyhedralGravity {
 
         /**
          * Generates a polyhedron from nodes and faces.
-         * If the indexing of the polyhedron's vertices in the faces array starts with one, it is shifted so that it starts with zero.
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
          * This constructor using a variant is mainly utilized from the Python Interface.
-         * @param polyhedralSource a list of files (see {@link TetgenAdapter} or a tuple of vector containing the nodes and trianglular faces.
+         * @param polyhedralSource a list of files (see {@link TetgenAdapter} or a tuple of vector containing the nodes and triangular faces.
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
@@ -235,7 +235,7 @@ namespace polyhedralGravity {
         /**
          * Returns the indices of the vertices making up the face at the given index.
          * @param index size_t
-         * @return triplet of the vertic'es indices forming the face
+         * @return triplet of the vertices indices forming the face
          */
         [[nodiscard]] const IndexArray3 &getFace(size_t index) const;
 
@@ -271,8 +271,8 @@ namespace polyhedralGravity {
         [[nodiscard]] NormalOrientation getOrientation() const;
 
         /**
-         * Retruns the plane unit normal orientation factor.
-         * If the unit normals are outwards pointing, it is 1.0 as Tsoulis inteneded.
+         * Returns the plane unit normal orientation factor.
+         * If the unit normals are outwards pointing, it is 1.0 as Tsoulis intended.
          * If the unit normals are inwards pointing, it is -1.0 (reversed).
          * @return 1.0 or -1.0 depending on plane unit orientation
          */
@@ -287,8 +287,8 @@ namespace polyhedralGravity {
         [[nodiscard]] std::string toString() const;
 
         /**
-         * Returns the internal data strcuture of Python pickle support.
-         * @return tuple of vertices, faces, density and normal orientation
+         * Returns the internal data structure of Python pickle support.
+         * @return tuple of vertices, faces, density, and normal orientation
          */
         [[nodiscard]] std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation> getState() const;
 
@@ -312,7 +312,7 @@ namespace polyhedralGravity {
 
         /**
          * This method determines the majority vertex ordering of a polyhedron and the set of faces which
-         * violate the majority constraint and need to be adpated.
+         * violate the majority constraint and need to be adapted.
          * Hence, if the set is empty, all faces obey to the returned ordering/ plane unit normal orientation.
          *
          * @return a pair consisting of majority ordering (OUTWARDS or INWARDS pointing normals)
@@ -326,14 +326,14 @@ namespace polyhedralGravity {
          *
          * @param integrity the behavior depends on the value, see {@link PolyhedronIntegrity}
          *
-         * @throws std::invalid_argument dpending on the {@param integrity} flag
+         * @throws std::invalid_argument depending on the {@param integrity} flag
          */
         void runIntegrityMeasures(const PolyhedronIntegrity &integrity);
 
 
         /**
          * Checks if no triangle is degenerated by checking the surface area being greater than zero.
-         * E.g. two points are the same or all three are collinear.
+         * E.g., two points are the same or all three are collinear.
          * @return true if triangles are fine and none of them is degenerate
          */
         [[nodiscard]] bool checkTrianglesNotDegenerated() const;
