@@ -186,7 +186,7 @@ cube_polyhedron = Polyhedron(
 
 > [!TIP]
 > More examples and plots are depicted in the
-[jupyter notebook](script/polyhedral-gravity.ipynb).
+[jupyter notebook](script/polyhedral-gravity.ipynb) and the [second jupyter notebook](script/Kleopatra.ipynb)
 
 
 ### Minimal C++ Example
