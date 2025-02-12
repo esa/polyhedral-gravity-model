@@ -76,6 +76,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       - uses: actions/upload-artifact@v4
         with:
+          name: artifact-wheels-${{ matrix.os }}
           path: dist/*.whl
 
   # 1.b Build the source distribution by simply running the build command
@@ -88,6 +89,7 @@ jobs:
         run: pipx run build --sdist
       - uses: actions/upload-artifact@v4
         with:
+          name: artifact-sdist
           path: dist/*.tar.gz
 
   # 2. Upload the wheels and the source distribution to testpypi
@@ -103,7 +105,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          pattern: artifact-*
+          merge-multiple: true
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -122,6 +125,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          pattern: artifact-*
+          merge-multiple: true
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
