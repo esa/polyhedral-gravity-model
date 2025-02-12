@@ -91,10 +91,10 @@ namespace polyhedralGravity {
 
     std::string Polyhedron::getDensityUnit() const {
         std::stringstream densityUnit{};
-        if (_metricUnit != MetricUnit::UNIT_LESS) {
+        if (_metricUnit != MetricUnit::UNITLESS) {
             densityUnit << "kg/" << _metricUnit << "^3";
         } else {
-            densityUnit << " " << _metricUnit;
+            densityUnit << _metricUnit;
         }
         return densityUnit.str();
     }
@@ -102,7 +102,7 @@ namespace polyhedralGravity {
 
     double Polyhedron::getGravityModelScaling() const {
         switch (_metricUnit) {
-            case MetricUnit::UNIT_LESS:
+            case MetricUnit::UNITLESS:
                 return getDensity() * getOrientationFactor();
             case MetricUnit::METER:
                 return util::GRAVITATIONAL_CONSTANT * getDensity() * getOrientationFactor();

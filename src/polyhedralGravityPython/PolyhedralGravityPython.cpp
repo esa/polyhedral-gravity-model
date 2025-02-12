@@ -139,7 +139,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
         )mydelimiter")
     .value("METER", MetricUnit::METER, "Representing meter :math:`[m]`")
     .value("KILOMETER", MetricUnit::KILOMETER, "Representing kilometer :math:`[km]`")
-    .value("UNIT_LESS", MetricUnit::UNIT_LESS, "Representing no unit :math:`[1]`");
+    .value("UNITLESS", MetricUnit::UNITLESS, "Representing no unit :math:`[1]`");
 
     py::class_<Polyhedron>(m, "Polyhedron", R"mydelimiter(
             A constant density Polyhedron stores the mesh data consisting of vertices and triangular faces.
@@ -170,7 +170,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                                         * :code:`VERIFY`: Like :code:`AUTOMATIC`, but does not print to stdout
                                         * :code:`DISABLE`: Recommend, when you are familiar with the mesh to avoid :math:`O(n^2)` runtime cost. Disables ALL checks
                                         * :code:`HEAL`: Automatically fixes the normal_orientation and vertex ordering to the correct values
-                metric_unit:        The metric unit of the mesh. Can be either :code:`METER`, :code:`KILOMETER`, or :code:`UNIT_LESS`
+                metric_unit:        The metric unit of the mesh. Can be either :code:`METER`, :code:`KILOMETER`, or :code:`UNITLESS`
                                     (default: :code:`METER`)
 
             Raises:

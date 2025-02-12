@@ -101,12 +101,25 @@ namespace polyhedralGravity {
         HEAL,
     };
 
+    /**
+     * Represents the unit of a polyhedron's mesh.
+     */
     enum class MetricUnit : char {
+        /** The unit meter @f$[m]@f$ */
         METER,
+        /** The unit kilometer @f$[km]@f$ */
         KILOMETER,
-        UNIT_LESS,
+        /** The mesh is unitless @f$[1]@f$ */
+        UNITLESS,
     };
 
+
+    /**
+     * Stream operator for the MetricUnit enum. Prints the enum to a human-readable string.
+     * @param os The output stream to write the string representation to.
+     * @param metricUnit the metric unit to print
+     * @return The output stream after writing the string representation.
+     */
     inline std::ostream &operator<<(std::ostream &os, const MetricUnit &metricUnit) {
         switch (metricUnit) {
             case MetricUnit::METER:

@@ -13,12 +13,14 @@ Polyhedron
    :members:
    :special-members: __init__, __getitem__, __repr__
 
-Enums to specify MeshChecks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Enums to specify Mesh(-checks)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: polyhedral_gravity.NormalOrientation
 
 .. autoclass:: polyhedral_gravity.PolyhedronIntegrity
+
+.. autoclass:: polyhedral_gravity.MetricUnit
 
 
 GravityModel

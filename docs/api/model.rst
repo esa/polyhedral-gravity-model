@@ -42,6 +42,8 @@ Polyhedron
 
 .. doxygenenum:: polyhedralGravity::PolyhedronIntegrity
 
+.. doxygenenum:: polyhedralGravity::MetricUnit
+
 
 GravityModel
 ------------
