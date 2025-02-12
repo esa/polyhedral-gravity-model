@@ -57,7 +57,8 @@ namespace polyhedralGravity {
         POLYHEDRAL_GRAVITY_LOG_DEBUG("Finished the sums. Applying final prefix.");
 
         //9. Step: Compute prefix consisting of GRAVITATIONAL_CONSTANT * density
-        const double prefix = GRAVITATIONAL_CONSTANT * _polyhedron.getDensity() * _polyhedron.getOrientationFactor();
+        //and correction factors depending on alignment of the normals and polyhedral mesh unit
+        const double prefix = _polyhedron.getGravityModelScaling();
 
         //10. Step: Final expressions after application of the prefix (and a division by 2 for the potential)
         potential = (potential * prefix) / 2.0;
@@ -229,9 +230,19 @@ namespace polyhedralGravity {
 
     std::string GravityEvaluable::toString() const {
         std::stringstream sstream;
-        sstream << "<polyhedral_gravity.GravityEvaluable, density=" << _polyhedron.getDensity() << ", vertices= "
-                << _polyhedron.countVertices() << ", faces= " << _polyhedron.countFaces() << ">";
+        const auto[unitPotential, unitAcceleration, unitGradiometricTensor] = getOutputMetricUnit();
+        sstream << "<polyhedral_gravity.GravityEvaluable, polyhedron = " << _polyhedron.toString()
+                << ", output_units = " << unitPotential << ", " << unitAcceleration << ", " << unitGradiometricTensor << ">";
         return sstream.str();
+    }
+
+    std::array<std::string, 3> GravityEvaluable::getOutputMetricUnit() const {
+        const auto metric = _polyhedron.getMetricUnit();
+        if (metric != MetricUnit::UNIT_LESS) {
+            return {(std::stringstream{} << metric << "^2/s^2").str(), (std::stringstream{} << metric << "/s^2").str(), "1/s^2"};
+        } else {
+            return {"1/s^2", "1/s^2", "1/s^2"};
+        }
     }
 
     std::tuple<Polyhedron, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>

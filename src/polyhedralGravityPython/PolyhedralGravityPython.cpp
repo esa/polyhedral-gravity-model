@@ -134,6 +134,13 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                "Verification and Automatic Healing of the NormalOrientation. "
                "A misalignment does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: :math:`O(n^2)`");
 
+    py::enum_<MetricUnit>(m, "MetricUnit", R"mydelimiter(
+        The metric unit of for example a polyhedral mesh source.
+        )mydelimiter")
+    .value("METER", MetricUnit::METER, "Representing meter :math:`[m]`")
+    .value("KILOMETER", MetricUnit::KILOMETER, "Representing kilometer :math:`[km]`")
+    .value("UNIT_LESS", MetricUnit::UNIT_LESS, "Representing no unit :math:`[1]`");
+
     py::class_<Polyhedron>(m, "Polyhedron", R"mydelimiter(
             A constant density Polyhedron stores the mesh data consisting of vertices and triangular faces.
 
@@ -144,7 +151,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             of the polyhedron. Otherwise the results are negated.
             The class by default enforces this constraints and offers utility to (automatically) make the input data obey to this constraint.
             )mydelimiter")
-            .def(py::init<const std::variant<PolyhedralSource, PolyhedralFiles> &, double, const NormalOrientation &, const PolyhedronIntegrity &>(), R"mydelimiter(
+            .def(py::init<const std::variant<PolyhedralSource, PolyhedralFiles> &, double, const NormalOrientation &, const PolyhedronIntegrity &, const MetricUnit &>(), R"mydelimiter(
             Creates a new Polyhedron from vertices and faces and a constant density.
             If the integrity_check is not set to DISABLE, the mesh integrity is checked
             (so that it fits the specification of the polyhedral model by *Tsoulis et al.*)
@@ -153,6 +160,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                 polyhedral_source:  The vertices (:math:`(N, 3)`-array-like) and faces (:math:`(M, 3)`-array-like) of the polyhedron as pair or
                                     The filenames of the files containing the vertices & faces as list of strings
                 density:            The constant density of the polyhedron, it must match the mesh's units, e.g. mesh in :math:`[m]` then density in :math:`[kg/m^3]`
+                                    or mesh in :math:`[km]` then density in :math:`[kg/km^3]`
                 normal_orientation: The pointing direction of the mesh's plane unit normals, i.e., either :code:`OUTWARDS` or :code:`INWARDS` of the polyhedron.
                                     One of :py:class:`polyhedral_gravity.NormalOrientation`.
                                     (default: :code:`OUTWARDS`)
@@ -162,6 +170,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                                         * :code:`VERIFY`: Like :code:`AUTOMATIC`, but does not print to stdout
                                         * :code:`DISABLE`: Recommend, when you are familiar with the mesh to avoid :math:`O(n^2)` runtime cost. Disables ALL checks
                                         * :code:`HEAL`: Automatically fixes the normal_orientation and vertex ordering to the correct values
+                metric_unit:        The metric unit of the mesh. Can be either :code:`METER`, :code:`KILOMETER`, or :code:`UNIT_LESS`
+                                    (default: :code:`METER`)
 
             Raises:
                 ValueError: If :code:`integrity_check` is set to :code:`AUTOMATIC` or :code:`VERIFY` and the mesh is inconsistent
@@ -175,7 +185,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                  py::arg("polyhedral_source"),
                  py::arg("density"),
                  py::arg("normal_orientation") = NormalOrientation::OUTWARDS,
-                 py::arg("integrity_check") = PolyhedronIntegrity::AUTOMATIC
+                 py::arg("integrity_check") = PolyhedronIntegrity::AUTOMATIC,
+                 py::arg("metric_unit") = MetricUnit::METER
                     )
             .def("check_normal_orientation", &Polyhedron::checkPlaneUnitNormalOrientation, R"mydelimiter(
             Returns a tuple consisting of majority plane unit normal orientation,
@@ -211,30 +222,37 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             :py:class:`str`: A string representation of this polyhedron
             )mydelimiter")
             .def_property_readonly("vertices", &Polyhedron::getVertices, R"mydelimiter(
-            (N, 3)-array-like of :py:class:`float`: The vertices of the polyhedron (Read-Only)
+            (N, 3)-array-like of :py:class:`float`: The vertices of the polyhedron. Coordinates in the unit of the mesh (Read-Only).
             )mydelimiter")
             .def_property_readonly("faces", &Polyhedron::getFaces, R"mydelimiter(
-            (M, 3)-array-like of :py:class:`int`: The faces of the polyhedron (Read-Only)
+            (M, 3)-array-like of :py:class:`int`: The faces of the polyhedron (Read-Only).
             )mydelimiter")
             .def_property("density", &Polyhedron::getDensity, &Polyhedron::setDensity, R"mydelimiter(
-            :py:class:`float`: The density of the polyhedron (Read/ Write)
+            :py:class:`float`: The density of the polyhedron in :math:`[kg/X^3]` with X being the unit of the mesh (Read/ Write).
             )mydelimiter")
             .def_property_readonly("normal_orientation", &Polyhedron::getOrientation, R"mydelimiter(
-            :py:class:`polyhedral_gravity.NormalOrientation`: The orientation of the plane unit normals (Read-Only)
+            :py:class:`polyhedral_gravity.NormalOrientation`: The orientation of the plane unit normals (Read-Only).
+            )mydelimiter")
+            .def_property_readonly("mesh_unit", &Polyhedron::getMeshUnit, R"mydelimiter(
+            :py:class:`str`: The metric unit of the polyhedral mesh (Read-Only).
+            )mydelimiter")
+            .def_property_readonly("density_unit", &Polyhedron::getDensityUnit, R"mydelimiter(
+            :py:class:`str`: The metric unit of the density (Read-Only).
             )mydelimiter")
             .def(py::pickle(
                     [](const Polyhedron &polyhedron) {
-                        const auto &[vertices, faces, density, orientation] = polyhedron.getState();
-                        return py::make_tuple(vertices, faces, density, orientation);
+                        const auto &[vertices, faces, density, orientation, metricUnit] = polyhedron.getState();
+                        return py::make_tuple(vertices, faces, density, orientation, metricUnit);
                     },
                     [](const py::tuple &tuple) {
-                        constexpr size_t tupleSize = 4;
-                        if (tuple.size() != tupleSize) {
+                        constexpr static size_t POLYHEDRON_STATE_SIZE = 5;
+                        if (tuple.size() != POLYHEDRON_STATE_SIZE) {
                             throw std::runtime_error("Invalid state!");
                         }
                         Polyhedron polyhedron{
                                 tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>(),
-                                tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), PolyhedronIntegrity::DISABLE
+                                tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), PolyhedronIntegrity::DISABLE,
+                                tuple[4].cast<MetricUnit>()
                         };
                         return polyhedron;
                     }
@@ -253,8 +271,11 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
              Args:
                  polyhedron: The polyhedron for which to evaluate the gravity model
              )mydelimiter", py::arg("polyhedron"))
+            .def_property_readonly("output_units", &GravityEvaluable::getOutputMetricUnit,R"mydelimiter(
+            (3)-array-like of :py:class:`str`: A human-readable string representation of the output units. This depends on the polyhedron's definition (Read-Only).
+            )mydelimiter")
             .def("__repr__", &GravityEvaluable::toString,R"mydelimiter(
-            :py:class:`str`: A string representation of this GravityEvaluable
+            :py:class:`str`: A string representation of this GravityEvaluable.
             )mydelimiter")
             .def("__call__", &GravityEvaluable::operator(),
              R"mydelimiter(
@@ -275,8 +296,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                         return py::make_tuple(polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals);
                     },
                     [](const py::tuple &tuple) {
-                        constexpr size_t tupleSize = 4;
-                        if (tuple.size() != tupleSize) {
+                        constexpr size_t GRAVITY_EVALUABLE_STATE_SIZE = 4;
+                        if (tuple.size() != GRAVITY_EVALUABLE_STATE_SIZE) {
                             throw std::runtime_error("Invalid state!");
                         }
                         GravityEvaluable evaluable{

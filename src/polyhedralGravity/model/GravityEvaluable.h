@@ -102,6 +102,14 @@ namespace polyhedralGravity {
         [[nodiscard]] std::string toString() const;
 
         /**
+         * Returns the output units of the GravityEvaluable in order potential, acceleration, second derivative tensor.
+         * This depends on the units chosen for the polyhedron.
+         * @return human-readable output units of the GravityEvaluable
+         */
+        [[nodiscard]] std::array<std::string, 3> getOutputMetricUnit() const;
+
+
+        /**
          * Returns the polyhedron, the density, and the internal caches.
          *
          * @return tuple of polyhedron, density, segmentVectors, planeUnitNormals, and segmentUnitNormals

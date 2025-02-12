@@ -3,16 +3,17 @@
 namespace polyhedralGravity {
 
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
-                           const std::vector<IndexArray3> &faces, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
+                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
         : _vertices{vertices},
           _faces{faces},
           _density{density},
-          _orientation{orientation} {
+          _orientation{orientation},
+          _metricUnit{metricUnit} {
         using util::operator-;
         // Checks that the node with index zero is actually used
         // In case it is not used, the indexing presumably starts mathematically at one
         // In this case, we shift it by -1, so that the indexing start with zero
-        if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
+        if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](const auto &face) {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;
             })) {
             POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
@@ -21,17 +22,17 @@ namespace polyhedralGravity {
         this->runIntegrityMeasures(integrity);
     }
 
-    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
-        : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity} {
+    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+        : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity, metricUnit} {
     }
 
-    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
-        : Polyhedron{MeshReader::getPolyhedralSource(polyhedralFiles), density, orientation, integrity} {
+    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+        : Polyhedron{MeshReader::getPolyhedralSource(polyhedralFiles), density, orientation, integrity, metricUnit} {
     }
 
-    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity)
+    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
         : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : MeshReader::getPolyhedralSource(std::get<PolyhedralFiles>(polyhedralSource)),
-                     density, orientation, integrity} {
+                     density, orientation, integrity, metricUnit} {
     }
 
     const std::vector<Array3> &Polyhedron::getVertices() const {
@@ -78,15 +79,55 @@ namespace polyhedralGravity {
         return _orientation == NormalOrientation::OUTWARDS ? 1.0 : -1.0;
     }
 
+    MetricUnit Polyhedron::getMetricUnit() const {
+        return _metricUnit;
+    }
+
+    std::string Polyhedron::getMeshUnit() const {
+        std::stringstream meshUnit{};
+        meshUnit << _metricUnit;
+        return meshUnit.str();
+    }
+
+    std::string Polyhedron::getDensityUnit() const {
+        std::stringstream densityUnit{};
+        if (_metricUnit != MetricUnit::UNIT_LESS) {
+            densityUnit << "kg/" << _metricUnit << "^3";
+        } else {
+            densityUnit << " " << _metricUnit;
+        }
+        return densityUnit.str();
+    }
+
+
+    double Polyhedron::getGravityModelScaling() const {
+        switch (_metricUnit) {
+            case MetricUnit::UNIT_LESS:
+                return getDensity() * getOrientationFactor();
+            case MetricUnit::METER:
+                return util::GRAVITATIONAL_CONSTANT * getDensity() * getOrientationFactor();
+            case MetricUnit::KILOMETER:
+                // Gravitational Constant in km^3/(kg * s^2)
+                constexpr double GRAVITATIONAL_CONSTANT_KM = util::GRAVITATIONAL_CONSTANT * 1e-9;
+                return GRAVITATIONAL_CONSTANT_KM * getDensity() * getOrientationFactor();
+        }
+        throw std::invalid_argument{"The metric unit is not supported!"};
+    }
+
+
     std::string Polyhedron::toString() const {
         std::stringstream sstream{};
-        sstream << "<polyhedral_gravity.Polyhedron, density = " << _density << ", vertices = "
-                << countVertices() << ", faces = " << countFaces() << ", orientation = " << _orientation << ">";
+        sstream << "<polyhedral_gravity.Polyhedron, density = " << _density << " " << getDensityUnit()
+                << ", vertices = " << countVertices()
+                << ", faces = " << countFaces()
+                << ", orientation = " << _orientation
+                << ", mesh_unit = '" << getMeshUnit() << "'"
+                << ">";
         return sstream.str();
     }
 
-    std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation> Polyhedron::getState() const {
-        return std::make_tuple(_vertices, _faces, _density, _orientation);
+    std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation, MetricUnit> Polyhedron::getState() const {
+        return std::make_tuple(_vertices, _faces, _density, _orientation, _metricUnit);
     }
 
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
