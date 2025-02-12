@@ -228,7 +228,7 @@ namespace polyhedralGravity {
         [[nodiscard]] double getOrientationFactor() const;
 
         /**
-         * Returns the metric unit of the polyhedron's mesh, which is either METER, KILOMETER, or UNIT_LESS.
+         * Returns the metric unit of the polyhedron's mesh, which is either METER, KILOMETER, or UNITLESS.
          * @return the metric unit of the polyhedron
          */
         [[nodiscard]] MetricUnit getMeshUnit() const;
