@@ -1,5 +1,5 @@
 from typing import Tuple, List, Union
-from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation
+from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation, MetricUnit
 import numpy as np
 import pickle
 import pytest
@@ -86,3 +86,30 @@ def test_polyhedron(
     non_modified_faces = np.array(polyhedron_non_modified.faces)
     np.testing.assert_array_almost_equal(non_modified_faces, polyhedral_source[1])
 
+def test_polyhedron_metric() -> None:
+    """Tests the metric utility displaying the units.
+    """
+    meter_polyhedron = Polyhedron(
+        polyhedral_source=(CUBE_VERTICES, CUBE_FACES_OUTWARDS),
+        density=1.0,
+        integrity_check=PolyhedronIntegrity.DISABLE,
+        metric_unit=MetricUnit.METER,
+    )
+    assert meter_polyhedron.density_unit == "kg/m^3"
+    assert meter_polyhedron.mesh_unit == "m"
+    kilometer_polyhedron = Polyhedron(
+        polyhedral_source=(CUBE_VERTICES, CUBE_FACES_OUTWARDS),
+        density=1.0,
+        integrity_check=PolyhedronIntegrity.DISABLE,
+        metric_unit=MetricUnit.KILOMETER,
+    )
+    assert kilometer_polyhedron.density_unit == "kg/km^3"
+    assert kilometer_polyhedron.mesh_unit == "km"
+    unitless_polyhedron = Polyhedron(
+        polyhedral_source=(CUBE_VERTICES, CUBE_FACES_OUTWARDS),
+        density=1.0,
+        integrity_check=PolyhedronIntegrity.DISABLE,
+        metric_unit=MetricUnit.UNITLESS,
+    )
+    assert unitless_polyhedron.density_unit == "unitless"
+    assert unitless_polyhedron.mesh_unit == "unitless"
