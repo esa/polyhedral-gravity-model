@@ -170,7 +170,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                                         * :code:`VERIFY`: Like :code:`AUTOMATIC`, but does not print to stdout
                                         * :code:`DISABLE`: Recommend, when you are familiar with the mesh to avoid :math:`O(n^2)` runtime cost. Disables ALL checks
                                         * :code:`HEAL`: Automatically fixes the normal_orientation and vertex ordering to the correct values
-                metric_unit:        The metric unit of the mesh. Can be either :code:`METER`, :code:`KILOMETER`, or :code:`UNITLESS`
+                metric_unit:        The metric unit of the mesh. Can be either :code:`METER`, :code:`KILOMETER`, or :code:`UNITLESS`.
                                     (default: :code:`METER`)
 
             Raises:
@@ -281,6 +281,10 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
              R"mydelimiter(
              Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
 
+             The results' units depend on the polyhedron's input units.
+             For example, if the polyhedral mesh is in :math:`[m]` and the density in :math:`[kg/m^3]`, then the potential is in :math:`[m^2/s^2]`.
+             In case the polyhedron is unitless, the results are **not** multiplied with the Gravitational Constant :math:`G`, but returned raw.
+
              Args:
                  computation_points: The computation points as tuple or list of points
                  parallel:           If :code:`True`, the computation is done in parallel (default: :code:`True`)
@@ -321,6 +325,10 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                         }, computationPoints);
           }, R"mydelimiter(
              Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
+
+             The results' units depend on the polyhedron's input units.
+             For example, if the polyhedral mesh is in :math:`[m]` and the density in :math:`[kg/m^3]`, then the potential is in :math:`[m^2/s^2]`.
+             In case the polyhedron is unitless, the results are **not** multiplied with the Gravitational Constant :math:`G`, but returned raw.
 
              Args:
                  polyhedron:            The polyhedron for which to evaluate the gravity model

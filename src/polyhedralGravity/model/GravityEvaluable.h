@@ -73,6 +73,11 @@ namespace polyhedralGravity {
         /**
          * Evaluates the polyhedral gravity model for a given constant density polyhedron at computation
          * point P. Wrapper for evaluate<parallelization>.
+         *
+         * The results' units depend on the polyhedron's input units.
+         * For example, if the polyhedral mesh is in @f$[m]@f$ and the density in @f$[kg/m^3]@f$, then the potential is in @f$[m^2/s^2]@f$.
+         * In case the polyhedron is unitless, the results are not multiplied with the Gravitational Constant @f$G@f$, but returned raw.
+         *
          * @param computationPoints the computation point P or multiple computation points in a vector
          * @param parallelization if true, the calculation is parallelized
          * @return the GravityModelResult containing the potential, acceleration, and second derivative

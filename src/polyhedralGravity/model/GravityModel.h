@@ -18,6 +18,11 @@ namespace polyhedralGravity::GravityModel {
     /**
      * Evaluates the polyhedral gravity model for a given constant density polyhedron at computation
      * point P.
+     *
+     * The results' units depend on the polyhedron's input units.
+     * For example, if the polyhedral mesh is in @f$[m]@f$ and the density in @f$[kg/m^3]@f$, then the potential is in @f$[m^2/s^2]@f$.
+     * In case the polyhedron is unitless, the results are not multiplied with the Gravitational Constant @f$G@f$, but returned raw.
+     *
      * @param polyhedron the polyhedron consisting of vertices and triangular faces
      * @param computationPoint the computation Point P
      * @param parallel whether to evaluate in parallel or serial
@@ -29,6 +34,11 @@ namespace polyhedralGravity::GravityModel {
     /**
      * Evaluates the polyhedral gravity model for a given constant density polyhedron at multiple computation
      * points.
+     *
+     * The results' units depend on the polyhedron's input units.
+     * For example, if the polyhedral mesh is in @f$[m]@f$ and the density in @f$[kg/m^3]@f$, then the potential is in @f$[m^2/s^2]@f$.
+     * In case the polyhedron is unitless, the results are not multiplied with the Gravitational Constant @f$G@f$, but returned raw.
+     *
      * @param polyhedron the polyhedron consisting of vertices and triangular faces
      * @param computationPoints vector of computation points
      * @param parallel whether to evaluate in parallel or serial

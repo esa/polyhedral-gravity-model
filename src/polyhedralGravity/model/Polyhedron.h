@@ -84,19 +84,19 @@ namespace polyhedralGravity {
         /**
          * Only verification of the NormalOrientation.
          * A misalignment (e.g., specified OUTWARDS, but is not) leads to a runtime_error.
-         * Runtime Cost O(n^2)
+         * Runtime Cost @f$O(n^2)@f$
          */
         VERIFY,
         /**
          * Like VERIFY, but also informs the user about the option in any case on the runtime costs.
          * This is the implicit default option.
-         * Runtime Cost: O(n^2) and output to stdout in every case!
+         * Runtime Cost: @f$O(n^2)@f$ and output to stdout in every case!
          */
         AUTOMATIC,
         /**
          * Verification and Automatic Healing of the NormalOrientation.
          * A misalignment does not lead to a runtime_error, but to an internal correction.
-         * Runtime Cost: O(n^2) and a modification of the mesh input!
+         * Runtime Cost: @f$O(n^2)@f$ and a modification of the mesh input!
          */
         HEAL,
     };
@@ -170,7 +170,7 @@ namespace polyhedralGravity {
          */
         NormalOrientation _orientation;
 
-        /** Metric Unit of the Vertices Coordinates. One of METER, KILOMETER, or UNIT_LESS */
+        /** Metric Unit of the Vertices Coordinates. One of METER, KILOMETER, or UNITLESS */
         const MetricUnit _metricUnit;
 
     public:
@@ -183,7 +183,7 @@ namespace polyhedralGravity {
          *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
-         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unit less (defaults to meter)
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
@@ -204,7 +204,7 @@ namespace polyhedralGravity {
          *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
-         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unit less (defaults to meter)
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
@@ -224,7 +224,7 @@ namespace polyhedralGravity {
          *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
-         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unit less (defaults to meter)
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
@@ -243,7 +243,7 @@ namespace polyhedralGravity {
          *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
-         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unit less (defaults to meter)
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
@@ -442,7 +442,7 @@ namespace polyhedralGravity {
          * @param triangle a triangular face
          * @return intersection point or null
          *
-         * @related Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
+         * @see Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
          */
         static std::unique_ptr<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
 
