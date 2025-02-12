@@ -1,13 +1,13 @@
 #pragma once
 
-#include <array>
-#include <ostream>
-#include <cmath>
-#include <algorithm>
-#include <tuple>
-#include "polyhedralGravity/model/Definitions.h"
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <ostream>
+#include <tuple>
 
 namespace polyhedralGravity {
 

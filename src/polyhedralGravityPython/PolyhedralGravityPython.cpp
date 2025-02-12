@@ -233,7 +233,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             .def_property_readonly("normal_orientation", &Polyhedron::getOrientation, R"mydelimiter(
             :py:class:`polyhedral_gravity.NormalOrientation`: The orientation of the plane unit normals (Read-Only).
             )mydelimiter")
-            .def_property_readonly("mesh_unit", &Polyhedron::getMeshUnit, R"mydelimiter(
+            .def_property_readonly("mesh_unit", &Polyhedron::getMeshUnitAsString, R"mydelimiter(
             :py:class:`str`: The metric unit of the polyhedral mesh (Read-Only).
             )mydelimiter")
             .def_property_readonly("density_unit", &Polyhedron::getDensityUnit, R"mydelimiter(

@@ -6,8 +6,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/output/Logging.h"
-#include "polyhedralGravity/model/Definitions.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include <exception>
 #include <stdexcept>

@@ -79,11 +79,11 @@ namespace polyhedralGravity {
         return _orientation == NormalOrientation::OUTWARDS ? 1.0 : -1.0;
     }
 
-    MetricUnit Polyhedron::getMetricUnit() const {
+    MetricUnit Polyhedron::getMeshUnit() const {
         return _metricUnit;
     }
 
-    std::string Polyhedron::getMeshUnit() const {
+    std::string Polyhedron::getMeshUnitAsString() const {
         std::stringstream meshUnit{};
         meshUnit << _metricUnit;
         return meshUnit.str();
@@ -121,7 +121,7 @@ namespace polyhedralGravity {
                 << ", vertices = " << countVertices()
                 << ", faces = " << countFaces()
                 << ", orientation = " << _orientation
-                << ", mesh_unit = '" << getMeshUnit() << "'"
+                << ", mesh_unit = '" << getMeshUnitAsString() << "'"
                 << ">";
         return sstream.str();
     }

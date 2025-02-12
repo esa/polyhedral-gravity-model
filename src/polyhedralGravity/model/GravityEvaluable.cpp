@@ -237,7 +237,7 @@ namespace polyhedralGravity {
     }
 
     std::array<std::string, 3> GravityEvaluable::getOutputMetricUnit() const {
-        const auto metric = _polyhedron.getMetricUnit();
+        const auto metric = _polyhedron.getMeshUnit();
         if (metric != MetricUnit::UNITLESS) {
             return {(std::stringstream{} << metric << "^2/s^2").str(), (std::stringstream{} << metric << "/s^2").str(), "1/s^2"};
         } else {

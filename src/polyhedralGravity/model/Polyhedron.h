@@ -1,139 +1,35 @@
 #pragma once
 
-#include <utility>
-#include <vector>
-#include <array>
-#include <set>
-#include <algorithm>
-#include <exception>
-#include <stdexcept>
-#include <tuple>
-#include <variant>
-#include <string>
-#include <sstream>
-#include <memory>
+#include "polyhedralGravity/input/MeshReader.h"
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
+#include "polyhedralGravity/output/Logging.h"
+#include "polyhedralGravity/util/UtilityConstants.h"
+#include "polyhedralGravity/util/UtilityContainer.h"
+#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
 #include "thrust/copy.h"
 #include "thrust/device_vector.h"
-#include "thrust/transform_reduce.h"
 #include "thrust/execution_policy.h"
 #include "thrust/iterator/counting_iterator.h"
 #include "thrust/iterator/transform_iterator.h"
-#include "polyhedralGravity/model/GravityModelData.h"
-#include "polyhedralGravity/model/Definitions.h"
-#include "polyhedralGravity/input/MeshReader.h"
-#include "polyhedralGravity/output/Logging.h"
-#include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/util/UtilityConstants.h"
-#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
+#include "thrust/transform_reduce.h"
+#include <algorithm>
+#include <array>
+#include <exception>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace polyhedralGravity {
 
     /* Forward declaration of Polyhedron */
     class Polyhedron;
-
-    /**
-     * The orientation of the plane unit normals of the polyhedron.
-     * We use this property as the precise definition of the vertices ordering depends on the
-     * utilized coordinate system.
-     * However, the normal alignment is independent. Tsoulis et al. equations require the
-     * normals to point outwards of the polyhedron. If the opposite hold, the result is
-     * negated.
-     */
-    enum class NormalOrientation: char {
-        /** Outwards pointing plane unit normals */
-        OUTWARDS,
-        /** Inwards pointing plane unit normals */
-        INWARDS
-    };
-
-
-    /**
-     * Overloaded insertion operator to output the string representation of a NormalOrientation enum value.
-     *
-     * @param os The output stream to write the string representation to.
-     * @param orientation The NormalOrientation enum value to output.
-     * @return The output stream after writing the string representation.
-     */
-    inline std::ostream &operator<<(std::ostream &os, const NormalOrientation &orientation) {
-        switch (orientation) {
-            case NormalOrientation::OUTWARDS:
-                os << "OUTWARDS";
-                break;
-            case NormalOrientation::INWARDS:
-                os << "INWARDS";
-                break;
-            default:
-                os << "Unknown";
-                break;
-        }
-        return os;
-    }
-
-    /**
-     * The three mode the polyhedron class takes in
-     * the constructor in order to determine what initialization checks to conduct.
-     * This enum is exclusively utilized in the constructor of a {@link Polyhedron} and its private method
-     * {@link runIntegrityMeasures}
-     */
-    enum class PolyhedronIntegrity: char {
-        /**
-         * All activities regarding MeshChecking are disabled.
-         * No runtime overhead!
-         */
-        DISABLE,
-        /**
-         * Only verification of the NormalOrientation.
-         * A misalignment (e.g., specified OUTWARDS, but is not) leads to a runtime_error.
-         * Runtime Cost @f$O(n^2)@f$
-         */
-        VERIFY,
-        /**
-         * Like VERIFY, but also informs the user about the option in any case on the runtime costs.
-         * This is the implicit default option.
-         * Runtime Cost: @f$O(n^2)@f$ and output to stdout in every case!
-         */
-        AUTOMATIC,
-        /**
-         * Verification and Automatic Healing of the NormalOrientation.
-         * A misalignment does not lead to a runtime_error, but to an internal correction.
-         * Runtime Cost: @f$O(n^2)@f$ and a modification of the mesh input!
-         */
-        HEAL,
-    };
-
-    /**
-     * Represents the unit of a polyhedron's mesh.
-     */
-    enum class MetricUnit : char {
-        /** The unit meter @f$[m]@f$ */
-        METER,
-        /** The unit kilometer @f$[km]@f$ */
-        KILOMETER,
-        /** The mesh is unitless @f$[1]@f$ */
-        UNITLESS,
-    };
-
-
-    /**
-     * Stream operator for the MetricUnit enum. Prints the enum to a human-readable string.
-     * @param os The output stream to write the string representation to.
-     * @param metricUnit the metric unit to print
-     * @return The output stream after writing the string representation.
-     */
-    inline std::ostream &operator<<(std::ostream &os, const MetricUnit &metricUnit) {
-        switch (metricUnit) {
-            case MetricUnit::METER:
-                os << "m";
-            break;
-            case MetricUnit::KILOMETER:
-                os << "km";
-            break;
-            default:
-                os << "unitless";
-            break;
-        }
-        return os;
-    }
 
     /**
      * Data structure containing the model data of one polyhedron. This includes nodes, edges (faces) and elements.
@@ -335,14 +231,14 @@ namespace polyhedralGravity {
          * Returns the metric unit of the polyhedron's mesh, which is either METER, KILOMETER, or UNIT_LESS.
          * @return the metric unit of the polyhedron
          */
-        [[nodiscard]] MetricUnit getMetricUnit() const;
+        [[nodiscard]] MetricUnit getMeshUnit() const;
 
         /**
          * Returns the metric unit of the polyhedral mesh.
          * It is either in meter, kilometer, or without units.
          * @return unit of mesh (i.e., the unit of the vertices)
          */
-        [[nodiscard]] std::string getMeshUnit() const;
+        [[nodiscard]] std::string getMeshUnitAsString() const;
 
         /**
          * Returns the metric unit of the density which is set during construction and depends on the mesh's unit.

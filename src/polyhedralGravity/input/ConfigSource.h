@@ -3,9 +3,8 @@
 #include <string>
 #include <tuple>
 #include <vector>
-#include <array>>
-#include <tuple>
-#include "polyhedralGravity/model/Definitions.h"
+#include <array>
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 
 namespace polyhedralGravity {
 
@@ -52,6 +51,14 @@ namespace polyhedralGravity {
          * @return a polyhedral source consisting of vertices and faces
          */
         virtual PolyhedralSource getPolyhedralSource() = 0;
+
+        /**
+         * Returns the unit of measurement used for the polyhedron mesh.
+         * This specifies the physical unit in which the mesh dimensions are defined.
+         * Could be metric units such as meters, kilometers, or unitless.
+         * @return the unit of the polyhedral mesh as a MetricUnit enum
+         */
+        virtual MetricUnit getMeshUnit() = 0;
 
     };
 

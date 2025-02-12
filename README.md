@@ -105,7 +105,7 @@ around a cube:
 
 ```python
 import numpy as np
-from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation
+from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation, MetricUnit
 
 # We define the cube as a polyhedron with 8 vertices and 12 triangular faces
 # The polyhedron's normals point outwards (see below for checking this)
@@ -171,13 +171,16 @@ You can disable/ enable this setting via the optional `integrity_check` flag and
 automatically repair the ordering via `HEAL`.
 If you are confident that your mesh is defined correctly (e.g. checked once with the integrity check)
 you can disable this check (via `DISABLE`) to avoid the additional runtime overhead of the check.
+Also, you can set the metric unit of the mesh and the density.
+This also influences the output unit. E.g., Density in $kg/m^3$, Mesh in $m$, then the potential is given in $m^2/s^2$.
 
 ```python
 cube_polyhedron = Polyhedron(
-  polyhedral_source=(cube_vertices, cube_faces),
-  density=cube_density,
+  polyhedral_source=(cube_vertices, cube_faces),# coordinates in m (default), km, or unitless
+  density=cube_density,                         # kg/m^3 (default) or kg/km^3 or unitless
   normal_orientation=NormalOrientation.INWARDS, # OUTWARDS (default) or INWARDS
   integrity_check=PolyhedronIntegrity.VERIFY,   # VERIFY (default), DISABLE or HEAL
+  metric_unit=MetricUnit.METER,                 # METER (default), KILOMETER, UNITLESS
 )
 ```
 
@@ -347,17 +350,18 @@ Further one must specify the name of the .csv output file.
 ---
 gravityModel:
   input:
-    polyhedron: #polyhedron source-file(s)
+    polyhedron:                                 # polyhedron source-file(s)
       - "../example-config/data/tsoulis.node"   # .node contains the vertices
       - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
     density: 2670.0                             # constant density, units must match with the mesh (see section below)
-    points: # Location of the computation point(s) P
+                                                # Depends on metric_unit: 'km' -> kg/km^3, 'm' -> kg/m^3, 'unitless' -> 'unitless'
+    points:                                     # Location of the computation point(s) P
       - [ 0, 0, 0 ]                             # Here it is situated at the origin
-    check_mesh: true                            # Fully optional, enables mesh autodetect+repair of 
+    check_mesh: true                            # Fully optional, enables mesh autodetect+repair of
                                                 # the polyhedron's vertex ordering (not given: true)
+    metric_unit: m                              # Unit of mesh: One of 'm', 'km' or 'unitless' (not given: 'm')
   output:
-    filename: "gravity_result.csv"              # The name of the output file 
-
+    filename: "gravity_result.csv"              # The name of the output file
 ````
 
 #### Output

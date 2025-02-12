@@ -50,4 +50,15 @@ namespace polyhedralGravity {
         }
     }
 
+    MetricUnit YAMLConfigReader::getMeshUnit() {
+        POLYHEDRAL_GRAVITY_LOG_DEBUG("Reading the unit of the polyhedral mesh.");
+        if (_file[ROOT][INPUT] && _file[ROOT][INPUT][INPUT_METRIC_UNIT]) {
+            const auto unit = _file[ROOT][INPUT][INPUT_METRIC_UNIT].as<std::string>();
+            return readMetricUnit(unit);
+        } else {
+            return MetricUnit::METER;
+        }
+    }
+
+
 }

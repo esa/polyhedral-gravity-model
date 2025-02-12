@@ -25,3 +25,9 @@ ASCII and binary format) are e.g.:
 
 - `Meshio <https://github.com/nschloe/meshio>`__ for Python
 - `OpenMesh <https://openmesh-python.readthedocs.io/en/latest/readwrite.html>`__ for Python
+
+You can select the metric unit of the mesh to be either in
+meter :math:`[m]`, kilometer :math:`[km]`, or unitless :math:`[1]` when constructing
+an object of type :code:`Polyhedron`. Have a look at the API or at :ref:`examples-python` and :ref:`examples-cpp`.
+In case, the mesh is unitless (and specified as such), the implementation won't multiply the results
+with the Gravitational Constant :math:`G` and return them raw.

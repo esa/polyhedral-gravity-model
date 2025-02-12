@@ -9,9 +9,9 @@
 #include <utility>
 #include <vector>
 
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/model/Definitions.h"
 #include <exception>
 #include <stdexcept>
 
