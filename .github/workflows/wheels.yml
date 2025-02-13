@@ -68,7 +68,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BEFORE_BUILD: pipx install ninja cmake
-          CIBW_ENABLE: cpython-freethreading pypy
+          CIBW_ENABLE: pypy # cpython-freethreading is not yet working on Windows
           CIBW_ARCHS_WINDOWS: "auto64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
