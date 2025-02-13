@@ -206,7 +206,7 @@ setup(
     license="GPLv3",
     license_file="LICENSE",
     zip_safe=False,
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     include_package_data=True,
     project_urls={
         "Homepage": "https://github.com/esa/polyhedral-gravity-model",

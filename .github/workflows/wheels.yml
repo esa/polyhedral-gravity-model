@@ -31,10 +31,10 @@ jobs:
           platforms: all
         if: matrix.os == 'ubuntu-latest'
       - name: Build wheels (Linux)
-        uses: pypa/cibuildwheel@v2.20.0
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BEFORE_BUILD: pipx install ninja cmake
-          CIBW_FREE_THREADED_SUPPORT: 1
+          CIBW_ENABLE: cpython-freethreading pypy
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
@@ -47,10 +47,10 @@ jobs:
       # For the x86_64, we set the MACOSX_DEPLOYMENT_TARGET='10.13' (released 2017) in order to have support for C++17
       # We don't need this for arm64 since macOS arm64 initially supported C++17/ came years later than macOS 10.13
       - name: Build wheels (macOS)
-        uses: pypa/cibuildwheel@v2.20.0
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BEFORE_BUILD: pipx install ninja cmake
-          CIBW_FREE_THREADED_SUPPORT: 1
+          CIBW_ENABLE: cpython-freethreading pypy
           CIBW_ENVIRONMENT: 'MACOSX_DEPLOYMENT_TARGET="10.13"'
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
@@ -65,9 +65,10 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Build wheels (Windows)
-        uses: pypa/cibuildwheel@v2.20.0
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BEFORE_BUILD: pipx install ninja cmake
+          CIBW_ENABLE: cpython-freethreading pypy
           CIBW_ARCHS_WINDOWS: "auto64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
