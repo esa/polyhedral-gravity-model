@@ -287,7 +287,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
              Args:
                  computation_points: The computation points as tuple or list of points
-                 parallel:           If :code:`True`, the computation is done in parallel (default: :code:`True`)
+                 parallel:           If :code:`True`, the computation is done in parallel on the CPU using the technology specified by
+                                     :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`)
 
              Returns:
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
@@ -333,7 +334,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
              Args:
                  polyhedron:            The polyhedron for which to evaluate the gravity model
                  computation_points:    The computation points as tuple or list of points
-                 parallel:              If :code:`True`, the computation is done in parallel (default: :code:`True`)
+                 parallel:              If :code:`True`, the computation is done in parallel on the CPU using the technology specified by
+                                        :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`)
 
              Returns:
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
