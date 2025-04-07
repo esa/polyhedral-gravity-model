@@ -9,9 +9,9 @@
 
 class PolyhedronMetricTest : public ::testing::Test {
 protected:
-    const std::vector<polyhedralGravity::Array3> _cubeVertices{
-                    {-1.0, -1.0, -1.0},
-                    {1.0, -1.0, -1.0},
+    const std::vector<polyhedralGravity::Array3> _polyhedronVertices{
+                    {-25.0, -25.0, -25.0},
+                    {10.0, -10.0, -10.0},
                     {1.0, 1.0, -1.0},
                     {-1.0, 1.0, -1.0},
                     {-1.0, -1.0, 1.0},
@@ -20,7 +20,7 @@ protected:
                     {-1.0, 1.0, 1.0}
     };
 
-    const std::vector<polyhedralGravity::IndexArray3> _cubeFaces{
+    const std::vector<polyhedralGravity::IndexArray3> _polyhedronFaces{
                     {1, 3, 2},
                     {0, 3, 1},
                     {0, 1, 5},
@@ -43,9 +43,9 @@ TEST_F(PolyhedronMetricTest, MetricUnitConversion) {
     using namespace testing;
     using namespace polyhedralGravity;
     // All normals are pointing outwards, extensive Eros example
-    const Polyhedron meterPolyhedron{_cubeVertices, _cubeFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::METER};
-    const Polyhedron kilometerPolyhedron{_cubeVertices, _cubeFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::KILOMETER};
-    const Polyhedron unitlessPolyhedron{_cubeVertices, _cubeFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::UNITLESS};
+    const Polyhedron meterPolyhedron{_polyhedronVertices, _polyhedronFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::METER};
+    const Polyhedron kilometerPolyhedron{_polyhedronVertices, _polyhedronFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::KILOMETER};
+    const Polyhedron unitlessPolyhedron{_polyhedronVertices, _polyhedronFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::UNITLESS};
 
     const auto& [meterPot, meterAcc, meterTensor] = GravityModel::evaluate(meterPolyhedron, computationPoint);
     const auto& [kilometerPot, kilometerAcc, kilometerTensor] = GravityModel::evaluate(kilometerPolyhedron, computationPoint);
@@ -60,15 +60,15 @@ TEST_F(PolyhedronMetricTest, MetricUnit) {
     using namespace testing;
     using namespace polyhedralGravity;
     // All normals are pointing outwards, extensive Eros example
-    const Polyhedron meterPolyhedron{_cubeVertices, _cubeFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::METER};
+    const Polyhedron meterPolyhedron{_polyhedronVertices, _polyhedronFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::METER};
     ASSERT_EQ(meterPolyhedron.getDensityUnit(), "kg/m^3");
     ASSERT_EQ(meterPolyhedron.getMeshUnitAsString(), "m");
 
-    const Polyhedron kilometerPolyhedron{_cubeVertices, _cubeFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::KILOMETER};
+    const Polyhedron kilometerPolyhedron{_polyhedronVertices, _polyhedronFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::KILOMETER};
     ASSERT_EQ(kilometerPolyhedron.getDensityUnit(), "kg/km^3");
     ASSERT_EQ(kilometerPolyhedron.getMeshUnitAsString(), "km");
 
-    const Polyhedron unitlessPolyhedron{_cubeVertices, _cubeFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::UNITLESS};
+    const Polyhedron unitlessPolyhedron{_polyhedronVertices, _polyhedronFaces, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::UNITLESS};
     ASSERT_EQ(unitlessPolyhedron.getDensityUnit(), "unitless");
     ASSERT_EQ(unitlessPolyhedron.getMeshUnitAsString(), "unitless");
 }

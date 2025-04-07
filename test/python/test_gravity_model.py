@@ -174,35 +174,35 @@ def test_polyhedral_evaluable_pickle(
 
 
 def test_polyhedron_metric() -> None:
-    """Tests the metric conversion/ options
+    """Tests the metric conversion/ options for a unit cube polyhedron.
     """
     computation_point = np.array([1.0, 0.0, 1.0])
     gravity_constant = 6.67430e-11
     meter_polyhedron = Polyhedron(
         polyhedral_source=(CUBE_VERTICES, CUBE_FACES),
-        density=1.0,
+        density=42.0,
         integrity_check=PolyhedronIntegrity.DISABLE,
         metric_unit=MetricUnit.METER,
     )
     meter_evaluable = GravityEvaluable(polyhedron=meter_polyhedron)
     kilometer_polyhedron = Polyhedron(
         polyhedral_source=(CUBE_VERTICES, CUBE_FACES),
-        density=1.0,
+        density=42.0,
         integrity_check=PolyhedronIntegrity.DISABLE,
         metric_unit=MetricUnit.KILOMETER,
     )
     kilometer_evaluable = GravityEvaluable(polyhedron=kilometer_polyhedron)
     unitless_polyhedron = Polyhedron(
         polyhedral_source=(CUBE_VERTICES, CUBE_FACES),
-        density=1.0,
+        density=42.0,
         integrity_check=PolyhedronIntegrity.DISABLE,
         metric_unit=MetricUnit.UNITLESS,
     )
     unitless_evaluable = GravityEvaluable(polyhedron=unitless_polyhedron)
 
-    assert evaluate(meter_polyhedron, computation_point)[0] * 1e-9 == evaluate(kilometer_polyhedron, computation_point)[0]
-    assert evaluate(meter_polyhedron, computation_point)[0]  == evaluate(unitless_polyhedron, computation_point)[0] * gravity_constant
-    assert evaluate(kilometer_polyhedron, computation_point)[0] == evaluate(unitless_polyhedron, computation_point)[0] * 1e-9 * gravity_constant
+    assert np.isclose(evaluate(meter_polyhedron, computation_point)[0] * 1e-9, evaluate(kilometer_polyhedron, computation_point)[0])
+    assert np.isclose(evaluate(meter_polyhedron, computation_point)[0], evaluate(unitless_polyhedron, computation_point)[0] * gravity_constant)
+    assert np.isclose(evaluate(kilometer_polyhedron, computation_point)[0], evaluate(unitless_polyhedron, computation_point)[0] * 1e-9 * gravity_constant)
 
     assert meter_evaluable.output_units == ["m^2/s^2", "m/s^2", "1/s^2"]
     assert kilometer_evaluable.output_units == ["km^2/s^2", "km/s^2", "1/s^2"]

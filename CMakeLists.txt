@@ -43,10 +43,17 @@ option(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE "Set this to on if the python i
 # Option to build tests or not
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
 
-IF(_LIBCPP_DISABLE_AVAILABILITY)
+if (_LIBCPP_DISABLE_AVAILABILITY)
     message(STATUS "Disabling availability macros for libc++")
     add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
 endif ()
+
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
+    # Fixes undefined _VSTD when using Apple Clang 17
+    message(STATUS "Using Apple Clang compiler. Defining _VSTD=std.")
+    add_definitions(-D_VSTD=std)
+endif()
+
 
 # Resolves missing fmt symbols when working with spdlog (bundled via brew/ conda on Arm architecture)
 # Refer to https://github.com/gabime/spdlog/issues/660
@@ -76,6 +83,7 @@ include(spdlog)
 include(tetgen)
 include(xsimd)
 include(clang_format)
+include(cmake_format)
 
 ###############################
 # Thrust Parallelization Set-Up
