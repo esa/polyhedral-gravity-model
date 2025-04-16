@@ -103,7 +103,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
     Accordingly, the second derivative tensor is defined as the derivative of :math:`\textbf{g}`.
     )mydelimiter";
 
-    // We embedded the version & compilation information into the Python Interface
+    // We embedded the version and compilation information into the Python Interface
     m.attr("__version__") = POLYHEDRAL_GRAVITY_VERSION;
     m.attr("__parallelization__") = POLYHEDRAL_GRAVITY_PARALLELIZATION;
     m.attr("__commit__") = POLYHEDRAL_GRAVITY_COMMIT_HASH;
@@ -131,17 +131,27 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                "Like :code:`VERIFY`, but also informs the user about the option in any case on the runtime costs. "
                "This is the implicit default option. Runtime Cost: :math:`O(n^2)` and output to stdout in every case!")
         .value("HEAL", PolyhedronIntegrity::HEAL,
-               "Verification and Autmatioc Healing of the NormalOrientation. "
-               "A misalignemt does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: :math:`O(n^2)`");
+               "Verification and Automatic Healing of the NormalOrientation. "
+               "A misalignment does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: :math:`O(n^2)`");
+
+    py::enum_<MetricUnit>(m, "MetricUnit", R"mydelimiter(
+        The metric unit of for example a polyhedral mesh source.
+        )mydelimiter")
+    .value("METER", MetricUnit::METER, "Representing meter :math:`[m]`")
+    .value("KILOMETER", MetricUnit::KILOMETER, "Representing kilometer :math:`[km]`")
+    .value("UNITLESS", MetricUnit::UNITLESS, "Representing no unit :math:`[1]`");
 
     py::class_<Polyhedron>(m, "Polyhedron", R"mydelimiter(
             A constant density Polyhedron stores the mesh data consisting of vertices and triangular faces.
+
             The density and the coordinate system in which vertices and faces are defined need to have the same scale/ units.
+            The vertices are indexed starting with zero, not one. If the polyhedral source starts indexing with one, the counting is shifted by -1.
+
             Tsoulis et al.'s polyhedral gravity model requires that the plane unit normals of every face are pointing outwards
             of the polyhedron. Otherwise the results are negated.
             The class by default enforces this constraints and offers utility to (automatically) make the input data obey to this constraint.
             )mydelimiter")
-            .def(py::init<const std::variant<PolyhedralSource, PolyhedralFiles> &, double, const NormalOrientation &, const PolyhedronIntegrity &>(), R"mydelimiter(
+            .def(py::init<const std::variant<PolyhedralSource, PolyhedralFiles> &, double, const NormalOrientation &, const PolyhedronIntegrity &, const MetricUnit &>(), R"mydelimiter(
             Creates a new Polyhedron from vertices and faces and a constant density.
             If the integrity_check is not set to DISABLE, the mesh integrity is checked
             (so that it fits the specification of the polyhedral model by *Tsoulis et al.*)
@@ -150,48 +160,53 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                 polyhedral_source:  The vertices (:math:`(N, 3)`-array-like) and faces (:math:`(M, 3)`-array-like) of the polyhedron as pair or
                                     The filenames of the files containing the vertices & faces as list of strings
                 density:            The constant density of the polyhedron, it must match the mesh's units, e.g. mesh in :math:`[m]` then density in :math:`[kg/m^3]`
+                                    or mesh in :math:`[km]` then density in :math:`[kg/km^3]`
                 normal_orientation: The pointing direction of the mesh's plane unit normals, i.e., either :code:`OUTWARDS` or :code:`INWARDS` of the polyhedron.
                                     One of :py:class:`polyhedral_gravity.NormalOrientation`.
                                     (default: :code:`OUTWARDS`)
                 integrity_check:    Conducts an Integrity Check (degenerated faces/ vertex ordering) depending on the values. One of :py:class:`polyhedral_gravity.PolyhedronIntegrity`:
 
-                                        * :code:`AUTOMATIC` (Default): Prints to stdout and throws ValueError if normal_orientation is wrong/ inconsisten
+                                        * :code:`AUTOMATIC` (Default): Prints to stdout and throws ValueError if normal_orientation is wrong/ inconsistent
                                         * :code:`VERIFY`: Like :code:`AUTOMATIC`, but does not print to stdout
-                                        * :code:`DISABLE`: Recommened, when you are familiar with the mesh to avoid :math:`O(n^2)` runtime cost. Disables ALL checks
+                                        * :code:`DISABLE`: Recommend, when you are familiar with the mesh to avoid :math:`O(n^2)` runtime cost. Disables ALL checks
                                         * :code:`HEAL`: Automatically fixes the normal_orientation and vertex ordering to the correct values
+                metric_unit:        The metric unit of the mesh. Can be either :code:`METER`, :code:`KILOMETER`, or :code:`UNITLESS`.
+                                    (default: :code:`METER`)
 
             Raises:
-                ValueError: If the faces array does not contain a reference to vertex 0 indicating an index start at 1
                 ValueError: If :code:`integrity_check` is set to :code:`AUTOMATIC` or :code:`VERIFY` and the mesh is inconsistent
 
             Note:
                 The :code:`integrity_check` is automatically enabled to avoid wrong results due to the wrong vertex ordering.
                 The check requires :math:`O(n^2)` operations. You want to turn this off, when you know you mesh!
+                The faces array's indexing is shifted by -1 if the indexing started previously from vertex one (i.e., the first index is referred to as one).
+                In other words, the first vertex is always referred to as vertex zero not one!
             )mydelimiter",
                  py::arg("polyhedral_source"),
                  py::arg("density"),
                  py::arg("normal_orientation") = NormalOrientation::OUTWARDS,
-                 py::arg("integrity_check") = PolyhedronIntegrity::AUTOMATIC
+                 py::arg("integrity_check") = PolyhedronIntegrity::AUTOMATIC,
+                 py::arg("metric_unit") = MetricUnit::METER
                     )
             .def("check_normal_orientation", &Polyhedron::checkPlaneUnitNormalOrientation, R"mydelimiter(
             Returns a tuple consisting of majority plane unit normal orientation,
             i.e. the direction in which at least more than half of the plane unit normals point,
             and the indices of the faces violating this orientation, i.e. the faces whose plane unit normals point in the other direction.
-            The set of incides vioalting the property is empty if the mesh has a clear ordering.
-            The set contains values if the mesh is incosistent.
+            The set of indices violating the property is empty if the mesh has a clear ordering.
+            The set contains values if the mesh is inconsistent.
 
             Returns:
                 Tuple consisting consisting of majority plane unit normal orientation and the indices of the faces violating this orientation.
 
             Note:
-                This utility is mainly for diagnostics and debugging purposes. If the polyhedron is constrcuted with `integrity_check`
+                This utility is mainly for diagnostics and debugging purposes. If the polyhedron is constructed with `integrity_check`
                 set to :code:`AUTOMATIC` or :code:`VERIFY`, the construction fails anyways.
                 If set to :code:`HEAL`, this method should return an empty set (but maybe a different ordering than initially specified)
                 Only if set to :code:`DISABLE`, then this method might actually return a set with faulty indices.
                 Hence, if you want to know your mesh error. Construct the polyhedron with :code:`integrity_check=DISABLE` and call this method.
             )mydelimiter")
             .def("__getitem__", &Polyhedron::getResolvedFace, R"mydelimiter(
-            Returns the the three cooridnates of the vertices making the face at the requested index.
+            Returns the the three coordinates of the vertices making the face at the requested index.
             This does not return the face as list of vertex indices, but resolved with the actual coordinates.
 
             Args:
@@ -207,30 +222,37 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
             :py:class:`str`: A string representation of this polyhedron
             )mydelimiter")
             .def_property_readonly("vertices", &Polyhedron::getVertices, R"mydelimiter(
-            (N, 3)-array-like of :py:class:`float`: The vertices of the polyhedron (Read-Only)
+            (N, 3)-array-like of :py:class:`float`: The vertices of the polyhedron. Coordinates in the unit of the mesh (Read-Only).
             )mydelimiter")
             .def_property_readonly("faces", &Polyhedron::getFaces, R"mydelimiter(
-            (M, 3)-array-like of :py:class:`int`: The faces of the polyhedron (Read-Only)
+            (M, 3)-array-like of :py:class:`int`: The faces of the polyhedron (Read-Only).
             )mydelimiter")
             .def_property("density", &Polyhedron::getDensity, &Polyhedron::setDensity, R"mydelimiter(
-            :py:class:`float`: The density of the polyhedron (Read/ Write)
+            :py:class:`float`: The density of the polyhedron in :math:`[kg/X^3]` with X being the unit of the mesh (Read/ Write).
             )mydelimiter")
             .def_property_readonly("normal_orientation", &Polyhedron::getOrientation, R"mydelimiter(
-            :py:class:`polyhedral_gravity.NormalOrientation`: The orientation of the plane unit normals (Read-Only)
+            :py:class:`polyhedral_gravity.NormalOrientation`: The orientation of the plane unit normals (Read-Only).
+            )mydelimiter")
+            .def_property_readonly("mesh_unit", &Polyhedron::getMeshUnitAsString, R"mydelimiter(
+            :py:class:`str`: The metric unit of the polyhedral mesh (Read-Only).
+            )mydelimiter")
+            .def_property_readonly("density_unit", &Polyhedron::getDensityUnit, R"mydelimiter(
+            :py:class:`str`: The metric unit of the density (Read-Only).
             )mydelimiter")
             .def(py::pickle(
                     [](const Polyhedron &polyhedron) {
-                        const auto &[vertices, faces, density, orientation] = polyhedron.getState();
-                        return py::make_tuple(vertices, faces, density, orientation);
+                        const auto &[vertices, faces, density, orientation, metricUnit] = polyhedron.getState();
+                        return py::make_tuple(vertices, faces, density, orientation, metricUnit);
                     },
                     [](const py::tuple &tuple) {
-                        constexpr size_t tupleSize = 4;
-                        if (tuple.size() != tupleSize) {
+                        constexpr static size_t POLYHEDRON_STATE_SIZE = 5;
+                        if (tuple.size() != POLYHEDRON_STATE_SIZE) {
                             throw std::runtime_error("Invalid state!");
                         }
                         Polyhedron polyhedron{
                                 tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>(),
-                                tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), PolyhedronIntegrity::DISABLE
+                                tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), PolyhedronIntegrity::DISABLE,
+                                tuple[4].cast<MetricUnit>()
                         };
                         return polyhedron;
                     }
@@ -238,27 +260,35 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
     py::class_<GravityEvaluable>(m, "GravityEvaluable", R"mydelimiter(
              A class to evaluate the polyhedral gravity model for a given constant density polyhedron at a given computation point.
-             It provides a :py:meth:`poylhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
+             It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
              )mydelimiter")
             .def(py::init<const Polyhedron &>(),R"mydelimiter(
              Creates a new GravityEvaluable for a given constant density polyhedron.
-             It provides a :py:meth:`poylhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
+             It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
 
              Args:
                  polyhedron: The polyhedron for which to evaluate the gravity model
              )mydelimiter", py::arg("polyhedron"))
+            .def_property_readonly("output_units", &GravityEvaluable::getOutputMetricUnit,R"mydelimiter(
+            (3)-array-like of :py:class:`str`: A human-readable string representation of the output units. This depends on the polyhedron's definition (Read-Only).
+            )mydelimiter")
             .def("__repr__", &GravityEvaluable::toString,R"mydelimiter(
-            :py:class:`str`: A string representation of this GravityEvaluable
+            :py:class:`str`: A string representation of this GravityEvaluable.
             )mydelimiter")
             .def("__call__", &GravityEvaluable::operator(),
              R"mydelimiter(
              Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
 
+             The results' units depend on the polyhedron's input units.
+             For example, if the polyhedral mesh is in :math:`[m]` and the density in :math:`[kg/m^3]`, then the potential is in :math:`[m^2/s^2]`.
+             In case the polyhedron is unitless, the results are **not** multiplied with the Gravitational Constant :math:`G`, but returned raw.
+
              Args:
                  computation_points: The computation points as tuple or list of points
-                 parallel:           If :code:`True`, the computation is done in parallel (default: :code:`True`)
+                 parallel:           If :code:`True`, the computation is done in parallel on the CPU using the technology specified by
+                                     :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`)
 
              Returns:
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
@@ -271,8 +301,8 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
                         return py::make_tuple(polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals);
                     },
                     [](const py::tuple &tuple) {
-                        constexpr size_t tupleSize = 4;
-                        if (tuple.size() != tupleSize) {
+                        constexpr size_t GRAVITY_EVALUABLE_STATE_SIZE = 4;
+                        if (tuple.size() != GRAVITY_EVALUABLE_STATE_SIZE) {
                             throw std::runtime_error("Invalid state!");
                         }
                         GravityEvaluable evaluable{
@@ -297,10 +327,15 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
           }, R"mydelimiter(
              Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
 
+             The results' units depend on the polyhedron's input units.
+             For example, if the polyhedral mesh is in :math:`[m]` and the density in :math:`[kg/m^3]`, then the potential is in :math:`[m^2/s^2]`.
+             In case the polyhedron is unitless, the results are **not** multiplied with the Gravitational Constant :math:`G`, but returned raw.
+
              Args:
                  polyhedron:            The polyhedron for which to evaluate the gravity model
                  computation_points:    The computation points as tuple or list of points
-                 parallel:              If :code:`True`, the computation is done in parallel (default: :code:`True`)
+                 parallel:              If :code:`True`, the computation is done in parallel on the CPU using the technology specified by
+                                        :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`)
 
              Returns:
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`

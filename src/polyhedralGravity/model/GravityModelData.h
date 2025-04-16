@@ -1,54 +1,15 @@
 #pragma once
 
-#include <array>
-#include <ostream>
-#include <cmath>
-#include <algorithm>
-#include <tuple>
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <ostream>
+#include <tuple>
 
 namespace polyhedralGravity {
-
-    /**
-     * Alias for an array of size 3 (double)
-     * @example for x, y, z coordinates.
-     */
-    using Array3 = std::array<double, 3>;
-
-    /**
-     * Alias for an array of size 3 (size_t)
-     * @example for the vertex indices in a triangular face.
-     */
-    using IndexArray3 = std::array<size_t, 3>;
-
-    /**
-     * Alias for an array of size 6
-     * @example for xx, yy, zz, xy, xz, yz second derivatives.
-     */
-    using Array6 = std::array<double, 6>;
-
-    /**
-     * Alias for a triplet of arrays of size 3
-     * @example for the segment of a triangular face
-     */
-    using Array3Triplet = std::array<Array3, 3>;
-
-    /**
-     * Contains in the order of the tuple:
-     * The gravitational potential in [m^2/s^2] <--> [J/kg] at point P.
-     * @related Equation (1) and (11) of Tsoulis Paper, here referred as V
-     *
-     * The first order derivatives of the gravitational potential in [m/s^2].
-     * The array contains the derivatives depending on the coordinates x-y-z in this order.
-     * @related Equation (2) and (12) of Tsoulis Paper, here referred as Vx, Vy, Vz
-     *
-     * The second order derivatives or also called gradiometric Tensor in [1/s^2].
-     * The array contains the second order derivatives in the following order xx, yy, zz, xy, xz, yz.
-     * @related Equation (3) and (13) of Tsoulis Paper, here referred as Vxx, Vyy, Vzz, Vxy, Vxz, Vyz
-     */
-    using GravityModelResult = std::tuple<double, Array3, Array6>;
-
 
     /**
      * Contains the 3D distances l1_pq and l2_pq between P and the endpoints of segment pq and

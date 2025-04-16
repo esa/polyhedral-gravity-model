@@ -76,20 +76,20 @@ The evaluation of the polyhedral gravity model requires the following parameters
 | Polyhedral Mesh (either as vertices & faces or as polyhedral source files) |
 | Constant Density $\rho$                                                    |
 
-The mesh and the constants density's unit must match.
-Have a look the documentation to view the [supported mesh files](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html).
+The mesh and the constant density's unit must match.
+Have a look at the documentation to view the [supported mesh files](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html).
 
 ### Output
 
 The calculation outputs the following parameters for every Computation Point *P*.
 The units of the respective output depend on the units of the input parameters (mesh and density)!
-Hence, if e.g. your mesh is in $km$, the density must match. Further, output units will be different accordingly.
+Hence, if e.g., your mesh is in $km$, the density must match. Further, output units will be different accordingly.
 
-|                            Name                            | Unit (if mesh in $[m]$ and $\rho$ in $[kg/m^3]$) |                              Comment                              |
-|:----------------------------------------------------------:|:------------------------------------------------:|:-----------------------------------------------------------------:|
-|                            $V$                             |       $\frac{m^2}{s^2}$ or $\frac{J}{kg}$        |           The potential or also called specific energy            |
-|                    $V_x$, $V_y$, $V_z$                     |                 $\frac{m}{s^2}$                  | The gravitational accerleration in the three cartesian directions |
-| $V_{xx}$, $V_{yy}$, $V_{zz}$, $V_{xy}$, $V_{xz}$, $V_{yz}$ |                 $\frac{1}{s^2}$                  |   The spatial rate of change of the gravitational accleration    |
+|                            Name                            | Unit (if mesh in $[m]$ and $\rho$ in $[kg/m^3]$) |                             Comment                              |
+|:----------------------------------------------------------:|:------------------------------------------------:|:----------------------------------------------------------------:|
+|                            $V$                             |       $\frac{m^2}{s^2}$ or $\frac{J}{kg}$        |           The potential or also called specific energy           |
+|                    $V_x$, $V_y$, $V_z$                     |                 $\frac{m}{s^2}$                  | The gravitational acceleration in the three cartesian directions |
+| $V_{xx}$, $V_{yy}$, $V_{zz}$, $V_{xy}$, $V_{xz}$, $V_{yz}$ |                 $\frac{1}{s^2}$                  |   The spatial rate of change of the gravitational acceleration   |
 
 
 >[!NOTE]
@@ -105,7 +105,7 @@ around a cube:
 
 ```python
 import numpy as np
-from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation
+from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation, MetricUnit
 
 # We define the cube as a polyhedron with 8 vertices and 12 triangular faces
 # The polyhedron's normals point outwards (see below for checking this)
@@ -148,7 +148,7 @@ potential, acceleration, tensor = evaluate(
 The more advanced way is to use the `GravityEvaluable` class. It caches the
 internal data structure and properties which can be reused for multiple
 evaluations. This is especially useful if you want to compute the gravity
-for multiple computation points, but don't know the "future points" in advance.
+for multiple computation points but don't know the "future points" in advance.
 
 ```python
 evaluable = GravityEvaluable(polyhedron=cube_polyhedron) # stores intermediate computation steps
@@ -169,21 +169,24 @@ This property is - by default - checked when constructing the `Polyhedron`! So, 
 is impossible if not **explicitly** disabled to create an invalid `Polyhedron`.
 You can disable/ enable this setting via the optional `integrity_check` flag and can even
 automatically repair the ordering via `HEAL`.
-If you are confident that your mesh is defined correctly (e.g. checked once with the integrity check)
+If you are confident that your mesh is defined correctly (e.g., checked once with the integrity check)
 you can disable this check (via `DISABLE`) to avoid the additional runtime overhead of the check.
+Also, you can set the metric unit of the mesh and the density.
+This also influences the output unit. E.g., Density in $kg/m^3$, Mesh in $m$, then the potential is given in $m^2/s^2$.
 
 ```python
 cube_polyhedron = Polyhedron(
-  polyhedral_source=(cube_vertices, cube_faces),
-  density=cube_density,
+  polyhedral_source=(cube_vertices, cube_faces),# coordinates in m (default), km, or unitless
+  density=cube_density,                         # kg/m^3 (default) or kg/km^3 or unitless
   normal_orientation=NormalOrientation.INWARDS, # OUTWARDS (default) or INWARDS
   integrity_check=PolyhedronIntegrity.VERIFY,   # VERIFY (default), DISABLE or HEAL
+  metric_unit=MetricUnit.METER,                 # METER (default), KILOMETER, UNITLESS
 )
 ```
 
 > [!TIP]
 > More examples and plots are depicted in the
-[jupyter notebook](script/polyhedral-gravity.ipynb).
+[jupyter notebook](script/polyhedral-gravity.ipynb) and the [second jupyter notebook](script/Kleopatra.ipynb)
 
 
 ### Minimal C++ Example
@@ -248,8 +251,8 @@ As a second option, you can also install the python interface with pip from [PyP
 pip install polyhedral-gravity
 ```
 
-Binaries for the most common platforms are available on PyPI including
-Windows, Linux and macOS. For macOS and Linux, binaries for
+Binaries for the most common platforms are available on PyPI, including
+Windows, Linux, and macOS. For macOS and Linux, binaries for
 `x86_64` and `aarch64` are provided.
 In case `pip` uses the source distribution, please make sure that
 you have a C++17 capable compiler and CMake installed.
@@ -257,7 +260,7 @@ you have a C++17 capable compiler and CMake installed.
 ### From source
 
 The project uses the following dependencies,
-all of them are **automatically** set-up via CMake:
+all of them are **automatically** set up via CMake:
 
 - GoogleTest (1.15.2 or compatible), only required for testing
 - spdlog (1.13.0 or compatible), required for logging
@@ -267,7 +270,7 @@ all of them are **automatically** set-up via CMake:
 - xsimd (11.1.0 or compatible), required for vectorization of the `atan(..)`
 - pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
 
-The module will be build using a C++17 capable compiler,
+The module will be built using a C++17 capable compiler,
 CMake. Just execute the following command in
 the repository root folder:
 
@@ -285,7 +288,7 @@ export POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
 pip install .
 ```
 
-(Optional: For a faster build you can install all dependencies available
+(Optional: For a faster build, you can install all dependencies available
 for your system in your local python environment. That way, they
 won't be fetched from GitHub.)
 
@@ -293,7 +296,7 @@ won't be fetched from GitHub.)
 
 ### Building the C++ Library & Executable
 
-The program is build by using CMake. So first make sure that you installed
+The program is built by using CMake. So first make sure that you installed
 CMake and then follow these steps:
 
 ```bash
@@ -314,7 +317,7 @@ The following options are available:
 |             BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (`ON`) | Build the Python interface                                                                  |
 
 During testing POLYHEDRAL_GRAVITY_PARALLELIZATION=`TBB` has been the most performant.
-It is further not recommend to change the POLYHEDRAL_GRAVITY_LOGGING_LEVEL to something else than `INFO=2`.
+It is further not recommended to change the POLYHEDRAL_GRAVITY_LOGGING_LEVEL to something else than `INFO=2`.
 
 The recommended CMake settings using the `TBB` backend would look like this:
 
@@ -341,23 +344,24 @@ It is required to specify the source-files of the polyhedron's mesh (more info
 about the supported file in the [documentation](https://esa.github.io/polyhedral-gravity-model/quickstart/supported_input.html)), the density
 of the polyhedron, and the wished computation points where the
 gravity tensor shall be computed.
-Further one must specify the name of the .csv output file.
+Further, one must specify the name of the .csv output file.
 
 ````yaml
 ---
 gravityModel:
   input:
-    polyhedron: #polyhedron source-file(s)
+    polyhedron:                                 # polyhedron source-file(s)
       - "../example-config/data/tsoulis.node"   # .node contains the vertices
       - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
-    density: 2670.0                             # constant density, units must match with the mesh (see section below)
-    points: # Location of the computation point(s) P
+    density: 2670.0                             # constant density, units must match with the mesh (see a section below)
+                                                # Depends on metric_unit: 'km' -> kg/km^3, 'm' -> kg/m^3, 'unitless' -> 'unitless'
+    points:                                     # Location of the computation point(s) P
       - [ 0, 0, 0 ]                             # Here it is situated at the origin
-    check_mesh: true                            # Fully optional, enables mesh autodetect+repair of 
+    check_mesh: true                            # Fully optional, enables mesh autodetect+repair of
                                                 # the polyhedron's vertex ordering (not given: true)
+    metric_unit: m                              # Unit of mesh: One of 'm', 'km' or 'unitless' (not given: 'm')
   output:
-    filename: "gravity_result.csv"              # The name of the output file 
-
+    filename: "gravity_result.csv"              # The name of the output file
 ````
 
 #### Output
@@ -368,8 +372,8 @@ computation point *P*.
 
 ## Testing
 
-The project uses GoogleTest for testing. In oder to execute those
-tests just execute the following command in the build directory:
+The project uses GoogleTest for testing.
+In order to execute those tests, just execute the following command in the build directory:
 
 ```bash
 ctest
@@ -384,5 +388,5 @@ pytest
 ## Contributing
 
 We are happy to accept contributions to the project in the form of
-suggestions, bug reports and pull requests. Please have a look at
+suggestions, bug reports, and pull requests. Please have a look at
 the [contributing guidelines](CONTRIBUTING.md) for more information.

@@ -110,3 +110,49 @@ Dependencies (all of them are automatically set-up via :code:`CMake`):
 - xsimd (11.1.0 or compatible), required for vectorization of the :code:`atan(..)`
 - pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
 
+Build this documentation
+------------------------
+
+In order to build this documentation from source, you require the following dependencies:
+
+- :code:`Doxygen`
+- :code:`Sphinx` with the following plugins
+    - :code:`breathe`
+    - :code:`sphinx-book-theme`
+- The :code:`polyhedral_gravity` Python Package needs to be installed
+
+How you install the :code:`polyhedral_gravity` Python Package is stated above.
+The other dependencies can be install them with your favorite package manager (e.g. conda, pip, brew, apt,...):
+
+.. code-block:: bash
+
+    conda install doxygen sphinx breathe sphinx-book-theme
+
+
+Build the documentation via CMake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can build the documentation locally using CMake by executing the following commands:
+
+.. code-block:: bash
+
+    mkdir build && cd build
+    cmake .. -DBUILD_POLYHEDRAL_GRAVITY_DOCS=ON
+    cmake --build . --target Doxygen
+    cmake --build . --target Sphinx
+    open docs/sphinx/index.html
+
+If you installed the Sphinx dependencies in a non-standard-path, e.g., a conda environment, you might need to help CMake
+finding it by specifying during the configure step `-DCMAKE_PREFIX_PATH=$CONDA_PREFIX`
+
+Build the documentation invoking Sphinx
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also omit CMake and build the documentation locally in the following way:
+
+.. code-block:: bash
+
+    cd docs
+    export BUILD_DOCS_CLI=1
+    make html # Alternatively: sphinx-build -M html . ./_build
+    open _build/html/index.html

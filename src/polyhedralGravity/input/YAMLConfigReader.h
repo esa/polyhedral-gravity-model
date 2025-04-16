@@ -2,16 +2,19 @@
 
 #include "ConfigSource.h"
 #include "TetgenAdapter.h"
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "yaml-cpp/yaml.h"
-#include <string>
-#include <vector>
 #include <array>
+#include <string>
+#include <tuple>
+#include <vector>
 
 namespace polyhedralGravity {
 
     /**
-     * The YAMLConfigReader serves as Interface between yaml-cpp and the Polyhedral Gravity Model and
-     * reads in the input from an yaml configuration file.
+     * A class to read configuration parameters from a YAML file.
+     * Provides methods to fetch specific configuration data such as density,
+     * computation points, mesh check status, and output file details.
      */
     class YAMLConfigReader final : public ConfigSource {
 
@@ -25,6 +28,7 @@ namespace polyhedralGravity {
         static constexpr char INPUT_DENSITY[] = "density";
         static constexpr char INPUT_POINTS[] = "points";
         static constexpr char INPUT_CHECK[] = "check_mesh";
+        static constexpr char INPUT_METRIC_UNIT[] = "metric_unit";
         static constexpr char OUTPUT[] = "output";
         static constexpr char OUTPUT_FILENAME[] = "filename";
 
@@ -89,7 +93,15 @@ namespace polyhedralGravity {
          * Reads the DataSource from the yaml configuration file.
          * @return shared_ptr to the DataSource Object created
          */
-        std::shared_ptr<DataSource> getDataSource() override;
+        std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedralSource() override;
+
+
+        /**
+         * Retrieves the metric unit of the mesh as specified in the configuration.
+         * Can return meter, kilometer, or unitless depending on the configuration data.
+         * @return the metric unit of the mesh as an instance of MetricUnit (if not present defaults to meter)
+         */
+        MetricUnit getMeshUnit() override;
 
 
     };

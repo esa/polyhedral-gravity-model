@@ -1,28 +1,30 @@
 #pragma once
 
-#include "DataSource.h"
 #include "tetgen.h"
-#include <map>
 #include <array>
-#include <vector>
-#include <string>
+#include <fstream>
 #include <functional>
+#include <map>
+#include <string>
 #include <utility>
-#include <exception>
-#include <stdexcept>
+#include <vector>
+
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
+#include <exception>
+#include <stdexcept>
 
 namespace polyhedralGravity {
 
-/**
- * An adapter to the Tetgen Library. This is the interface between tetgen's data structures and I/O
- * capabilities and the here implemented polyhedral gravity model.
- * The adapter always converts tetgen's datastructure into the structure utilized by the Polyhedral Gravity Model.
- *
- * The Adapter further keeps en eye on the already read in files in order to give feedback if data is in conflict.
- */
-    class TetgenAdapter final : public DataSource {
+    /**
+     * An adapter to the Tetgen Library. This is the interface between tetgen's data structures and I/O
+     * capabilities and the here implemented polyhedral gravity model.
+     * The adapter always converts tetgen's data structure into the structure utilized by the Polyhedral Gravity Model.
+     *
+     * The Adapter further keeps en eye on the already read-in files in order to give feedback if data is in conflict.
+     */
+    class TetgenAdapter {
 
         /**
          * The default exception message
@@ -53,26 +55,22 @@ namespace polyhedralGravity {
         std::vector<std::array<size_t, 3>> _faces;
 
     public:
-
         /**
          * Constructs a new TetgenAdapter from a vector of filenames. These filenames should end on the supported
          * suffixes
          * @param fileNames vector of filenames
          */
-        explicit TetgenAdapter(std::vector<std::string> fileNames)
-                : _tetgenio{},
-                  _fileNames{std::move(fileNames)},
-                  _vertices{},
-                  _faces{} {};
+        explicit TetgenAdapter(const std::vector<std::string> &fileNames);
 
         /**
          * Use this function to get a Polyhedron.
-         * This functions consists of two steps. First, the Adapter will delegate I/O to the tetgen library and
-         * read in the Polyhedron data in the library's datastructure. Second, tetgen's datastructure is then
+         * This function consists of two steps. First, the Adapter will delegate I/O to the tetgen library and
+         * read in the Polyhedron data in the library's data structure. Second, tetgen's data structure is then
          * converted to a Polyhedron.
          * @return a Polyhedron
+         * @throws std::invalid_argument exception in case the filetype is not supported!
          */
-        std::tuple<std::vector<Array3>, std::vector<IndexArray3>> getPolyhedralSource() override;
+        PolyhedralSource getPolyhedralSource();
 
         /**
          * Reads nodes from a .node file
@@ -116,9 +114,7 @@ namespace polyhedralGravity {
          */
         void readMesh(const std::string &filename);
 
-
     private:
-
         /**
          * The map contains the file suffix and the corresponding operation applicable for this suffix.
          * File suffix --> Operation on this instance
@@ -126,11 +122,10 @@ namespace polyhedralGravity {
         const std::map<std::string, std::function<void(const std::string &name)>> _suffixToOperation{
                 {"node", [this](const std::string &name) { this->readNode(name); }},
                 {"face", [this](const std::string &name) { this->readFace(name); }},
-                {"off",  [this](const std::string &name) { this->readOff(name); }},
-                {"ply",  [this](const std::string &name) { this->readPly(name); }},
-                {"stl",  [this](const std::string &name) { this->readStl(name); }},
-                {"mesh", [this](const std::string &name) { this->readMesh(name); }}
-        };
+                {"off", [this](const std::string &name) { this->readOff(name); }},
+                {"ply", [this](const std::string &name) { this->readPly(name); }},
+                {"stl", [this](const std::string &name) { this->readStl(name); }},
+                {"mesh", [this](const std::string &name) { this->readMesh(name); }}};
 
         /**
          * Checks if the polyhedron is integer and not already defined by other properties
@@ -157,7 +152,6 @@ namespace polyhedralGravity {
          * and to ensure the correct format
          */
         void addVerticesAndFacesByTriangulation();
-
     };
 
-}
+}// namespace polyhedralGravity

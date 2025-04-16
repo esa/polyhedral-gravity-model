@@ -13,8 +13,7 @@
 namespace polyhedralGravity::util {
 
     /**
-     * Alias for two-dimensional array with size M and N.
-     * M is the major size.
+     * Alias for a two-dimensional array with size M and N. M is the major size!
      */
     template<typename T, size_t M, size_t N>
     using Matrix = std::array<std::array<T, N>, M>;
@@ -38,9 +37,9 @@ namespace polyhedralGravity::util {
 
     /**
      * Applies a binary function to elements of one container piece by piece. The objects must
-     * be iterable. The resulting container consist of the containers' object after the application
-     * of the binary function with the scalar as parameter.
-     * @tparam Container a iterable object like an array or vector
+     * be iterable. The resulting container consists of the containers' object after the application
+     * of the binary function with the scalar as a parameter.
+     * @tparam Container an iterable object like an array or vector
      * @tparam Scalar a scalar to use on each element
      * @tparam BinOp a binary function to apply
      * @param lhs the first container
@@ -59,8 +58,8 @@ namespace polyhedralGravity::util {
 
     /**
      * Applies the Operation Minus to two Containers piece by piece.
-     * @example {1, 2, 3} - {1, 1, 1} = {0, 1, 2}
-     * @tparam Container
+     * @code {1, 2, 3} - {1, 1, 1} = {0, 1, 2} @endcode
+    * @tparam Container an iterable object like an array or vector
      * @param lhs minuend
      * @param rhs subtrahend
      * @return the difference
@@ -72,8 +71,8 @@ namespace polyhedralGravity::util {
 
     /**
     * Applies the Operation Plus to two Containers piece by piece.
-    * @example {1, 2, 3} + {1, 1, 1} = {2, 3, 4}
-    * @tparam Container
+    * @code {1, 2, 3} + {1, 1, 1} = {2, 3, 4} @endcode
+    * @tparam Container an iterable object like an array or vector
     * @param lhs addend
     * @param rhs addend
     * @return the sum
@@ -85,8 +84,8 @@ namespace polyhedralGravity::util {
 
     /**
     * Applies the Operation * to two Containers piece by piece.
-    * @example {1, 2, 3} * {2, 2, 2} = {2, 4, 6}
-    * @tparam Container
+    * @code {1, 2, 3} * {2, 2, 2} = {2, 4, 6} @endcode
+    * @tparam Container an iterable object like an array or vector
     * @param lhs multiplicand
     * @param rhs multiplicand
     * @return the product
@@ -98,8 +97,8 @@ namespace polyhedralGravity::util {
 
     /**
     * Applies the Operation / to two Containers piece by piece.
-    * @example {1, 2, 3} * {1, 2, 3} = {1, 1, 1}
-    * @tparam Container
+    * @code {1, 2, 3} / {1, 2, 3} = {1, 1, 1} @endcode
+    * @tparam Container an iterable object like an array or vector
     * @param lhs multiplicand
     * @param rhs multiplicand
     * @return the product
@@ -111,9 +110,9 @@ namespace polyhedralGravity::util {
 
     /**
     * Applies the Operation + to a Container and a Scalar.
-    * @example {1, 2, 3} + 2 = {3, 4, 5}
-    * @tparam Container
-    * @tparam Scalar
+    * @code {1, 2, 3} + 2 = {3, 4, 5} @endcode
+    * @tparam Container an iterable object like an array or vector
+    * @tparam Scalar a scalar to use on each element
     * @param lhs addend
     * @param scalar addend
     * @return a Container
@@ -125,24 +124,23 @@ namespace polyhedralGravity::util {
 
     /**
     * Applies the Operation to a Container and a Scalar.
-    * @example {1, 2, 3} 2 = {-1, 0, 1}
-    * @tparam Container
-    * @tparam Scalar
+    * @code {1, 2, 3} - 2 = {-1, 0, 1} @endcode
+    * @tparam Container an iterable object like an array or vector
+    * @tparam Scalar a scalar to use on each element
     * @param lhs minuend
     * @param scalar subtrahend
     * @return a Container
-     * TODO This method causes issues with the MVSC 19.31.31107.0? Although it is never used...
     */
-    //    template<typename Container, typename Scalar>
-    //    Container operator-(const Container &lhs, const Scalar &scalar) {
-    //        return applyBinaryFunction(lhs, scalar, std::minus<>());
-    //    }
+    template<typename Container, typename Scalar>
+    Container operator-(const Container &lhs, const Scalar &scalar) {
+        return applyBinaryFunction(lhs, scalar, std::minus<>());
+    }
 
     /**
     * Applies the Operation to a Container and a Scalar.
-    * @example {1, 2, 3} * 2 = {2, 4, 6}
-    * @tparam Container
-    * @tparam Scalar
+    * @code {1, 2, 3} * 2 = {2, 4, 6} @endcode
+    * @tparam Container an iterable object like an array or vector
+    * @tparam Scalar a scalar to use on each element
     * @param lhs multiplicand
     * @param scalar multiplicand
     * @return a Container
@@ -154,9 +152,9 @@ namespace polyhedralGravity::util {
 
     /**
      * Applies the Operation / to a Container and a Scalar.
-     * @example {2, 4, 6} / 2 = {1, 2, 3}
-     * @tparam Container
-     * @tparam Scalar
+     * @code {2, 4, 6} / 2 = {1, 2, 3} @endcode
+     * @tparam Container an iterable object like an array or vector
+     * @tparam Scalar a scalar to use on each element
      * @param lhs the dividend
      * @param scalar the divisor
      * @return a Container
@@ -167,10 +165,10 @@ namespace polyhedralGravity::util {
     }
 
     /**
-     * Applies the euclidean norm/ L2-norm to a Container (e.g. a vector)
+     * Applies the Euclidean norm/ L2-norm to a Container (e.g., a vector)
      * @tparam Container must be iterable
      * @param container e.g. a vector
-     * @return an double containing the L2 norm
+     * @return a double containing the L2 norm
      */
     template<typename Container>
     double euclideanNorm(const Container &container) {
@@ -179,7 +177,7 @@ namespace polyhedralGravity::util {
 
     /**
      * Computes the absolute value for each value in the given container
-     * @tparam Container a iterable container, containing numerical values
+     * @tparam Container an iterable container, containing numerical values
      * @param container the container
      * @return a container with the modified values
      */
@@ -193,7 +191,7 @@ namespace polyhedralGravity::util {
 
     /**
      * Computes the determinant with the Sarrus rule for a 3x3 matrix.
-     * Notice that for square matrices det(A) = det(A^T).
+     * Notice that for square matrices @f$det(A) = det(A^T)@f$.
      * @tparam T a numerical value
      * @param matrix the 3x3 matrix
      * @return the determinant
@@ -225,7 +223,7 @@ namespace polyhedralGravity::util {
     }
 
     /**
-    * Returns the cross product of two cartesian vectors.
+    * Returns the cross-product of two cartesian vectors.
     * @tparam T a number
     * @param lhs left vector
     * @param rhs right vector
@@ -272,7 +270,7 @@ namespace polyhedralGravity::util {
      * @tparam T a numerical (floating point) value
      * @param val the value itself
      * @param cutoffEpsilon the cut-off radius around zero to return 0
-     * @return -1, 0, 1 depending on the sign an the given EPSILON
+     * @return -1, 0, 1 depending on the sign and the given EPSILON
      */
     template<typename T>
     int sgn(T val, double cutoffEpsilon) {
@@ -317,7 +315,7 @@ namespace polyhedralGravity::util {
      * @tparam T numerical type
      * @param first first number
      * @param second second number
-     * @return true if the difference is too be huge, so that floating point absorption will happen
+     * @return true if the difference is too huge, so that floating point absorption will happen
      */
     template<typename T>
     bool isCriticalDifference(const T &first, const T &second) {

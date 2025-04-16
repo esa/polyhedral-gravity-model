@@ -42,6 +42,8 @@ Polyhedron
 
 .. doxygenenum:: polyhedralGravity::PolyhedronIntegrity
 
+.. doxygenenum:: polyhedralGravity::MetricUnit
+
 
 GravityModel
 ------------
@@ -59,3 +61,20 @@ Named Tuple
 .. doxygenstruct:: polyhedralGravity::TranscendentalExpression
 
 .. doxygenstruct:: polyhedralGravity::HessianPlane
+
+Type Definitions
+----------------
+
+.. doxygentypedef:: polyhedralGravity::Array3
+
+.. doxygentypedef:: polyhedralGravity::Array6
+
+.. doxygentypedef:: polyhedralGravity::IndexArray3
+
+.. doxygentypedef:: polyhedralGravity::Array3Triplet
+
+.. doxygentypedef:: polyhedralGravity::GravityModelResult
+
+.. doxygentypedef:: polyhedralGravity::PolyhedralFiles
+
+.. doxygentypedef:: polyhedralGravity::PolyhedralSource

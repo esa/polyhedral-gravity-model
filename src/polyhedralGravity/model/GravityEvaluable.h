@@ -71,11 +71,16 @@ namespace polyhedralGravity {
         }
 
         /**
-         * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
+         * Evaluates the polyhedral gravity model for a given constant density polyhedron at computation
          * point P. Wrapper for evaluate<parallelization>.
+         *
+         * The results' units depend on the polyhedron's input units.
+         * For example, if the polyhedral mesh is in @f$[m]@f$ and the density in @f$[kg/m^3]@f$, then the potential is in @f$[m^2/s^2]@f$.
+         * In case the polyhedron is unitless, the results are not multiplied with the Gravitational Constant @f$G@f$, but returned raw.
+         *
          * @param computationPoints the computation point P or multiple computation points in a vector
          * @param parallelization if true, the calculation is parallelized
-         * @return the GravityModelResult containing the potential, acceleration and second derivative
+         * @return the GravityModelResult containing the potential, acceleration, and second derivative
          */
         inline std::variant<GravityModelResult, std::vector<GravityModelResult>>
         operator()(const std::variant<Array3, std::vector<Array3>> &computationPoints,
@@ -102,27 +107,35 @@ namespace polyhedralGravity {
         [[nodiscard]] std::string toString() const;
 
         /**
-         * Returns the polyhedron, the density and the internal caches.
+         * Returns the output units of the GravityEvaluable in order potential, acceleration, second derivative tensor.
+         * This depends on the units chosen for the polyhedron.
+         * @return human-readable output units of the GravityEvaluable
+         */
+        [[nodiscard]] std::array<std::string, 3> getOutputMetricUnit() const;
+
+
+        /**
+         * Returns the polyhedron, the density, and the internal caches.
          *
-         * @return tuple of polyhedron, density, segmentVectors, planeUnitNormals and segmentUnitNormals
+         * @return tuple of polyhedron, density, segmentVectors, planeUnitNormals, and segmentUnitNormals
          */
         std::tuple<Polyhedron, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>> getState() const;
 
     private:
 
         /**
-         * Prepares the polyhedron for the evaluation by calculating the segment vectors, the plane unit normals
+         * Prepares the polyhedron for the evaluation by calculating the segment vectors, the plane unit normals,
          * and the segment unit normals.
          * Called by the constructor once.
          */
         void prepare() const;
 
         /**
-        * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
+        * Evaluates the polyhedral gravity model for a given constant density polyhedron at computation
         * point P.
         * @tparam Parallelization if true, the calculation is parallelized
         * @param computationPoint the computation Point P
-        * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration
+        * @return the GravityModelResult containing the potential, the acceleration, and the change of acceleration
         * at computation Point P
         */
         template<bool Parallelization = true>
@@ -130,19 +143,19 @@ namespace polyhedralGravity {
 
 
         /**
-         * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation
+         * Evaluates the polyhedral gravity model for a given constant density polyhedron at computation
          * at multiple computation points.
          * @tparam Parallelization if true, the calculation is parallelized
          * @param computationPoints the computation Points
-         * @return vector of GravityModelResults containing the potential, the acceleration and the change of acceleration
+         * @return vector of GravityModelResults containing the potential, the acceleration, and the change of acceleration
          */
         template<bool Parallelization = true>
         [[nodiscard]] std::vector<GravityModelResult> evaluate(const std::vector<Array3> &computationPoints) const;
 
         /**
-         * Evaluates the polyhedrale gravity model for a given constant density polyhedron at computation a certain face.
-         * @param tuple consisting of face, segmentVectors, planeUnitNormal and segmentUnitNormals
-         * @return the GravityModelResult containing the potential, the acceleration and the change of acceleration which
+         * Evaluates the polyhedral gravity model for a given constant density polyhedron at computation a certain face.
+         * @param tuple consisting of face, segmentVectors, planeUnitNormal, and segmentUnitNormals
+         * @return the GravityModelResult containing the potential, the acceleration, and the change of acceleration which
          * this face contributes to the computation point
          */
         static GravityModelResult

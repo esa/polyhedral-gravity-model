@@ -7,11 +7,12 @@
 
 
 namespace polyhedralGravity {
-
     class PolyhedralGravityLogger;
 
     /**
-     * Wrapper Class for spdlog logger
+     * Wrapper Class for a spdlog logger.
+     * It is used to configure the static DEFAULT_LOGGER of the polyhedral gravity model
+     * within the constructor.
      */
     class PolyhedralGravityLogger {
 
@@ -39,11 +40,22 @@ namespace polyhedralGravity {
             _logger->set_level(spdlog::level::trace);
         }
 
+        /**
+         * Returns the underlying pointer to spdlog's logger object.
+         * @return a shared pointer to a spdlog's logger object
+         */
         [[nodiscard]] inline std::shared_ptr<spdlog::logger> getLogger() const {
             return _logger;
         }
 
 
     };
+
+#define POLYHEDRAL_GRAVITY_LOG_TRACE(msg, ...) SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_DEBUG(msg, ...) SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_INFO(msg, ...) SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_WARN(msg, ...) SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_ERROR(msg, ...) SPDLOG_LOGGER_ERROR(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
+#define POLYHEDRAL_GRAVITY_LOG_CRITICAL(msg, ...) SPDLOG_LOGGER_CRITICAL(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
 
 }

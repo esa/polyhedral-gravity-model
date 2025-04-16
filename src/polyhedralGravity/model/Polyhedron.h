@@ -1,109 +1,35 @@
 #pragma once
 
-#include <utility>
-#include <vector>
-#include <array>
-#include <set>
-#include <algorithm>
-#include <exception>
-#include <stdexcept>
-#include <tuple>
-#include <variant>
-#include <string>
-#include <sstream>
-#include <memory>
+#include "polyhedralGravity/input/MeshReader.h"
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
+#include "polyhedralGravity/output/Logging.h"
+#include "polyhedralGravity/util/UtilityConstants.h"
+#include "polyhedralGravity/util/UtilityContainer.h"
+#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
 #include "thrust/copy.h"
 #include "thrust/device_vector.h"
-#include "polyhedralGravity/output/Logging.h"
-#include "thrust/transform_reduce.h"
 #include "thrust/execution_policy.h"
 #include "thrust/iterator/counting_iterator.h"
-#include "polyhedralGravity/model/GravityModelData.h"
 #include "thrust/iterator/transform_iterator.h"
-#include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/util/UtilityConstants.h"
-#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
+#include "thrust/transform_reduce.h"
+#include <algorithm>
+#include <array>
+#include <exception>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace polyhedralGravity {
 
     /* Forward declaration of Polyhedron */
     class Polyhedron;
-
-    /** A polyhedron defined by a set of filenames, as available in {@link TetgenAdapter} */
-    using PolyhedralFiles = std::vector<std::string>;
-
-    /** A polyhedron defined by a set of vertices and face indices */
-    using PolyhedralSource = std::tuple<std::vector<Array3>, std::vector<IndexArray3>>;
-
-    /**
-     * The orientation of the plane unit normals of the polyhedron.
-     * We use this property as the concret definition of the vertices ordering depends on the
-     * utilized cooridnate system.
-     * However, the normal alignement is independent. Tsoulis et al. equations require the
-     * normals to point outwards of the polyhedron. If the opposite hold, the result is
-     * negated.
-     */
-    enum class NormalOrientation: char {
-        /** Outwards pointing plane unit normals */
-        OUTWARDS,
-        /** Inwards pointing plane unit normals */
-        INWARDS
-    };
-
-
-    /**
-     * Overloaded insertion operator to output the string representation of a NormalOrientation enum value.
-     *
-     * @param os The output stream to write the string representation to.
-     * @param orientation The NormalOrientation enum value to output.
-     * @return The output stream after writing the string representation.
-     */
-    inline std::ostream &operator<<(std::ostream &os, const NormalOrientation &orientation) {
-        switch (orientation) {
-            case NormalOrientation::OUTWARDS:
-                os << "OUTWARDS";
-                break;
-            case NormalOrientation::INWARDS:
-                os << "INWARDS";
-                break;
-            default:
-                os << "Unknown";
-                break;
-        }
-        return os;
-    }
-
-    /**
-     * The three mode the poylhedron class takes in
-     * the constructor in order to determine what initilaization checks to conduct.
-     * This enum is exclusivly utilized in the constrcutor of a {@link Polyhedron} and its private method
-     * {@link runIntegrityMeasures}
-     */
-    enum class PolyhedronIntegrity: char {
-        /**
-         * All activities regarding MeshChecking are disabled.
-         * No runtime overhead!
-         */
-        DISABLE,
-        /**
-         * Only verification of the NormalOrientation.
-         * A misalignment (e.g. specified OUTWARDS, but is not) leads to a runtime_error.
-         * Runtime Cost O(n^2)
-         */
-        VERIFY,
-        /**
-         * Like VERIFY, but also informs the user about the option in any case on the runtime costs.
-         * This is the implicit default option.
-         * Runtime Cost: O(n^2) and output to stdout in every case!
-         */
-        AUTOMATIC,
-        /**
-         * Verification and Autmatioc Healing of the NormalOrientation.
-         * A misalignemt does not lead to a runtime_error, but to an internal correction.
-         * Runtime Cost: O(n^2) and a modification of the mesh input!
-         */
-        HEAL,
-    };
 
     /**
      * Data structure containing the model data of one polyhedron. This includes nodes, edges (faces) and elements.
@@ -122,9 +48,9 @@ namespace polyhedralGravity {
         /**
          * A vector containing the faces (triangles) of the polyhedron.
          * Each face is an array of size three containing the indices of the nodes forming the face.
-         * Since every face consist of three nodes, every face consist of three segments. Each segment consists of
+         * Since every face consists of three nodes, every face consists of three segments. Each segment consists of
          * two nodes.
-         * @example face consisting of {1, 2, 3} --> segments: {1, 2}, {2, 3}, {3, 1}
+         * For example, a face consisting of {1, 2, 3} --> segments: {1, 2}, {2, 3}, {3, 1}
          */
         std::vector<IndexArray3> _faces;
 
@@ -140,75 +66,88 @@ namespace polyhedralGravity {
          */
         NormalOrientation _orientation;
 
+        /** Metric Unit of the Vertices Coordinates. One of METER, KILOMETER, or UNITLESS */
+        const MetricUnit _metricUnit;
+
     public:
         /**
          * Generates a polyhedron from nodes and faces.
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
          * @param vertices a vector of nodes
          * @param faces a vector of faces containing the formation of faces off vertices
-         * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * @param density the density of the polyhedron in @f$[kg/X^3]@f$.
+         *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
          *
-         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
-         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@link integrity} flag
+         * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(
                 const std::vector<Array3> &vertices,
                 const std::vector<IndexArray3> &faces,
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC
+                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                const MetricUnit &metricUnit = MetricUnit::METER
                 );
 
         /**
          * Generates a polyhedron from nodes and faces.
-         * @param polyhedralSource a tuple of vector containing the nodes and trianglular faces.
-         * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
+         * @param polyhedralSource a tuple of vector containing the nodes and triangular faces.
+         * @param density the density of the polyhedron in @f$[kg/X^3]@f$.
+         *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
          *
-         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
-         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@link integrity} flag
+         * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(
                 const PolyhedralSource &polyhedralSource,
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC
+                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                const MetricUnit &metricUnit = MetricUnit::METER
                 );
 
         /**
          * Generates a polyhedron from nodes and faces.
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
          * @param polyhedralFiles a list of files (see {@link TetgenAdapter}
-         * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * @param density the density of the polyhedron in @f$[kg/X^3]@f$.
+         *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
          *
-         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
-         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@link integrity} flag
+         * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(const PolyhedralFiles &polyhedralFiles, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC);
+                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                   const MetricUnit &metricUnit = MetricUnit::METER
+                                   );
 
         /**
          * Generates a polyhedron from nodes and faces.
-         * This constructor using a variant is maninly utilized from the Python Interface.
-         * @param polyhedralSource a list of files (see {@link TetgenAdapter} or a tuple of vector containing the nodes and trianglular faces.
-         * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
+         * This constructor using a variant is mainly utilized from the Python Interface.
+         * @param polyhedralSource a list of files (see {@link TetgenAdapter} or a tuple of vector containing the nodes and triangular faces.
+         * @param density the density of the polyhedron in @f$[kg/X^3]@f$.
+         *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
          *
-         * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
-         * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
-         * @throws std::invalid_argument dpending on the {@link integrity} flag
+         * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC);
+                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                   const MetricUnit &metricUnit = MetricUnit::METER
+                   );
 
         /**
          * Default destructor
@@ -243,7 +182,7 @@ namespace polyhedralGravity {
         /**
          * Returns the indices of the vertices making up the face at the given index.
          * @param index size_t
-         * @return triplet of the vertic'es indices forming the face
+         * @return triplet of the vertices indices forming the face
          */
         [[nodiscard]] const IndexArray3 &getFace(size_t index) const;
 
@@ -262,12 +201,14 @@ namespace polyhedralGravity {
 
         /**
          * Returns the constant density of this polyhedron.
+         * Its unit is @f$[kg/X^3]@f$ with X as the metric unit of the mesh.
          * @return the constant density a double
          */
         [[nodiscard]] double getDensity() const;
 
         /**
          * Sets the density to a new value. The density's unit must match to the scaling of the mesh.
+         * In other words, mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$.
          * @param density the new constant density of the polyhedron
          */
         void setDensity(double density);
@@ -279,12 +220,40 @@ namespace polyhedralGravity {
         [[nodiscard]] NormalOrientation getOrientation() const;
 
         /**
-         * Retruns the plane unit normal orientation factor.
-         * If the unit normals are outwards pointing, it is 1.0 as Tsoulis inteneded.
+         * Returns the plane unit normal orientation factor.
+         * If the unit normals are outwards pointing, it is 1.0 as Tsoulis intended.
          * If the unit normals are inwards pointing, it is -1.0 (reversed).
          * @return 1.0 or -1.0 depending on plane unit orientation
          */
         [[nodiscard]] double getOrientationFactor() const;
+
+        /**
+         * Returns the metric unit of the polyhedron's mesh, which is either METER, KILOMETER, or UNITLESS.
+         * @return the metric unit of the polyhedron
+         */
+        [[nodiscard]] MetricUnit getMeshUnit() const;
+
+        /**
+         * Returns the metric unit of the polyhedral mesh.
+         * It is either in meter, kilometer, or without units.
+         * @return unit of mesh (i.e., the unit of the vertices)
+         */
+        [[nodiscard]] std::string getMeshUnitAsString() const;
+
+        /**
+         * Returns the metric unit of the density which is set during construction and depends on the mesh's unit.
+         * @return unit of the density
+         */
+        [[nodiscard]] std::string getDensityUnit() const;
+
+        /**
+         * Returns the scaling factor for the gravity model evaluation.
+         * If the unit is UNIT_LESS, it returns the product of density and orientation factor.
+         * If the unit is METER, it returns the product of density, orientation factor, and util::GRAVITATIONAL_CONSTANT
+         * If the unit is KILOMETER, it returns the product of density, orientation factor, and util::GRAVITATIONAL_CONSTANT in @f$[km^3/(kg * s^2)]@f$
+         * @return scaling factor in Tsoulis Model (i.e., gravitational constant and density with additional correction depending on alignment and unit)
+         */
+        [[nodiscard]] double getGravityModelScaling() const;
 
         /**
          * Returns a string representation of the Polyhedron.
@@ -295,10 +264,10 @@ namespace polyhedralGravity {
         [[nodiscard]] std::string toString() const;
 
         /**
-         * Returns the internal data strcuture of Python pickle support.
-         * @return tuple of vertices, faces, density and normal orientation
+         * Returns the internal data structure of Python pickle support.
+         * @return tuple of vertices, faces, density, and normal orientation
          */
-        [[nodiscard]] std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation> getState() const;
+        [[nodiscard]] std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation, MetricUnit> getState() const;
 
         /**
          * An iterator transforming the polyhedron's coordinates on demand by a given offset.
@@ -320,7 +289,7 @@ namespace polyhedralGravity {
 
         /**
          * This method determines the majority vertex ordering of a polyhedron and the set of faces which
-         * violate the majority constraint and need to be adpated.
+         * violate the majority constraint and need to be adapted.
          * Hence, if the set is empty, all faces obey to the returned ordering/ plane unit normal orientation.
          *
          * @return a pair consisting of majority ordering (OUTWARDS or INWARDS pointing normals)
@@ -334,14 +303,14 @@ namespace polyhedralGravity {
          *
          * @param integrity the behavior depends on the value, see {@link PolyhedronIntegrity}
          *
-         * @throws std::invalid_argument dpending on the {@param integrity} flag
+         * @throws std::invalid_argument depending on the {@param integrity} flag
          */
         void runIntegrityMeasures(const PolyhedronIntegrity &integrity);
 
 
         /**
          * Checks if no triangle is degenerated by checking the surface area being greater than zero.
-         * E.g. two points are the same or all three are collinear.
+         * E.g., two points are the same or all three are collinear.
          * @return true if triangles are fine and none of them is degenerate
          */
         [[nodiscard]] bool checkTrianglesNotDegenerated() const;
@@ -369,7 +338,7 @@ namespace polyhedralGravity {
          * @param triangle a triangular face
          * @return intersection point or null
          *
-         * @related Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
+         * @see Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
          */
         static std::unique_ptr<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
 
