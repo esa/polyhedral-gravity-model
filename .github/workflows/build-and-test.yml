@@ -27,7 +27,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
           cmake --build . --config Release
       - name: Test (Linux & macOS)
         run: cd build/test && ./polyhedralGravity_test

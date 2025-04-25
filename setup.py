@@ -30,7 +30,9 @@ CMAKE_OPTIONS = {
     # Should be of course ON!
     "BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE": "ON",
     # Build static libs by default (On conda-forge we build shared libs by setting this to ON)
-    "BUILD_SHARED_LIBS": "OFF"
+    "BUILD_SHARED_LIBS": "OFF",
+    # Required since CMake 4.0 (doesn't do anything before that) due to the outdated TetGen build system
+    "CMAKE_POLICY_VERSION_MINIMUM": "3.5",
 }
 # ---------------------------------------------------------------------------------
 

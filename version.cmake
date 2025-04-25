@@ -1,5 +1,5 @@
 # Modify the version with a new release
-set(PROJECT_VERSION 3.3)
+set(PROJECT_VERSION 3.3rc2)
 set(POLYHEDRAL_GRAVITY_VERSION ${PROJECT_VERSION})
 
 # Get the Git information
