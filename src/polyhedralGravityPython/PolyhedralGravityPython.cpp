@@ -175,6 +175,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
             Raises:
                 ValueError: If :code:`integrity_check` is set to :code:`AUTOMATIC` or :code:`VERIFY` and the mesh is inconsistent
+                RuntimeError: If files given as :code:`polyhedral_source` do not exist
 
             Note:
                 The :code:`integrity_check` is automatically enabled to avoid wrong results due to the wrong vertex ordering.

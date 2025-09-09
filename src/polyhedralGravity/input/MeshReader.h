@@ -11,6 +11,7 @@
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include <exception>
 #include <stdexcept>
+#include <filesystem>
 
 namespace polyhedralGravity {
 
@@ -23,7 +24,8 @@ namespace polyhedralGravity {
          * Returns a polyhedral source consisting of vertices and faces by reading mesh input files.
          * @param fileNames files specifying a polyhedron
          * @return polyhedral source consisting of vertices and faces
-         * @throws std::invalid_argument exception if the file type is unsupported by the implementation
+         * @throws std::invalid_argument if the file type is unsupported by the implementation
+         * @throws std::runtime_error if the provided files do not exist
          */
         PolyhedralSource getPolyhedralSource(const std::vector<std::string> &fileNames);
 
