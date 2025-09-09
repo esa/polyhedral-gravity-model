@@ -56,24 +56,11 @@ def get_cmake_generator():
         return None
 
 def get_version():
-    """Returns the version of the polyhedral gravity package by reading the CMake file."""
-    # Path to the CMake file
-    cmake_file = os.path.join(os.path.dirname(__file__), "version.cmake" )
-
-    # Check if the CMake file exists
-    if not os.path.exists(cmake_file):
-        raise FileNotFoundError(f"CMake file not found: {cmake_file}")
-
-    # Open and read the file
-    with open(cmake_file, "r") as file:
-        content = file.read()
-
-    # Use regex to extract the PROJECT_VERSION
-    version_match = re.search(r'set\(PROJECT_VERSION\s+([^\s)]+)\)', content)
-    if version_match:
-        return version_match.group(1)
-    else:
-        raise ValueError("Version string not found in CMakeLists.txt")
+    """Returns the version of the polyhedral gravity package by using git describe"""
+    version_string = subprocess.check_output([ "git", "describe", "--tags", "--match", "v[0-9]*.[0-9]*.[0-9]*"]).decode("utf-8")
+    # The output looks like 'v3.3.0-1-g98405d2\n' or 'v3.3.0\n' depending on whether the commit has been directly tagged or not
+    # We only want the initial version number without the git commit hash
+    return re.search(r"v(\d+\.\d+\.\d+)", version_string).group(1)
 
 
 # -----------------------------------------------------------------------------------------
