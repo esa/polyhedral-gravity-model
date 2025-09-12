@@ -66,9 +66,8 @@ def get_version():
         "--match", "v[0-9]*.[0-9]*.[0-9]*.post*",  # post
         "--match", "v[0-9]*.[0-9]*.[0-9]*.dev*",   # dev
     ]).decode("utf-8").strip()
-    # The output looks like 'v3.3.0-1-g98405d2\n' or 'v3.3.0\n' depending on whether the commit has been directly tagged or not
-    # We only want the initial version number without the git commit hash
-    return version_string.split("-")[0][1:]
+    # Remove the leading "v"
+    return version_string[1:]
 
 
 # -----------------------------------------------------------------------------------------
