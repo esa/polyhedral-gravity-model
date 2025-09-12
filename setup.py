@@ -55,7 +55,7 @@ def get_cmake_generator():
     else:
         return None
 
-def get_version():
+def get_git_version():
     """Returns the version of the polyhedral gravity package by using git describe"""
     version_string = subprocess.check_output([
         "git", "describe", "--tags", "--abbrev=0",
@@ -68,6 +68,26 @@ def get_version():
     ]).decode("utf-8").strip()
     # Remove the leading "v"
     return version_string[1:]
+
+def get_cmake_version():
+    """Returns the version of the polyhedral gravity package by reading the CMake file."""
+    # Path to the CMake file
+    cmake_file = os.path.join(os.path.dirname(__file__), "version.cmake" )
+
+    # Check if the CMake file exists
+    if not os.path.exists(cmake_file):
+        raise FileNotFoundError(f"CMake file not found: {cmake_file}")
+
+    # Open and read the file
+    with open(cmake_file, "r") as file:
+        content = file.read()
+
+    # Use regex to extract the PROJECT_VERSION
+    version_match = re.search(r'set\(POLYHEDRAL_GRAVITY_VERSION\s+"(.*)"', content)
+    if version_match:
+        return version_match.group(1)
+    else:
+        raise ValueError("Version string not found in CMakeLists.txt")
 
 
 # -----------------------------------------------------------------------------------------
@@ -190,7 +210,7 @@ picture_in_readme = '''<p align="center">
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version=get_version(),
+    version=get_cmake_version(),
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "
