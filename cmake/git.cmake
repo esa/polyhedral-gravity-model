@@ -1,7 +1,12 @@
-find_package(Git QUIET REQUIRED)
+find_package(Git QUIET)
 
 function(get_git_commit_hash OUTPUT_VAR)
     # Run a Git command to get the first 8 characters of the current commit hash
+    if(NOT GIT_FOUND OR NOT GIT_EXECUTABLE)
+        set(${OUTPUT_VAR} "Unknown" PARENT_SCOPE)
+        return()
+    endif()
+
     execute_process(
             COMMAND ${GIT_EXECUTABLE} rev-parse --short=8 HEAD
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -23,6 +28,11 @@ endfunction()
 
 function(is_git_working_tree_clean OUTPUT_VAR)
     # Run a Git command to check if the working tree is clean
+    if(NOT GIT_FOUND OR NOT GIT_EXECUTABLE)
+        set(${OUTPUT_VAR} "Unknown" PARENT_SCOPE)
+        return()
+    endif()
+
     execute_process(
             COMMAND ${GIT_EXECUTABLE} diff-index --quiet HEAD --
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -45,8 +55,13 @@ function(is_git_working_tree_clean OUTPUT_VAR)
     endif()
 endfunction()
 
-# Based on https://github.com/Blauben/kd-tree/blob/d1b271f898248a8e22750545c075b42e58432f7d/cmake/git.cmake#L48
 function(get_git_version_tag OUTPUT_VAR)
+    # Runs a git command to return the latest version number (given the most similar git tag)
+    if(NOT GIT_FOUND OR NOT GIT_EXECUTABLE)
+        set(${OUTPUT_VAR} "Unknown" PARENT_SCOPE)
+        return()
+    endif()
+
     execute_process(
             COMMAND git describe --tags --abbrev=0
             --match v[0-9]*.[0-9]*.[0-9]*        # plain
