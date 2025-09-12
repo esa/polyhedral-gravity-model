@@ -57,10 +57,18 @@ def get_cmake_generator():
 
 def get_version():
     """Returns the version of the polyhedral gravity package by using git describe"""
-    version_string = subprocess.check_output([ "git", "describe", "--tags", "--match", "v[0-9]*.[0-9]*.[0-9]*"]).decode("utf-8")
+    version_string = subprocess.check_output([
+        "git", "describe", "--tags", "--abbrev=0",
+        "--match", "v[0-9]*.[0-9]*.[0-9]*",        # plain
+        "--match", "v[0-9]*.[0-9]*.[0-9]*a*",      # alpha
+        "--match", "v[0-9]*.[0-9]*.[0-9]*b*",      # beta
+        "--match", "v[0-9]*.[0-9]*.[0-9]*rc*",     # release candidate
+        "--match", "v[0-9]*.[0-9]*.[0-9]*.post*",  # post
+        "--match", "v[0-9]*.[0-9]*.[0-9]*.dev*",   # dev
+    ]).decode("utf-8").strip()
     # The output looks like 'v3.3.0-1-g98405d2\n' or 'v3.3.0\n' depending on whether the commit has been directly tagged or not
     # We only want the initial version number without the git commit hash
-    return re.search(r"v(\d+\.\d+\.\d+)", version_string).group(1)
+    return version_string.split("-")[0][1:]
 
 
 # -----------------------------------------------------------------------------------------
