@@ -48,7 +48,7 @@ if (_LIBCPP_DISABLE_AVAILABILITY)
     add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
 endif ()
 
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
+if (${APPLE} AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang"))
     # Fixes undefined _VSTD when using Apple Clang 17
     message(STATUS "Using Apple Clang compiler. Defining _VSTD=std.")
     add_definitions(-D_VSTD=std)
