@@ -15,7 +15,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(polyhedral_gravity, m) {
+PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
     using namespace polyhedralGravity;
     m.doc() = R"mydelimiter(
     The evaluation of the polyhedral gravity model requires the following parameters:
