@@ -335,3 +335,13 @@ TEST_F(PolyhedronTest, CorrectBigPolyhedron) {
             );
 }
 
+TEST_F(PolyhedronTest, FileDoesNotExistPolyhedron) {
+    using namespace testing;
+    using namespace polyhedralGravity;
+    // All normals are pointing outwards, extensive Eros example
+    ASSERT_THROW(Polyhedron(
+                std::vector<std::string>({"resources/FileDoesNotExist.node", "resources/FileDoesNotExist.face"}),
+                1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY), std::runtime_error
+            );
+}
+
