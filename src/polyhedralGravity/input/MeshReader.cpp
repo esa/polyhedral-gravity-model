@@ -6,6 +6,12 @@
 namespace polyhedralGravity {
 
     PolyhedralSource MeshReader::getPolyhedralSource(const std::vector<std::string> &fileNames) {
+        // Input Sanity Check if the files exists
+        for (const auto &fileName: fileNames) {
+            if (!std::filesystem::exists(fileName)) {
+                throw std::runtime_error("File '" + fileName + "' does not exist.");
+            }
+        }
         switch (fileNames.size()) {
             case 0:
                 throw std::runtime_error("No mesh file given");

@@ -113,3 +113,11 @@ def test_polyhedron_metric() -> None:
     )
     assert unitless_polyhedron.density_unit == "unitless"
     assert unitless_polyhedron.mesh_unit == "unitless"
+
+def test_failed_polyhedral_construction() -> None:
+    """Tests if the construction of a Polyhedron fails when the source is invalid."""
+    with pytest.raises(RuntimeError):
+        Polyhedron(
+            polyhedral_source=["test/resources/FileDoesNotExist.node", "test/resources/FileDoesNotExist.face"],
+            density=1.0,
+        )

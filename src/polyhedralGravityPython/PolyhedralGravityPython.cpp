@@ -15,7 +15,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(polyhedral_gravity, m) {
+PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
     using namespace polyhedralGravity;
     m.doc() = R"mydelimiter(
     The evaluation of the polyhedral gravity model requires the following parameters:
@@ -175,6 +175,7 @@ PYBIND11_MODULE(polyhedral_gravity, m) {
 
             Raises:
                 ValueError: If :code:`integrity_check` is set to :code:`AUTOMATIC` or :code:`VERIFY` and the mesh is inconsistent
+                RuntimeError: If files given as :code:`polyhedral_source` do not exist
 
             Note:
                 The :code:`integrity_check` is automatically enabled to avoid wrong results due to the wrong vertex ordering.

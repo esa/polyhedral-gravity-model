@@ -1,7 +1,8 @@
 include(FetchContent)
 
 message(STATUS "Setting up Pybind11 Library")
-set(PYBIND11_VERSION 2.12.0)
+set(PYBIND11_VERSION 3.0.1)
+set(PYBIND11_FINDPYTHON ON)
 
 find_package(pybind11 ${PYBIND11_VERSION} QUIET)
 

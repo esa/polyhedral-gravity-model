@@ -55,7 +55,21 @@ def get_cmake_generator():
     else:
         return None
 
-def get_version():
+def get_git_version():
+    """Returns the version of the polyhedral gravity package by using git describe"""
+    version_string = subprocess.check_output([
+        "git", "describe", "--tags", "--abbrev=0",
+        "--match", "v[0-9]*.[0-9]*.[0-9]*",        # plain
+        "--match", "v[0-9]*.[0-9]*.[0-9]*a*",      # alpha
+        "--match", "v[0-9]*.[0-9]*.[0-9]*b*",      # beta
+        "--match", "v[0-9]*.[0-9]*.[0-9]*rc*",     # release candidate
+        "--match", "v[0-9]*.[0-9]*.[0-9]*.post*",  # post
+        "--match", "v[0-9]*.[0-9]*.[0-9]*.dev*",   # dev
+    ]).decode("utf-8").strip()
+    # Remove the leading "v"
+    return version_string[1:]
+
+def get_cmake_version():
     """Returns the version of the polyhedral gravity package by reading the CMake file."""
     # Path to the CMake file
     cmake_file = os.path.join(os.path.dirname(__file__), "version.cmake" )
@@ -69,7 +83,7 @@ def get_version():
         content = file.read()
 
     # Use regex to extract the PROJECT_VERSION
-    version_match = re.search(r'set\(PROJECT_VERSION\s+([^\s)]+)\)', content)
+    version_match = re.search(r'set\(POLYHEDRAL_GRAVITY_VERSION\s+"(.*)"', content)
     if version_match:
         return version_match.group(1)
     else:
@@ -196,7 +210,7 @@ picture_in_readme = '''<p align="center">
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version=get_version(),
+    version=get_cmake_version(),
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "
@@ -208,7 +222,7 @@ setup(
     license="GPLv3",
     license_file="LICENSE",
     zip_safe=False,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     include_package_data=True,
     project_urls={
         "Homepage": "https://github.com/esa/polyhedral-gravity-model",
