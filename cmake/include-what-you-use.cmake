@@ -1,0 +1,5 @@
+find_program(INCLUDE_WHAT_YOU_USE_PATH include-what-you-use)
+if (INCLUDE_WHAT_YOU_USE_PATH)
+    message(STATUS "Found existing Include-What-You-See: scheduled for execution during compilation.")
+    set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${INCLUDE_WHAT_YOU_USE_PATH} -Xiwyu --no_comments -Xiwyu --verbose=3 -Xiwyu --quoted_includes_first)
+endif ()

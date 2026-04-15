@@ -1,19 +1,19 @@
 #pragma once
 
-#include <tuple>
-#include <variant>
-#include <string>
 #include <optional>
 #include <sstream>
+#include <string>
+#include <tuple>
+#include <variant>
 
-#include "thrust/transform.h"
 #include "thrust/execution_policy.h"
+#include "thrust/transform.h"
 
-#include "GravityModelDetail.h"
-#include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/input/TetgenAdapter.h"
 #include "GravityModelData.h"
+#include "GravityModelDetail.h"
 #include "Polyhedron.h"
+#include "polyhedralGravity/input/TetgenAdapter.h"
+#include "polyhedralGravity/util/UtilityContainer.h"
 
 
 namespace polyhedralGravity {
@@ -46,8 +46,8 @@ namespace polyhedralGravity {
          *
          * @param polyhedron the constant density polyhedron
          */
-        explicit GravityEvaluable(const Polyhedron &polyhedron) :
-            _polyhedron{polyhedron} {
+        explicit GravityEvaluable(const Polyhedron &polyhedron)
+            : _polyhedron{polyhedron} {
             this->prepare();
         }
 
@@ -62,12 +62,12 @@ namespace polyhedralGravity {
         GravityEvaluable(const Polyhedron &polyhedron,
                          const std::vector<Array3Triplet> &segmentVectors,
                          const std::vector<Array3> &planeUnitNormals,
-                         const std::vector<Array3Triplet> &segmentUnitNormals) :
-            _polyhedron{polyhedron},
-            _segmentVectors{segmentVectors},
-            _planeUnitNormals{planeUnitNormals},
-            _segmentUnitNormals{
-                    segmentUnitNormals} {
+                         const std::vector<Array3Triplet> &segmentUnitNormals)
+            : _polyhedron{polyhedron},
+              _segmentVectors{segmentVectors},
+              _planeUnitNormals{planeUnitNormals},
+              _segmentUnitNormals{
+                      segmentUnitNormals} {
         }
 
         /**
@@ -109,7 +109,6 @@ namespace polyhedralGravity {
         std::tuple<Polyhedron, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>> getState() const;
 
     private:
-
         /**
          * Prepares the polyhedron for the evaluation by calculating the segment vectors, the plane unit normals
          * and the segment unit normals.
@@ -147,7 +146,6 @@ namespace polyhedralGravity {
          */
         static GravityModelResult
         evaluateFace(const thrust::tuple<Array3Triplet, Array3Triplet, Array3, Array3Triplet> &tuple);
-
     };
 
 }// namespace polyhedralGravity

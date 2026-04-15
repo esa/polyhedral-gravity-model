@@ -1,16 +1,16 @@
 #pragma once
 
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 /*
- * This file provides several matchers to be used with ASSERT_TAHT(..) statements for multi-dimensional containers
- * with flotaing points as content.
+ * This file provides several matchers to be used with ASSERT_THAT(..) statements for multi-dimensional containers
+ * with floating points as content.
  * GoogleTest provides matchers like DoubleNear(..), ContainerEq(..) and Pointwise(..). These work great when working
  * with 1D containers. However, there is a lack of these matchers for multi-dimensional containers.
  * This files provides Matcher for comparing nested containers with floating points where the comparison is
- * conducted with an epsilon to counter the effect of potential rounding erros due to floating point arithmetic.
+ * conducted with an epsilon to counter the effect of potential rounding errors due to floating point arithmetic.
  */
 
 
@@ -30,7 +30,7 @@ MATCHER_P(FloatContainter1D, container, "Comparing 1D Containers") {
     return true;
 }
 
-// Using the FloatContainter1D would be nice, but this leads to issues with template instatantation
+// Using the FloatContainer1D would be nice, but this leads to issues with template instantiation
 // Hence, this is the easy way and a double-for-loop (but at least better fitting messages)
 MATCHER_P(FloatContainter2D, container, "Comparing 2D Containers") {
     if (container.size() != arg.size()) {
@@ -56,7 +56,7 @@ MATCHER_P(FloatContainter2D, container, "Comparing 2D Containers") {
     return true;
 }
 
-// Using the FloatContainter2D would be nice, but this leads to issues with template instatantation
+// Using the FloatContainer2D would be nice, but this leads to issues with template instantiation
 // Hence, this is the easy way and a triple-for-loop (but at least better fitting messages)
 MATCHER_P(FloatContainter3D, container, "Comparing 3D Containers") {
     if (container.size() != arg.size()) {

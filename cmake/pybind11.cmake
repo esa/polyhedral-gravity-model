@@ -1,22 +1,18 @@
 include(FetchContent)
 
-message(STATUS "Setting up pybind11")
+message(STATUS "Setting up Pybind11 Library")
+set(PYBIND11_VERSION 2.12.0)
 
-find_package(pybind11 2.12.0 QUIET)
+find_package(pybind11 ${PYBIND11_VERSION} QUIET)
 
-if (${pybind11_FOUND})
-
-    message(STATUS "Using local pybind11 installation")
-
+if(${pybind11_FOUND})
+    message(STATUS "Found existing Pybind11 Library: ${pybind11_DIR}")
 else()
-
-    message(STATUS "Using pybind11 from git repository")
+    message(STATUS "Using Pybind11 Library from GitHub Release ${PYBIND11_VERSION}")
 
     FetchContent_Declare(pybind11
             GIT_REPOSITORY https://github.com/pybind/pybind11
-            GIT_TAG v2.12.0
+            GIT_TAG v${PYBIND11_VERSION}
     )
-
     FetchContent_MakeAvailable(pybind11)
-
 endif()

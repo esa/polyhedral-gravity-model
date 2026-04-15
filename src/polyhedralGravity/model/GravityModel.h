@@ -38,4 +38,4 @@ namespace polyhedralGravity::GravityModel {
     std::vector<GravityModelResult>
     evaluate(const Polyhedron &polyhedron, const std::vector<Array3> &computationPoints, bool parallel = true);
 
-}
+}// namespace polyhedralGravity::GravityModel

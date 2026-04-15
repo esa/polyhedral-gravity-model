@@ -12,4 +12,4 @@ namespace polyhedralGravity::GravityModel {
         return std::get<std::vector<GravityModelResult>>(evaluable(computationPoints, parallel));
     }
 
-}
+}// namespace polyhedralGravity::GravityModel

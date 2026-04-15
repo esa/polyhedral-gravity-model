@@ -12,16 +12,16 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
     # Adds the include Path PROJECT_SOURCE_DIR/src to the target polyhedralGravity
     target_include_directories(${PROJECT_NAME}_lib PUBLIC
             "${CMAKE_CURRENT_SOURCE_DIR}"
-            )
+    )
 
     # Link libraries needed in all targets
     target_link_libraries(${PROJECT_NAME}_lib
             spdlog::spdlog
-            yaml-cpp
-            tetgen
+            yaml-cpp::yaml-cpp
+            tetgen_lib
             xsimd
             Thrust
-            )
+    )
 endif ()
 #####################################
 # Building the Polyhedral Executable
@@ -40,13 +40,13 @@ if (BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE)
             ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
-            )
-endif()
+    )
+endif ()
 
 ##########################################
 # Building the Polyhedral Python Interface
 ##########################################
-if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
+if (BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
     message(STATUS "Building the Polyhedral Gravity Python Interface")
 
     # Include pybind11
@@ -56,12 +56,34 @@ if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
 
     target_include_directories(polyhedral_gravity PUBLIC
             "${CMAKE_CURRENT_SOURCE_DIR}"
-            )
+    )
 
     target_link_libraries(polyhedral_gravity PUBLIC
             spdlog::spdlog
-            tetgen
+            tetgen_lib
             xsimd
             Thrust
-            )
-endif()
+    )
+endif ()
+
+#####################################################
+# Building the Polyhedral Time Measurement Executable
+#####################################################
+if (BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT)
+    message(STATUS "Building the Polyhedral Gravity Executable")
+
+    include(benchmark)
+
+    # Building the standalone Executable
+    add_executable(${PROJECT_NAME}_time kd_time_main.cpp)
+
+    # Link executable with library
+    target_link_libraries(${PROJECT_NAME}_time PUBLIC ${PROJECT_NAME}_lib benchmark::benchmark)
+
+    # Place the executable in the top level directory
+    set_target_properties(${PROJECT_NAME}_time PROPERTIES
+            ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+endif ()

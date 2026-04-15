@@ -44,7 +44,7 @@ namespace polyhedralGravity::GravityModel::detail {
     double distanceBetweenOriginAndPlane(const HessianPlane &hessianPlane) {
         //Compute h_p as D/sqrt(A^2 + B^2 + C^2)
         return std::abs(hessianPlane.d / std::sqrt(
-                hessianPlane.a * hessianPlane.a + hessianPlane.b * hessianPlane.b + hessianPlane.c * hessianPlane.c));
+                                                 hessianPlane.a * hessianPlane.a + hessianPlane.b * hessianPlane.b + hessianPlane.c * hessianPlane.c));
     }
 
     Array3 projectPointOrthogonallyOntoPlane(const Array3 &planeUnitNormal, double planeDistance,
@@ -134,12 +134,13 @@ namespace polyhedralGravity::GravityModel::detail {
         const Array3 matrixRow3 = cross(matrixRow2, matrixRow1);
         const Array3 d = {dot(matrixRow1, orthogonalProjectionPointOnPlane),
                           dot(matrixRow2, orthogonalProjectionPointOnPlane), dot(matrixRow3, vertex1)};
-        Matrix<double, 3, 3> columnMatrix = transpose(Matrix < double, 3, 3 > {matrixRow1, matrixRow2, matrixRow3});
+        Matrix<double, 3, 3> columnMatrix = transpose(Matrix<double, 3, 3>{matrixRow1, matrixRow2, matrixRow3});
         //Calculation and solving the equations of above
         const double determinant = det(columnMatrix);
-        return Array3{det(Matrix < double, 3, 3 > {d, columnMatrix[1], columnMatrix[2]}),
-                      det(Matrix < double, 3, 3 > {columnMatrix[0], d, columnMatrix[2]}),
-                      det(Matrix < double, 3, 3 > {columnMatrix[0], columnMatrix[1], d})} / determinant;
+        return Array3{det(Matrix<double, 3, 3>{d, columnMatrix[1], columnMatrix[2]}),
+                      det(Matrix<double, 3, 3>{columnMatrix[0], d, columnMatrix[2]}),
+                      det(Matrix<double, 3, 3>{columnMatrix[0], columnMatrix[1], d})} /
+               determinant;
     }
 
     Array3 distancesBetweenProjectionPoints(const Array3 &orthogonalProjectionPointOnPlane,
@@ -149,9 +150,9 @@ namespace polyhedralGravity::GravityModel::detail {
         //Using the values P'_i and P''_ij for the calculation of the distance
         std::transform(orthogonalProjectionPointOnSegments.cbegin(), orthogonalProjectionPointOnSegments.cend(),
                        segmentDistances.begin(), [&](const Array3 &orthogonalProjectionPointOnSegment) {
-                    using namespace util;
-                    return euclideanNorm(orthogonalProjectionPointOnSegment - orthogonalProjectionPointOnPlane);
-                });
+                           using namespace util;
+                           return euclideanNorm(orthogonalProjectionPointOnSegment - orthogonalProjectionPointOnPlane);
+                       });
         return segmentDistances;
     }
 
@@ -313,8 +314,10 @@ namespace polyhedralGravity::GravityModel::detail {
                         [](const double sigma) { return sigma == 1.0; })) {
             using namespace util;
             return std::make_pair(
-                    -1.0 * util::PI2 * planeDistance,                               //sing alpha = -2pi*h_p
-                    planeUnitNormal * (-1.0 * util::PI2 * planeNormalOrientation)); //sing beta  = -2pi*sigma_p*N_p
+                    //sing alpha = -2pi*h_p
+                    -1.0 * util::PI2 * planeDistance,
+                    //sing beta  = -2pi*sigma_p*N_p
+                    planeUnitNormal * (-1.0 * util::PI2 * planeNormalOrientation));
         }
         //2. Case: If sigma_pq == 0 AND norm(P' - v1) < norm(G_ij) && norm(P' - v2) < norm(G_ij) with G_ij
         // as the vector of v1 and v2
@@ -325,24 +328,26 @@ namespace polyhedralGravity::GravityModel::detail {
         auto secondCaseEnd = util::zip(segmentVectorsForPlane.end(), segmentNormalOrientationForPlane.end(),
                                        counter2 + 3);
         if (std::any_of(secondCaseBegin, secondCaseEnd, [&](const auto &tuple) {
-            using namespace util;
-            const Array3 &segmentVector = thrust::get<0>(tuple);
-            const double segmentNormalOrientation = thrust::get<1>(tuple);
-            const unsigned int j = thrust::get<2>(tuple);
+                using namespace util;
+                const Array3 &segmentVector = thrust::get<0>(tuple);
+                const double segmentNormalOrientation = thrust::get<1>(tuple);
+                const unsigned int j = thrust::get<2>(tuple);
 
-            //segmentNormalOrientation != 0.0
-            if (std::abs(segmentNormalOrientation) > EPSILON_ZERO_OFFSET) {
-                return false;
-            }
+                //segmentNormalOrientation != 0.0
+                if (std::abs(segmentNormalOrientation) > EPSILON_ZERO_OFFSET) {
+                    return false;
+                }
 
-            const double segmentVectorNorm = euclideanNorm(segmentVector);
-            return projectionPointVertexNorms[(j + 1) % 3] < segmentVectorNorm &&
-                   projectionPointVertexNorms[j] < segmentVectorNorm;
-        })) {
+                const double segmentVectorNorm = euclideanNorm(segmentVector);
+                return projectionPointVertexNorms[(j + 1) % 3] < segmentVectorNorm &&
+                       projectionPointVertexNorms[j] < segmentVectorNorm;
+            })) {
             using namespace util;
-            return std::make_pair(-1.0 * util::PI * planeDistance,                                //sing alpha = -pi*h_p
+            //sing alpha = -pi*h_p
+            return std::make_pair(-1.0 * util::PI * planeDistance,
                                   planeUnitNormal *
-                                  (-1.0 * util::PI * planeNormalOrientation));  //sing beta  = -pi*sigma_p*N_p
+                                          //sing beta  = -pi*sigma_p*N_p
+                                          (-1.0 * util::PI * planeNormalOrientation));
         }
         //3. Case If sigma_pq == 0 AND norm(P' - v1) < 0 || norm(P' - v2) < 0
         // then P' is located at one of G_p's vertices
@@ -353,20 +358,20 @@ namespace polyhedralGravity::GravityModel::detail {
         double r2Norm;
         unsigned int j;
         if (std::any_of(thirdCaseBegin, thirdCaseEnd, [&](const auto &tuple) {
-            using namespace util;
-            const double segmentNormalOrientation = thrust::get<0>(tuple);
-            j = thrust::get<1>(tuple);
+                using namespace util;
+                const double segmentNormalOrientation = thrust::get<0>(tuple);
+                j = thrust::get<1>(tuple);
 
-            //segmentNormalOrientation != 0.0
-            if (std::abs(segmentNormalOrientation) > EPSILON_ZERO_OFFSET) {
-                return false;
-            }
+                //segmentNormalOrientation != 0.0
+                if (std::abs(segmentNormalOrientation) > EPSILON_ZERO_OFFSET) {
+                    return false;
+                }
 
-            r1Norm = projectionPointVertexNorms[(j + 1) % 3];
-            r2Norm = projectionPointVertexNorms[j];
-            //r1Norm == 0.0 || r2Norm == 0.0
-            return r1Norm < EPSILON_ZERO_OFFSET || r2Norm < EPSILON_ZERO_OFFSET;
-        })) {
+                r1Norm = projectionPointVertexNorms[(j + 1) % 3];
+                r2Norm = projectionPointVertexNorms[j];
+                //r1Norm == 0.0 || r2Norm == 0.0
+                return r1Norm < EPSILON_ZERO_OFFSET || r2Norm < EPSILON_ZERO_OFFSET;
+            })) {
             using namespace util;
             //Two segment vectors G_1 and G_2 of this plane
             const Array3 &g1 = r1Norm == 0.0 ? segmentVectorsForPlane[j] : segmentVectorsForPlane[(j - 1 + 3) % 3];
@@ -374,13 +379,17 @@ namespace polyhedralGravity::GravityModel::detail {
             // theta = arcos((G_2 * -G_1) / (|G_2| * |G_1|))
             const double gdot = dot(g1 * -1.0, g2);
             const double theta = gdot == 0.0 ? util::PI_2 : std::acos(gdot / (euclideanNorm(g1) * euclideanNorm(g2)));
-            return std::make_pair(-1.0 * theta * planeDistance,                               //sing alpha = -theta*h_p
+            //sing alpha = -theta*h_p
+            return std::make_pair(-1.0 * theta * planeDistance,
                                   planeUnitNormal *
-                                  (-1.0 * theta * planeNormalOrientation)); //sing beta  = -theta*sigma_p*N_p
+                                          //sing beta  = -theta*sigma_p*N_p
+                                          (-1.0 * theta * planeNormalOrientation));
         }
         //4. Case Otherwise P' is located outside the plane S_p and then the singularity equals zero
-        return std::make_pair(0.0,                                                            //sing alpha = 0
-                              Array3{0.0, 0.0, 0.0});                                         //sing beta  = 0
+        //sing alpha = 0
+        return std::make_pair(0.0,
+                              //sing beta  = 0
+                              Array3{0.0, 0.0, 0.0});
     }
 
     Array3 computeNormsOfProjectionPointAndVertices(const Array3 &orthogonalProjectionPointOnPlane,
@@ -392,4 +401,4 @@ namespace polyhedralGravity::GravityModel::detail {
     }
 
 
-} // namespace polyhedralGravity::GravityModel::detail
+}// namespace polyhedralGravity::GravityModel::detail

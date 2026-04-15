@@ -1,12 +1,12 @@
 #pragma once
 
-#include <array>
-#include <ostream>
-#include <cmath>
-#include <algorithm>
-#include <tuple>
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <ostream>
+#include <tuple>
 
 namespace polyhedralGravity {
 
@@ -220,7 +220,7 @@ namespace polyhedralGravity {
             return !(rhs == *this);
         }
 
-         /**
+        /**
          * Pretty output of this struct on the given ostream.
          * @param os the ostream
          * @param hessianPlane a HessianPlane
@@ -232,4 +232,4 @@ namespace polyhedralGravity {
         }
     };
 
-}
+}// namespace polyhedralGravity

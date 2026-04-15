@@ -1,17 +1,19 @@
 #pragma once
 
-#include <array>
-#include <set>
-#include <numeric>
-#include <utility>
+#include "polyhedralGravity/model/GravityModelData.h"
+
+
 #include <algorithm>
-#include <functional>
+#include <array>
 #include <cmath>
-#include <string>
+#include <functional>
 #include <iostream>
+#include <numeric>
+#include <set>
+#include <string>
+#include <utility>
 
 namespace polyhedralGravity::util {
-
     /**
      * Alias for two-dimensional array with size M and N.
      * M is the major size.
@@ -276,7 +278,8 @@ namespace polyhedralGravity::util {
      */
     template<typename T>
     int sgn(T val, double cutoffEpsilon) {
-        return val < -cutoffEpsilon ? -1 : val > cutoffEpsilon ? 1 : 0;
+        return val < -cutoffEpsilon ? -1 : val > cutoffEpsilon ? 1
+                                                               : 0;
     }
 
     /**
@@ -372,7 +375,7 @@ namespace polyhedralGravity::util {
             return std::make_tuple(std::get<Is>(t1) + std::get<Is>(t2)...);
         }
 
-    }
+    }// namespace detail
 
     /**
      * Adds the contents of two tuples of the same size and types with the operator +.
@@ -398,7 +401,7 @@ namespace polyhedralGravity::util {
     std::ostream &operator<<(std::ostream &os, const std::array<T, N> &array) {
         os.operator<<('[');
         os.operator<<(' ');
-        std::for_each(array.cbegin(), array.cend(), [&os](const auto& arg) {
+        std::for_each(array.cbegin(), array.cend(), [&os](const auto &arg) {
             os << arg << ' ';
         });
         os.operator<<(']');
@@ -416,7 +419,7 @@ namespace polyhedralGravity::util {
     std::ostream &operator<<(std::ostream &os, const std::set<T> &set) {
         os.operator<<('[');
         os.operator<<(' ');
-        std::for_each(set.cbegin(), set.cend(), [&os](const auto& arg) {
+        std::for_each(set.cbegin(), set.cend(), [&os](const auto &arg) {
             os << arg << ' ';
         });
         os.operator<<(']');
@@ -431,4 +434,28 @@ namespace polyhedralGravity::util {
     struct is_stdarray<std::array<T, N>> : std::true_type {
     };
 
-}
+    /**
+    * Calculates the min and max coordinate values for each dimension of the elements supplied.
+    * @param elements the container of whose elements to search for min and max ccordinates
+    * @return the findings formatted in a pair of new elements. E.g <(0,0,0) , (1,1,1)> if the container {(0,0,1), (1,1,0)} is passed.
+    */
+    template<typename Container, typename ValueType>
+    std::pair<ValueType, ValueType> findMinMaxCoordinates(Container elements) {
+        //return empty box centered at the origin if no vertices provided
+        if (elements.empty()) {
+            return {{0, 0, 0}, {0, 0, 0}};
+        }
+        //initialize values from the array -> even if only one vertex is provided the box is still correct without executing the loop.
+       ValueType min = elements[0];
+        ValueType max = elements[0];
+        //test each vertex for proximity to the origin and find minima and maxima
+        for (const auto& vertex : elements) {
+            // test each dimension separately
+            for (size_t i = 0; i < vertex.size(); ++i) {
+                min[i] = std::min(min[i], vertex[i]);
+                max[i] = std::max(max[i], vertex[i]);
+            }
+        }
+        return {min, max};
+    }
+}// namespace polyhedralGravity::util

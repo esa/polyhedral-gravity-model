@@ -7,3 +7,5 @@ dependencies:
   - matplotlib
   - sympy
   - polyhedral-gravity-model
+  - open3d
+  - regex

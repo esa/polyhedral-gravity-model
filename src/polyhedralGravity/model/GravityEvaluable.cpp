@@ -50,10 +50,10 @@ namespace polyhedralGravity {
 
         if constexpr (Parallelization) {
             result = thrust::transform_reduce(thrust::device, zip1, zip2, &GravityEvaluable::evaluateFace, result,
-                                              util::operator+ < double, Array3, Array6 > );
+                                              util::operator+ <double, Array3, Array6>);
         } else {
             result = thrust::transform_reduce(thrust::host, zip1, zip2, &GravityEvaluable::evaluateFace, result,
-                                              util::operator+ < double, Array3, Array6 > );
+                                              util::operator+ <double, Array3, Array6>);
         }
 
         SPDLOG_LOGGER_DEBUG(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
@@ -109,7 +109,8 @@ namespace polyhedralGravity {
         const auto &segmentUnitNormals = thrust::get<3>(tuple);
         SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
                             "Evaluating the plane with vertices: v1 = [{}, {}, {}], v2 = [{}, {}, {}], "
-                            "v3 = [{}, {}, {}]", face[0][0], face[0][1], face[0][2], face[1][0], face[1][1], face[1][2],
+                            "v3 = [{}, {}, {}]",
+                            face[0][0], face[0][1], face[0][2], face[1][0], face[1][1], face[1][2],
                             face[2][0], face[2][1], face[2][2]);
         //1. Step: Compute ingredients for current plane which were not computed before
         //1-04 Step: Compute Plane Normal Orientation sigma_p (direction of N_p in relation to P)
@@ -165,7 +166,7 @@ namespace polyhedralGravity {
                                                                      const TranscendentalExpression &transcendentalExpressions = thrust::get<2>(
                                                                              tuple);
                                                                      return acc + segmentOrientation * segmentDistance *
-                                                                                  transcendentalExpressions.ln;
+                                                                                          transcendentalExpressions.ln;
                                                                  });
 
         //3. Step: Compute Sum 1 used for the gradiometric tensor (second derivative)
@@ -174,10 +175,10 @@ namespace polyhedralGravity {
         auto zipIteratorSum1Tensor = util::zipPair(segmentUnitNormals, transcendentalExpressions);
         const Array3 sum1Tensor = std::accumulate(zipIteratorSum1Tensor.first, zipIteratorSum1Tensor.second,
                                                   Array3{0.0, 0.0, 0.0}, [](const Array3 &acc, const auto &tuple) {
-                    const Array3 &segmentNormal = thrust::get<0>(tuple);
-                    const TranscendentalExpression &transcendentalExpressions = thrust::get<1>(tuple);
-                    return acc + (segmentNormal * transcendentalExpressions.ln);
-                });
+                                                      const Array3 &segmentNormal = thrust::get<0>(tuple);
+                                                      const TranscendentalExpression &transcendentalExpressions = thrust::get<1>(tuple);
+                                                      return acc + (segmentNormal * transcendentalExpressions.ln);
+                                                  });
 
         //4. Step: Compute Sum 2 which is the same for every result parameter
         // sum over: sigma_pq * AN_pq
@@ -205,7 +206,8 @@ namespace polyhedralGravity {
                                "While evaluating the plane with coordinates v1 = [{}, {}, {}], v2 = [{}, {}, {}], "
                                "v3 = [{}, {}, {}] (with computation point re-located at the origin) a "
                                "significant difference of magnitudes occurred during the evaluation. "
-                               "This may lead to numerically unstable results!", face[0][0], face[0][1], face[0][2],
+                               "This may lead to numerically unstable results!",
+                               face[0][0], face[0][1], face[0][2],
                                face[1][0], face[1][1], face[1][2], face[2][0], face[2][1], face[2][2]);
         }
 
@@ -233,7 +235,7 @@ namespace polyhedralGravity {
     std::string GravityEvaluable::toString() const {
         std::stringstream sstream;
         sstream << "<polyhedral_gravity.GravityEvaluable, density=" << _polyhedron.getDensity() << ", vertices= "
-           << _polyhedron.countVertices() << ", faces= " << _polyhedron.countFaces() << ">";
+                << _polyhedron.countVertices() << ", faces= " << _polyhedron.countFaces() << ">";
         return sstream.str();
     }
 
@@ -242,4 +244,4 @@ namespace polyhedralGravity {
         return std::make_tuple(_polyhedron, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
     }
 
-}
+}// namespace polyhedralGravity
