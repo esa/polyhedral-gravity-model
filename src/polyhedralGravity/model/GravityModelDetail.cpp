@@ -338,8 +338,8 @@ namespace polyhedralGravity::GravityModel::detail {
             const double segmentVectorNorm = euclideanNorm(segmentVector);
             return projectionPointVertexNorms[(j + 1) % 3] < segmentVectorNorm &&
                    projectionPointVertexNorms[j] < segmentVectorNorm &&
-                   projectionPointVertexNorms[(j + 1) % 3] > EPSILON_ZERO_OFFSET &&
-                   projectionPointVertexNorms[j] > EPSILON_ZERO_OFFSET;
+                   projectionPointVertexNorms[(j + 1) % 3] >= EPSILON_ZERO_OFFSET &&
+                   projectionPointVertexNorms[j] >= EPSILON_ZERO_OFFSET;
         })) {
             using namespace util;
             return std::make_pair(-1.0 * util::PI * planeDistance,                                //sing alpha = -pi*h_p
