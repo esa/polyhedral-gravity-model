@@ -337,7 +337,9 @@ namespace polyhedralGravity::GravityModel::detail {
 
             const double segmentVectorNorm = euclideanNorm(segmentVector);
             return projectionPointVertexNorms[(j + 1) % 3] < segmentVectorNorm &&
-                   projectionPointVertexNorms[j] < segmentVectorNorm;
+                   projectionPointVertexNorms[j] < segmentVectorNorm &&
+                   projectionPointVertexNorms[(j + 1) % 3] > EPSILON_ZERO_OFFSET &&
+                   projectionPointVertexNorms[j] > EPSILON_ZERO_OFFSET;
         })) {
             using namespace util;
             return std::make_pair(-1.0 * util::PI * planeDistance,                                //sing alpha = -pi*h_p
@@ -369,8 +371,8 @@ namespace polyhedralGravity::GravityModel::detail {
         })) {
             using namespace util;
             //Two segment vectors G_1 and G_2 of this plane
-            const Array3 &g1 = r1Norm == 0.0 ? segmentVectorsForPlane[j] : segmentVectorsForPlane[(j - 1 + 3) % 3];
-            const Array3 &g2 = r1Norm == 0.0 ? segmentVectorsForPlane[(j + 1) % 3] : segmentVectorsForPlane[j];
+            const Array3 &g1 = r1Norm < EPSILON_ZERO_OFFSET ? segmentVectorsForPlane[j] : segmentVectorsForPlane[(j - 1 + 3) % 3];
+            const Array3 &g2 = r1Norm < EPSILON_ZERO_OFFSET ? segmentVectorsForPlane[(j + 1) % 3] : segmentVectorsForPlane[j];
             // theta = arcos((G_2 * -G_1) / (|G_2| * |G_1|))
             const double gdot = dot(g1 * -1.0, g2);
             const double theta = gdot == 0.0 ? util::PI_2 : std::acos(gdot / (euclideanNorm(g1) * euclideanNorm(g2)));
