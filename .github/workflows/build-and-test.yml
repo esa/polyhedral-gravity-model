@@ -33,6 +33,29 @@ jobs:
         run: cd build/test && ./polyhedralGravity_test
         if: matrix.os != 'windows-latest'
 
+  # Install the python interface with PyTorch and run the differentiable gravity tests
+  build-and-test-torch:
+    name: PyTorch Interface (CPU)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Conda environment from environment.yml
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          micromamba-version: '1.5.6-0'
+          environment-file: environment.yml
+          cache-downloads: true
+          cache-environment: true
+          init-shell: bash
+      - name: Install polyhedral-gravity and PyTorch (CPU)
+        run: |
+          pip install . -vv --no-build-isolation
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+        shell: bash -el {0}
+      - name: Test PyTorch interface
+        run: pytest test/python/test_gravity_model_torch.py -v
+        shell: bash -el {0}
+
   # Install the python interface & test that it is working using pytest
   build-and-test-python:
     name: Python Interface on ${{ matrix.os }}
