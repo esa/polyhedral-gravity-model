@@ -28,6 +28,7 @@
   - [Input & Output (C++ and Python)](#input--output-c-and-python)
   - [Minimal Python Example](#minimal-python-example)
   - [Minimal C++ Example](#minimal-c-example)
+  - [Minimal PyTorch Example (Differentiable)](#minimal-pytorch-example-differentiable)
 - [Installation](#installation)
   - [With conda](#with-conda)
   - [With pip](#with-pip)
@@ -231,6 +232,52 @@ Similarly to Python, the C++ implementation also provides mesh checking capabili
 
 > [!TIP]
 > For reference, have a look at [the main method](./src/main.cpp) of the C++ executable.
+
+### Minimal PyTorch Example (Differentiable)
+
+Besides the C++/pybind11 interface above, `polyhedral_gravity.torch` provides a pure
+PyTorch re-implementation of the same Tsoulis line-integral formula. It is fully
+differentiable (autograd) with respect to vertex positions and density, and runs on
+both CPU and CUDA. On CPU it is slower than the compiled C++ implementation, but with
+a CUDA GPU it can be faster when evaluating many points at once, depending on hardware
+and problem size — see the [benchmark notebook](notebooks/polyhedral-gravity-torch-benchmark.ipynb).
+
+It requires PyTorch, which is **not** a dependency of the base package and must be
+installed separately:
+
+```bash
+pip install torch
+```
+
+```python
+import torch
+from polyhedral_gravity.torch import evaluate
+
+cube_vertices = torch.tensor(
+  [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+   [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]],
+  dtype=torch.float64, requires_grad=True,
+)
+cube_faces = torch.tensor(
+  [[1, 3, 2], [0, 3, 1], [0, 1, 5], [0, 5, 4], [0, 7, 3], [0, 4, 7],
+   [1, 2, 6], [1, 6, 5], [2, 3, 6], [3, 7, 6], [4, 5, 6], [4, 6, 7]],
+)
+cube_density = torch.tensor(1.0, requires_grad=True)
+computation_points = torch.tensor([[0.0, 0.0, 2.0]])
+
+potential, acceleration, tensor = evaluate(
+  cube_vertices, cube_faces, cube_density, computation_points,
+)
+
+# Gradients flow back through the analytic formula, e.g. for shape/density optimization
+potential.sum().backward()
+print(cube_vertices.grad, cube_density.grad)
+```
+
+> [!TIP]
+> See the [PyTorch interface notebook](notebooks/polyhedral-gravity-torch.ipynb) for a
+> worked example, and the [benchmark notebook](notebooks/polyhedral-gravity-torch-benchmark.ipynb)
+> for a CPU/GPU performance comparison against the C++ implementation.
 
 ## Installation
 

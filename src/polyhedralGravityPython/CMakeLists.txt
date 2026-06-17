@@ -7,14 +7,14 @@ file(GLOB_RECURSE PYTHON_INTERFACE_SRC
     )
 list(FILTER PYTHON_INTERFACE_SRC EXCLUDE REGEX ".*YAML.*")
 
-pybind11_add_module(polyhedral_gravity ${PYTHON_INTERFACE_SRC} PolyhedralGravityPython.cpp)
+pybind11_add_module(_core ${PYTHON_INTERFACE_SRC} PolyhedralGravityPython.cpp)
 
 # Checks if MinGW is used, in this case, the .dll of the the standard library need to be linked statically to the
 # Python interface since otherwise they won't be found
 # https://github.com/pybind/pybind11/issues/2010 and https://cython.readthedocs.io/en/latest/src/tutorial/appendix.html
 if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     message(STATUS "Compiler is GNU, Platform is Windows, Linking libaries statically to the Python interface")
-    target_link_libraries(polyhedral_gravity PUBLIC
+    target_link_libraries(_core PUBLIC
         -static-libgcc
         -static-libstdc++
         -W

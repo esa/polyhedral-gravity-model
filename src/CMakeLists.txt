@@ -54,11 +54,11 @@ if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
 
     add_subdirectory(polyhedralGravityPython)
 
-    target_include_directories(polyhedral_gravity PUBLIC
+    target_include_directories(_core PUBLIC
             "${CMAKE_CURRENT_SOURCE_DIR}"
             )
 
-    target_link_libraries(polyhedral_gravity PUBLIC
+    target_link_libraries(_core PUBLIC
             spdlog::spdlog
             tetgen_lib
             xsimd
