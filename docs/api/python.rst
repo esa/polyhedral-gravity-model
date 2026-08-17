@@ -72,3 +72,28 @@ Below is the list of the available attributes:
     Specifies the logging level fixed at compile time.
 
     This corresponds to the value defined by the ``POLYHEDRAL_GRAVITY_LOGGING_LEVEL`` C++ variable.
+
+
+PyTorch Interface (Differentiable)
+-----------------------------------
+
+The optional :code:`polyhedral_gravity.torch` submodule provides a pure-PyTorch,
+autograd-differentiable re-implementation of :code:`evaluate(..)`. It is not
+imported by default and requires PyTorch to be installed separately
+(:code:`pip install torch`). See :ref:`examples-python` for a usage example,
+and the `PyTorch interface notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch.ipynb>`__
+and `benchmark notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch-benchmark.ipynb>`__
+for further details.
+
+.. py:function:: polyhedral_gravity.torch.evaluate(vertices, faces, density, computation_points, gravitational_constant=6.67430e-11)
+
+    Gravitational potential, acceleration, and gradient tensor for a polyhedron,
+    differentiable w.r.t. vertex positions and density.
+
+    :param vertices: ``(N, 3)`` vertex positions [m] (``torch.Tensor``).
+    :param faces: ``(F, 3)`` triangle vertex indices, integer dtype (``torch.Tensor``).
+    :param density: Constant density [kg/m^3].
+    :param computation_points: ``(Q, 3)`` evaluation positions [m] (``torch.Tensor``).
+    :param gravitational_constant: Gravitational constant, defaults to ``6.67430e-11``.
+    :returns: Tuple of ``potential (Q,)``, ``acceleration (Q, 3)``, and gradient ``tensor (Q, 6)``
+        (ordered as ``[Vxx, Vyy, Vzz, Vxy, Vxz, Vyz]``).

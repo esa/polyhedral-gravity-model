@@ -227,3 +227,40 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
         # as fast as the following (find the runtime details below), which returns
         # a list of triplets comprising potential, acceleration, tensor
         results = evaluable(computation_points, parallel=True)
+
+
+PyTorch Interface (Differentiable)
+-----------------------------------
+
+In addition to the C++-backed :code:`evaluate(..)`, the optional
+:code:`polyhedral_gravity.torch` submodule provides a pure-PyTorch
+re-implementation of the same Tsoulis (2012) line-integral formula. It is
+differentiable with respect to both the polyhedron's vertex positions and its
+density, and runs on CPU or CUDA. This is useful for gradient-based
+optimization, e.g. recovering a shape or density distribution from gravity
+measurements. It requires PyTorch to be installed separately
+(:code:`pip install torch`); it is not a hard dependency of
+:code:`polyhedral-gravity-model`.
+
+.. code-block:: python
+
+    import torch
+    from polyhedral_gravity.torch import evaluate as torch_evaluate
+
+    vertices = torch.tensor(..., dtype=torch.float64, requires_grad=True)  # (N, 3)
+    faces = torch.tensor(...)                                              # (F, 3) int
+    density = torch.tensor(1.0, requires_grad=True)
+    computation_points = torch.tensor(...)                                 # (Q, 3)
+
+    potential, acceleration, tensor = torch_evaluate(
+        vertices, faces, density, computation_points,
+    )
+
+    # Gradients flow back through the analytic formula, e.g. for shape/density optimization
+    potential.sum().backward()
+    print(vertices.grad, density.grad)
+
+.. tip::
+   See the `PyTorch interface notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch.ipynb>`__
+   for a worked example, and the `benchmark notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch-benchmark.ipynb>`__
+   for a CPU/GPU performance comparison against the C++ implementation.

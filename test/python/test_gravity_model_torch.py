@@ -110,13 +110,13 @@ def _rel_err_acc(mine, ref):
     return np.linalg.norm(mine - ref, axis=-1) / (np.linalg.norm(ref, axis=-1) + 1e-30)
 
 
-def _esa_batch(poly, pts):
-    Vs, gs = [], []
+def _cpp_batch(poly, pts):
+    potentials, gs = [], []
     for p in pts:
-        V, g, _ = evaluate(poly, p)
-        Vs.append(V)
+        potential, g, _ = evaluate(poly, p)
+        potentials.append(potential)
         gs.append(g)
-    return np.array(Vs), np.array(gs)
+    return np.array(potentials), np.array(gs)
 
 
 # ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ def _esa_batch(poly, pts):
 # ---------------------------------------------------------------------------
 
 def _make_body(b):
-    esa_poly = Polyhedron(
+    cpp_poly = Polyhedron(
         (b["vertices"], b["faces"]),
         density=1.0,
         normal_orientation=NormalOrientation.OUTWARDS,
@@ -133,7 +133,7 @@ def _make_body(b):
         **b,
         "verts_t": torch.tensor(b["vertices"], dtype=torch.float64),
         "faces_t": torch.tensor(b["faces"], dtype=torch.long),
-        "esa_poly": esa_poly,
+        "cpp_poly": cpp_poly,
     }
 
 
@@ -162,18 +162,18 @@ class TestAccuracy:
 
     def test_exterior_points(self, body):
         pts = body["exterior_points"]
-        V, g, _ = torch_evaluate(
+        potential, g, _ = torch_evaluate(
             body["verts_t"], body["faces_t"], 1.0,
             torch.tensor(pts, dtype=torch.float64),
         )
-        V_np = V.detach().numpy()
+        potential_np = potential.detach().numpy()
         g_np = g.detach().numpy()
 
         for i, p in enumerate(pts):
-            esa_V, esa_g, _ = evaluate(body["esa_poly"], p)
-            assert _rel_err_pot(V_np[i], esa_V) < REL_TOL, \
+            cpp_potential, cpp_g, _ = evaluate(body["cpp_poly"], p)
+            assert _rel_err_pot(potential_np[i], cpp_potential) < REL_TOL, \
                 f"body={body['id']} point={p}: potential rel error too large"
-            assert _rel_err_acc(g_np[i], np.array(esa_g)) < REL_TOL, \
+            assert _rel_err_acc(g_np[i], np.array(cpp_g)) < REL_TOL, \
                 f"body={body['id']} point={p}: acceleration rel error too large"
 
 
@@ -182,25 +182,25 @@ class TestSingularityCases:
 
     def test_edge_singularity(self, body_with_singularities):
         body = body_with_singularities
-        V, g, _ = torch_evaluate(
+        potential, g, _ = torch_evaluate(
             body["verts_t"], body["faces_t"], 1.0,
             torch.tensor(body["edge_singular_points"], dtype=torch.float64),
         )
         for i, p in enumerate(body["edge_singular_points"]):
-            esa_V, esa_g, _ = evaluate(body["esa_poly"], p)
-            assert _rel_err_pot(V.detach().numpy()[i], esa_V) < REL_TOL
-            assert _rel_err_acc(g.detach().numpy()[i], np.array(esa_g)) < REL_TOL
+            cpp_potential, cpp_g, _ = evaluate(body["cpp_poly"], p)
+            assert _rel_err_pot(potential.detach().numpy()[i], cpp_potential) < REL_TOL
+            assert _rel_err_acc(g.detach().numpy()[i], np.array(cpp_g)) < REL_TOL
 
     def test_vertex_singularity(self, body_with_singularities):
         body = body_with_singularities
-        V, g, _ = torch_evaluate(
+        potential, g, _ = torch_evaluate(
             body["verts_t"], body["faces_t"], 1.0,
             torch.tensor(body["vertex_singular_points"], dtype=torch.float64),
         )
         for i, p in enumerate(body["vertex_singular_points"]):
-            esa_V, esa_g, _ = evaluate(body["esa_poly"], p)
-            assert _rel_err_pot(V.detach().numpy()[i], esa_V) < REL_TOL
-            assert _rel_err_acc(g.detach().numpy()[i], np.array(esa_g)) < REL_TOL
+            cpp_potential, cpp_g, _ = evaluate(body["cpp_poly"], p)
+            assert _rel_err_pot(potential.detach().numpy()[i], cpp_potential) < REL_TOL
+            assert _rel_err_acc(g.detach().numpy()[i], np.array(cpp_g)) < REL_TOL
 
 
 class TestBatched:
@@ -218,12 +218,12 @@ class TestBatched:
         ], dtype=np.float64)
 
     def test_potential_batch(self, body, sphere_points):
-        V, _, __ = torch_evaluate(
+        potential, _, __ = torch_evaluate(
             body["verts_t"], body["faces_t"], 1.0,
             torch.tensor(sphere_points, dtype=torch.float64),
         )
-        ref_V, _ = _esa_batch(body["esa_poly"], sphere_points)
-        err = _rel_err_pot(V.detach().numpy(), ref_V)
+        ref_potential, _ = _cpp_batch(body["cpp_poly"], sphere_points)
+        err = _rel_err_pot(potential.detach().numpy(), ref_potential)
         assert err.max() < REL_TOL, \
             f"body={body['id']}: max potential rel error = {err.max():.2e}"
 
@@ -232,7 +232,7 @@ class TestBatched:
             body["verts_t"], body["faces_t"], 1.0,
             torch.tensor(sphere_points, dtype=torch.float64),
         )
-        _, ref_g = _esa_batch(body["esa_poly"], sphere_points)
+        _, ref_g = _cpp_batch(body["cpp_poly"], sphere_points)
         err = _rel_err_acc(g.detach().numpy(), ref_g)
         assert err.max() < REL_TOL, \
             f"body={body['id']}: max acceleration rel error = {err.max():.2e}"
@@ -244,23 +244,23 @@ class TestGradients:
     def test_gradient_wrt_vertices_nonzero(self, body):
         verts = body["verts_t"].clone().requires_grad_(True)
         q = torch.tensor(body["exterior_points"][:1], dtype=torch.float64)
-        V, _, __ = torch_evaluate(verts, body["faces_t"], 1.0, q)
-        V.sum().backward()
+        potential, _, __ = torch_evaluate(verts, body["faces_t"], 1.0, q)
+        potential.sum().backward()
         assert verts.grad is not None and verts.grad.abs().max() > 0
 
     def test_gradient_wrt_scalar_density_nonzero(self, body):
         density = torch.tensor(1.0, dtype=torch.float64, requires_grad=True)
         q = torch.tensor(body["exterior_points"][:1], dtype=torch.float64)
-        V, _, __ = torch_evaluate(body["verts_t"], body["faces_t"], density, q)
-        V.sum().backward()
+        potential, _, __ = torch_evaluate(body["verts_t"], body["faces_t"], density, q)
+        potential.sum().backward()
         assert density.grad is not None and density.grad.abs() > 0
 
     def test_gradient_consistent_with_finite_differences(self, body):
         """∂V/∂vertices must agree with central finite differences to 1e-6."""
         verts = body["verts_t"].clone().requires_grad_(True)
         q = torch.tensor(body["grad_point"], dtype=torch.float64)
-        V, _, __ = torch_evaluate(verts, body["faces_t"], 1.0, q)
-        V.backward()
+        potential, _, __ = torch_evaluate(verts, body["faces_t"], 1.0, q)
+        potential.backward()
         grad = verts.grad.clone()
 
         eps = 1e-5
@@ -268,11 +268,13 @@ class TestGradients:
         base = body["verts_t"]
         for i in range(base.shape[0]):
             for j in range(3):
-                vp = base.clone(); vp[i, j] += eps
-                vm = base.clone(); vm[i, j] -= eps
-                Vp, _, __ = torch_evaluate(vp, body["faces_t"], 1.0, q)
-                Vm, _, __ = torch_evaluate(vm, body["faces_t"], 1.0, q)
-                fd_grad[i, j] = (Vp - Vm) / (2 * eps)
+                vp = base.clone()
+                vp[i, j] += eps
+                vm = base.clone()
+                vm[i, j] -= eps
+                potential_plus, _, __ = torch_evaluate(vp, body["faces_t"], 1.0, q)
+                potential_minus, _, __ = torch_evaluate(vm, body["faces_t"], 1.0, q)
+                fd_grad[i, j] = (potential_plus - potential_minus) / (2 * eps)
 
         rel = (grad - fd_grad).abs() / (fd_grad.abs() + 1e-30)
         assert rel.max().item() < 1e-6, \
@@ -284,27 +286,27 @@ class TestTensor:
 
     def test_tensor_accuracy(self, body):
         pts = body["exterior_points"]
-        _, _, T = torch_evaluate(
+        _, _, tensor = torch_evaluate(
             body["verts_t"], body["faces_t"], 1.0,
             torch.tensor(pts, dtype=torch.float64),
         )
-        T_np = T.detach().numpy()
+        tensor_np = tensor.detach().numpy()
 
         for i, p in enumerate(pts):
-            _, _, esa_T = evaluate(body["esa_poly"], p)
-            ref = np.array(esa_T)
+            _, _, cpp_tensor = evaluate(body["cpp_poly"], p)
+            ref = np.array(cpp_tensor)
             # Normalise by the problem scale (max component) so near-zero diagonal
             # components at high-symmetry points don't blow up the relative error.
             scale = np.abs(ref).max() + 1e-30
-            err = np.abs(T_np[i] - ref) / scale
+            err = np.abs(tensor_np[i] - ref) / scale
             assert err.max() < REL_TOL, \
                 f"body={body['id']} point={p}: tensor rel error too large: {err.max():.2e}"
 
     def test_tensor_scaling(self, body):
         q = torch.tensor(body["exterior_points"][:2], dtype=torch.float64)
-        _, _, T1 = torch_evaluate(body["verts_t"], body["faces_t"], 1.0, q)
-        _, _, Tr = torch_evaluate(body["verts_t"], body["faces_t"], 2.0, q)
-        assert torch.allclose(Tr, 2.0 * T1, rtol=1e-12)
+        _, _, tensor_unit = torch_evaluate(body["verts_t"], body["faces_t"], 1.0, q)
+        _, _, tensor_scaled = torch_evaluate(body["verts_t"], body["faces_t"], 2.0, q)
+        assert torch.allclose(tensor_scaled, 2.0 * tensor_unit, rtol=1e-12)
 
 
 class TestDensityScaling:
@@ -313,8 +315,8 @@ class TestDensityScaling:
     @pytest.mark.parametrize("rho", [0.5, 2.0, 1000.0])
     def test_linear_scaling(self, body, rho):
         q = torch.tensor(body["exterior_points"][:2], dtype=torch.float64)
-        V1, g1, _ = torch_evaluate(body["verts_t"], body["faces_t"], 1.0, q)
-        Vr, gr, _ = torch_evaluate(body["verts_t"], body["faces_t"], rho, q)
-        assert torch.allclose(Vr, rho * V1, rtol=1e-12)
+        potential_unit, g1, _ = torch_evaluate(body["verts_t"], body["faces_t"], 1.0, q)
+        potential_scaled, gr, _ = torch_evaluate(body["verts_t"], body["faces_t"], rho, q)
+        assert torch.allclose(potential_scaled, rho * potential_unit, rtol=1e-12)
         assert torch.allclose(gr, rho * g1, rtol=1e-12)
 
