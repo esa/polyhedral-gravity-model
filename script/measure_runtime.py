@@ -1,5 +1,4 @@
 #!python3
-from pathspec import backend
 from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable, ComputeBackend, ComputePrecision
 import polyhedral_gravity
 import numpy as np
