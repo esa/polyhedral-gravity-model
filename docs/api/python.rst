@@ -26,6 +26,14 @@ Enums to specify Mesh(-checks)
 GravityModel
 ------------
 
+Enums to specify where and how to evaluate
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: polyhedral_gravity.ComputeBackend
+
+.. autoclass:: polyhedral_gravity.ComputePrecision
+
+
 Single Function
 ~~~~~~~~~~~~~~~
 
@@ -56,10 +64,13 @@ Below is the list of the available attributes:
 
 .. py:attribute:: __parallelization__
 
-    Specifies the parallelization of the :code:`polyhedral_gravity` module at compile time
-    (One of :code:`CPP`, :code:`OMP`, :code:`TBB`)
+    Lists the `Kokkos <https://kokkos.org/>`__ execution spaces the :code:`polyhedral_gravity` module was
+    compiled with, as a comma-separated string, e.g. :code:`'Serial, OpenMP, Cuda'`.
 
-    This attribute corresponds to the value of the ``POLYHEDRAL_GRAVITY_PARALLELIZATION`` C++ variable.
+    These are the backends a :py:class:`polyhedral_gravity.ComputeBackend` can be served by:
+    :code:`Serial` for :code:`CPU_SERIAL`, :code:`OpenMP` for :code:`CPU_PARALLEL`, and
+    :code:`Cuda`/ :code:`HIP`/ :code:`SYCL` for :code:`GPU_PARALLEL`. If no GPU space is listed,
+    requesting :code:`GPU_PARALLEL` raises a :code:`RuntimeError`.
 
 .. py:attribute:: __commit__
 

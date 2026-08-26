@@ -8,7 +8,6 @@
 #include <array>
 #include <algorithm>
 #include <random>
-#include <thrust/generate.h>
 #include <iostream>
 #include "polyhedralGravity/model/Polyhedron.h"
 
@@ -60,7 +59,7 @@ public:
 
         for (size_t i = 0; i < SET_NUMBER; ++i) {
             std::set<size_t> generatedSet;
-            thrust::generate_n(std::inserter(generatedSet, generatedSet.end()), SET_SIZE, [&dist, &engine]() {return dist(engine);});
+            std::generate_n(std::inserter(generatedSet, generatedSet.end()), SET_SIZE, [&dist, &engine]() { return dist(engine); });
             while(generatedSet.size() < SET_SIZE) {
                 generatedSet.insert(dist(engine));
             }

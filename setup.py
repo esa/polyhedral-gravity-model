@@ -15,8 +15,8 @@ from setuptools.command.build_ext import build_ext
 CMAKE_OPTIONS = {
     # The Build Type (Should be release!)
     "CMAKE_BUILD_TYPE": "Release",
-    # Modify to change the parallelization (Default value: TBB)
-    "POLYHEDRAL_GRAVITY_PARALLELIZATION": "TBB",
+    # Modify to change the GPU backend Kokkos targets (AUTO = detect the vendor paradigm)
+    "POLYHEDRAL_GRAVITY_DEVICE_BACKEND": "AUTO",
     # Default value (INFO=2)
     "POLYHEDRAL_GRAVITY_LOGGING_LEVEL": "INFO",
     # Not required for the python interface (--> OFF)
@@ -185,7 +185,7 @@ class CMakeBuild(build_ext):
         if not os.path.exists(build_temp):
             os.makedirs(build_temp)
 
-        # Enables log messages for thrust
+        # Enables the dependencies' set-up messages
         cmake_args += ["--log-level=VERBOSE"]
 
         # Call CMake and build the project

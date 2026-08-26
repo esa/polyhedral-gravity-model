@@ -82,13 +82,13 @@ and we check the if the plane unit normals are actually outwards pointing
         // Returns either a single of vector of results
         // Here, we only have one point. Thus we get a single result
         Polyhedron polyhedron{vertices, faces, density, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY};
-        const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, false);
+        const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, ComputeBackend::CPU_SERIAL);
 
 
 **Example 2:** Evaluating the gravity model for a given polyhedron
 in some source files for a specific point and density.
-Further, we explicitly enable the parallelization using the optional fourth parameter
-(which defaults to true). We disable the :math:`O(n^2)` check if the
+Further, we explicitly select the compute backend using the optional third parameter
+(which defaults to :code:`ComputeBackend::CPU_PARALLEL`). We disable the :math:`O(n^2)` check if the
 plane unit normals are actually outwards pointing.
 
 .. code-block:: cpp
@@ -102,7 +102,7 @@ plane unit normals are actually outwards pointing.
         // Returns either a single of vector of results
         // Here, we only have one point. Thus we get a single result
         Polyhedron polyhedron{files, density, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE};
-        const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, true);
+        const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, ComputeBackend::CPU_PARALLEL);
 
 
 **Example 3:** Evaluating the gravity model for a given configuration
@@ -166,11 +166,12 @@ defined from within source code for a specific point and density.
         std::vector<std::array<double, 3>> points = ...
 
         // Instantiation of the GravityEvaluable object
+        // It optionally takes the ComputePrecision as a second argument (default: FLOAT64)
         GravityEvaluable evaluable{polyhedron};
 
         // From now, we can evaluate the gravity model for any point with
-        const auto[pot, acc, tensor] = evaluable(point);
+        const auto[pot, acc, tensor] = std::get<GravityModelResult>(evaluable(point));
         // or for multiple points with
-        const auto results = evaluable(points);
-        // and we can also disable e.g. the parallelization like for the free function
-        const auto singleResultTuple = evaluable(point, false);
+        const auto results = std::get<std::vector<GravityModelResult>>(evaluable(points));
+        // and we can also choose the compute backend like for the free function
+        const auto onTheGpu = std::get<GravityModelResult>(evaluable(point, ComputeBackend::GPU_PARALLEL));

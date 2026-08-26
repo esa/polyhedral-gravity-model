@@ -8,14 +8,8 @@
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
-#include "thrust/iterator/zip_iterator.h"
-#include "thrust/iterator/transform_iterator.h"
-#include "thrust/iterator/counting_iterator.h"
-#include "thrust/transform.h"
-#include "thrust/transform_reduce.h"
-#include "thrust/execution_policy.h"
-#include "polyhedralGravity/util/UtilityThrust.h"
 #include "polyhedralGravity/model/GravityModel.h"
+#include "polyhedralGravity/model/GravityModelDetail.h"
 
 /**
  * Contains additional utility for working with the values of the polyhedrale Gravity Model.

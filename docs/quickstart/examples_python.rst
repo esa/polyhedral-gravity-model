@@ -28,7 +28,7 @@ polyhedron defined from within source code for a single point.
 
 .. code-block:: python
 
-        from polyhedral_gravity import Polyhedron, evaluate
+        from polyhedral_gravity import Polyhedron, evaluate, ComputeBackend
 
         # Defining every input parameter in the source code
         vertices = ...          # (N-3)-array-like of type float
@@ -41,7 +41,7 @@ polyhedron defined from within source code for a single point.
         # Returns a tuple of potential, acceleration and tensor
         # If computation_point would be a (N,3)-array, the output would be list of triplets!
         polyhedron = Polyhedron((vertices, faces), density)
-        potential, acceleration, tensor = evaluate(polyhedron, computation_point, parallel=True)
+        potential, acceleration, tensor = evaluate(polyhedron, computation_point, backend=ComputeBackend.CPU_PARALLEL)
 
 
 **Example 2a:** Evaluating the gravity model for a given constant density polyhedron
@@ -53,7 +53,7 @@ plane unit normal is inwards pointing.
 
 .. code-block:: python
 
-    from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity, NormalOrientation
+    from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity, NormalOrientation, ComputeBackend
 
     # Reading the vertices and files from a .node and .face file
     file_vertices = '___.node'      # str, path to file
@@ -73,7 +73,7 @@ plane unit normal is inwards pointing.
     results = evaluate(
         polyhedron=polyhedron,
         computation_points=computation_points,
-        parallel=True,
+        backend=ComputeBackend.CPU_PARALLEL,
     )
 
 
@@ -201,7 +201,7 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
 
 .. code-block:: python
 
-        from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity
+        from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, ComputeBackend
 
         # Defining every input parameter in the source code
         vertices = ...           # (N-3)-array-like of type float
@@ -221,12 +221,12 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
 
         for point in computation_points:
             # Evaluate the gravity model for single points (3)-array-like
-            potential, acceleration, tensor = evaluable(point, parallel=True)
+            potential, acceleration, tensor = evaluable(point, backend=ComputeBackend.CPU_PARALLEL)
 
         # Due to the GravityEvaluable's caching the above for-loop is nearly
         # as fast as the following (find the runtime details below), which returns
         # a list of triplets comprising potential, acceleration, tensor
-        results = evaluable(computation_points, parallel=True)
+        results = evaluable(computation_points, backend=ComputeBackend.CPU_PARALLEL)
 
 
 PyTorch Interface (Differentiable)

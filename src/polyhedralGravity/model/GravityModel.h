@@ -25,11 +25,19 @@ namespace polyhedralGravity::GravityModel {
      *
      * @param polyhedron the polyhedron consisting of vertices and triangular faces
      * @param computationPoint the computation Point P
-     * @param parallel whether to evaluate in parallel or serial
+     * @param backend the compute backend the evaluation runs on (default: CPU_PARALLEL)
+     * @param precision the floating point precision the evaluation computes in (default: FLOAT64)
      * @return the GravityModelResult containing the potential, the acceleration, and the change of acceleration
      * at computation Point P
+     *
+     * @throws std::runtime_error if GPU_PARALLEL is requested, but this build has no GPU backend
+     *
+     * @note Every call sets up its own {@link GravityEvaluable}, which means uploading the polyhedron to the
+     * compute device again. Prefer a {@link GravityEvaluable} for repeated evaluations.
      */
-    GravityModelResult evaluate(const Polyhedron &polyhedron, const Array3 &computationPoint, bool parallel = true);
+    GravityModelResult evaluate(const Polyhedron &polyhedron, const Array3 &computationPoint,
+                                ComputeBackend backend = ComputeBackend::CPU_PARALLEL,
+                                ComputePrecision precision = ComputePrecision::FLOAT64);
 
     /**
      * Evaluates the polyhedral gravity model for a given constant density polyhedron at multiple computation
@@ -41,11 +49,19 @@ namespace polyhedralGravity::GravityModel {
      *
      * @param polyhedron the polyhedron consisting of vertices and triangular faces
      * @param computationPoints vector of computation points
-     * @param parallel whether to evaluate in parallel or serial
+     * @param backend the compute backend the evaluation runs on (default: CPU_PARALLEL)
+     * @param precision the floating point precision the evaluation computes in (default: FLOAT64)
      * @return the GravityModelResult containing the potential, the acceleration, and the change of acceleration
      * foreach computation Point P
+     *
+     * @throws std::runtime_error if GPU_PARALLEL is requested, but this build has no GPU backend
+     *
+     * @note Every call sets up its own {@link GravityEvaluable}, which means uploading the polyhedron to the
+     * compute device again. Prefer a {@link GravityEvaluable} for repeated evaluations.
      */
     std::vector<GravityModelResult>
-    evaluate(const Polyhedron &polyhedron, const std::vector<Array3> &computationPoints, bool parallel = true);
+    evaluate(const Polyhedron &polyhedron, const std::vector<Array3> &computationPoints,
+             ComputeBackend backend = ComputeBackend::CPU_PARALLEL,
+             ComputePrecision precision = ComputePrecision::FLOAT64);
 
 }

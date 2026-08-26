@@ -9,9 +9,31 @@
 namespace polyhedralGravity {
 
     /**
+     * Alias for an array of size 3 for x, y, z coordinates in the given floating point precision.
+     * The evaluation of the gravity model is templated over this precision (see {@link ComputePrecision}),
+     * whereas everything the user hands in or gets back is always in double precision.
+     */
+    template<typename FloatType>
+    using Vector3 = std::array<FloatType, 3>;
+
+    /**
+     * Alias for an array of size 6 for xx, yy, zz, xy, xz, yz second derivatives
+     * in the given floating point precision.
+     */
+    template<typename FloatType>
+    using Vector6 = std::array<FloatType, 6>;
+
+    /**
+     * Alias for a triplet of arrays of size 3 for the segments of a triangular face
+     * in the given floating point precision.
+     */
+    template<typename FloatType>
+    using Vector3Triplet = std::array<Vector3<FloatType>, 3>;
+
+    /**
      * Alias for an array of size 3 (double) for x, y, z coordinates.
      */
-    using Array3 = std::array<double, 3>;
+    using Array3 = Vector3<double>;
 
     /**
      * Alias for an array of size 3 (size_t) for the vertex indices in a triangular face.
@@ -21,12 +43,12 @@ namespace polyhedralGravity {
     /**
      * Alias for an array of size 6 for xx, yy, zz, xy, xz, yz second derivatives.
      */
-    using Array6 = std::array<double, 6>;
+    using Array6 = Vector6<double>;
 
     /**
      * Alias for a triplet of arrays of size 3 for the segment of a triangular face
      */
-    using Array3Triplet = std::array<Array3, 3>;
+    using Array3Triplet = Vector3Triplet<double>;
 
     /**
      * Contains in the order of the tuple:
@@ -126,6 +148,52 @@ namespace polyhedralGravity {
      * @return The output stream after writing the string representation.
      */
     std::ostream &operator<<(std::ostream &os, const MetricUnit &metricUnit);
+
+    /**
+     * The compute backend on which the polyhedral gravity model is evaluated.
+     * Every backend is a Kokkos execution space; which of them are compiled in is decided
+     * by the CMake configuration (see {@code cmake/kokkos.cmake}).
+     */
+    enum class ComputeBackend : char {
+        /** Evaluation on a single CPU thread, i.e. the Kokkos Serial execution space */
+        CPU_SERIAL,
+        /** Evaluation on all CPU threads, i.e. the Kokkos OpenMP execution space */
+        CPU_PARALLEL,
+        /**
+         * Evaluation on the GPU using the vendor's native paradigm, i.e. the Kokkos CUDA (NVIDIA),
+         * HIP (AMD), or SYCL (Intel) execution space.
+         * @throws std::runtime_error if the library was not compiled with a GPU backend
+         */
+        GPU_PARALLEL,
+    };
+
+    /**
+     * Stream operator for the ComputeBackend enum. Prints the enum to a human-readable string.
+     * @param os The output stream to write the string representation to.
+     * @param backend the compute backend to print
+     * @return The output stream after writing the string representation.
+     */
+    std::ostream &operator<<(std::ostream &os, const ComputeBackend &backend);
+
+    /**
+     * The floating point precision in which the polyhedral gravity model is evaluated.
+     * The polyhedron's mesh and the results are always given in double precision;
+     * this enum only selects the precision of the evaluation itself.
+     */
+    enum class ComputePrecision : char {
+        /** Single precision @f$[32\ bit]@f$ */
+        FLOAT32,
+        /** Double precision @f$[64\ bit]@f$ */
+        FLOAT64,
+    };
+
+    /**
+     * Stream operator for the ComputePrecision enum. Prints the enum to a human-readable string.
+     * @param os The output stream to write the string representation to.
+     * @param precision the compute precision to print
+     * @return The output stream after writing the string representation.
+     */
+    std::ostream &operator<<(std::ostream &os, const ComputePrecision &precision);
 
     /**
      * Converts a given string representation of a metric unit into the corresponding MetricUnit enum value.

@@ -34,7 +34,7 @@ Binaries for the most common platforms are available on PyPI including
 Windows, Linux and macOS. For macOS and Linux, binaries for
 :code:`x86_64` and :code:`aarch64` are provided.
 In case :code:`pip` uses the source distribution, please make sure that
-you have a C++17 capable compiler and CMake installed.
+you have a C++20 capable compiler and CMake installed.
 
 
 Installation & Build from source
@@ -52,14 +52,14 @@ The module will be build using CMake. Just execute in repository root:
 
     pip install .
 
-To modify the build options (like parallelization) have a look
+To modify the build options (like the GPU backend) have a look
 at the :ref:`build-options` for an overview of options.
 The pip installation will call CMake. To modify build options, just set them as
 environment variable before executing the :code:`pip install .` command, e.g.:
 
 .. code-block::
 
-    export POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
+    export POLYHEDRAL_GRAVITY_DEVICE_BACKEND="CUDA"
 
 
 Build C++ library/ executable
@@ -87,15 +87,23 @@ Build Options
 
 The available options are the following:
 
-====================================================== ============================================================================================================
+====================================================== ==========================================================================================================================
 Name (Default)                                         Options
-====================================================== ============================================================================================================
-POLYHEDRAL_GRAVITY_PARALLELIZATION (:code:`CPP`)       :code:`CPP` = Serial Execution / :code:`OMP` or :code:`TBB`  = Parallel Execution with OpenMP or Intel's TBB
+====================================================== ==========================================================================================================================
+POLYHEDRAL_GRAVITY_DEVICE_BACKEND (:code:`AUTO`)       :code:`AUTO` = detect the GPU vendor's paradigm / :code:`NONE` = CPU-only build / :code:`CUDA`, :code:`HIP`, or :code:`SYCL`
 POLYHEDRAL_GRAVITY_LOGGING_LEVEL (:code:`INFO`)        :code:`TRACE`, :code:`DEBUG`, :code:`INFO`, :code:`WARN`, :code:`ERROR`, :code:`CRITICAL`, :code:`OFF`
 BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)            Build this documentation
 BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)            Build the Tests
 BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (:code:`ON`) Build the Python interface
-====================================================== ============================================================================================================
+====================================================== ==========================================================================================================================
+
+The host backends need no configuration: the Kokkos :code:`Serial` backend is always compiled in, and the
+:code:`OpenMP` backend is enabled whenever an OpenMP installation is found. On macOS this is Homebrew's
+:code:`libomp`; without it, :code:`ComputeBackend.CPU_PARALLEL` falls back to serial execution.
+
+:code:`POLYHEDRAL_GRAVITY_DEVICE_BACKEND=AUTO` picks the GPU vendor's native paradigm from the installed
+toolchain: CUDA if :code:`nvcc` is found, HIP if the ROCm compiler is found, SYCL for the Intel LLVM
+compiler, and no GPU backend otherwise.
 
 Dependencies (automatically set-up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -106,8 +114,7 @@ Dependencies (all of them are automatically set-up via :code:`CMake`):
 - spdlog (1.13.0 or compatible), required for logging
 - tetgen (1.6 or compatible), required for I/O
 - yaml-cpp (0.8.0 or compatible), required for I/O
-- thrust (2.1.0 or compatible), required for parallelization and utility
-- xsimd (11.1.0 or compatible), required for vectorization of the :code:`atan(..)`
+- Kokkos (5.1.1 or compatible), required for the parallelization on the CPU and the GPU
 - pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
 
 Build this documentation

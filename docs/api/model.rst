@@ -25,9 +25,13 @@ The class :cpp:class:`polyhedralGravity::GravityEvaluable` is provides as a way 
 perform the evaluation of the polyhedral gravity model repeatedly
 without the need to re-initialize the polyhedron and the gravity model as
 caching is performed.
-It takes a :cpp:class:`polyhedralGravity::Polyhedron` and provides an
+It takes a :cpp:class:`polyhedralGravity::Polyhedron`, uploads it to the compute devices, and provides an
 :cpp:func:`polyhedralGravity::GravityEvaluable::operator()` to evaluate the
-model at computation point(s) :math:`P` optionally using parallelization.
+model at computation point(s) :math:`P` on the
+:cpp:enum:`polyhedralGravity::ComputeBackend` of one's choice.
+The evaluation itself is implemented once with `Kokkos <https://kokkos.org/>`__ and therefore runs
+unchanged on a single CPU thread, on all CPU threads, and on a GPU. Its floating point precision is
+selected with :cpp:enum:`polyhedralGravity::ComputePrecision` when constructing the evaluable.
 A :cpp:func:`polyhedralGravity::GravityModel::evaluate` summarizes the
 functionality :cpp:class:`polyhedralGravity::GravityEvaluable`, but does not
 provide any caching throughout multiple calls.
@@ -50,20 +54,47 @@ GravityModel
 
 .. doxygenclass:: polyhedralGravity::GravityEvaluable
 
+.. doxygenenum:: polyhedralGravity::ComputeBackend
+
+.. doxygenenum:: polyhedralGravity::ComputePrecision
+
 .. doxygennamespace:: polyhedralGravity::GravityModel
+
+
+Kokkos Backend
+--------------
+
+The namespace :cpp:any:`polyhedralGravity::kokkos` contains everything which directly touches Kokkos:
+the runtime session, the device-resident polyhedron, and the kernels. A user of this library never has
+to interact with it, since the Kokkos runtime is initialized on demand and finalized when the process
+exits.
+
+.. doxygennamespace:: polyhedralGravity::kokkos
 
 
 Named Tuple
 -----------
 
-.. doxygenstruct:: polyhedralGravity::Distance
+.. doxygenstruct:: polyhedralGravity::DistanceTemplate
 
-.. doxygenstruct:: polyhedralGravity::TranscendentalExpression
+.. doxygenstruct:: polyhedralGravity::TranscendentalExpressionTemplate
 
-.. doxygenstruct:: polyhedralGravity::HessianPlane
+.. doxygenstruct:: polyhedralGravity::HessianPlaneTemplate
+
+.. doxygentypedef:: polyhedralGravity::Distance
+
+.. doxygentypedef:: polyhedralGravity::TranscendentalExpression
+
+.. doxygentypedef:: polyhedralGravity::HessianPlane
 
 Type Definitions
 ----------------
+
+.. doxygentypedef:: polyhedralGravity::Vector3
+
+.. doxygentypedef:: polyhedralGravity::Vector6
+
+.. doxygentypedef:: polyhedralGravity::Vector3Triplet
 
 .. doxygentypedef:: polyhedralGravity::Array3
 

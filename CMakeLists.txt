@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 cmake_policy(SET CMP0079 NEW)
 project(polyhedralGravity)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Appends the the module path to contain additional CMake modules for this project
@@ -10,14 +11,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(CMakeDependentOption)
 
-#####################################
-# PARALLELIZATION OPTIONS AND LOGGING
-#####################################
-# Parallelization on the HOST
-set(POLYHEDRAL_GRAVITY_PARALLELIZATION "CPP" CACHE STRING "Host parallelization chosen by the user
- (CPP= Serial, OMP = OpenMP, TBB = Intel Threading Building Blocks")
-set_property(CACHE POLYHEDRAL_GRAVITY_PARALLELIZATION PROPERTY STRINGS CPP, OMP, TBB)
-
+##########################
+# LOGGING
+##########################
 # Set the Logging Level
 set(POLYHEDRAL_GRAVITY_LOGGING_LEVEL_LIST "TRACE" "DEBUG" "INFO" "WARN" "ERROR" "CRITICAL" "OFF")
 set(POLYHEDRAL_GRAVITY_LOGGING_LEVEL "INFO" CACHE STRING "Set the Logging level, default (INFO), available options: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL, OFF")
@@ -66,7 +62,6 @@ include(version.cmake)
 message(STATUS "#################################################################")
 message(STATUS "Polyhedral Gravity Version          ${POLYHEDRAL_GRAVITY_VERSION}")
 message(STATUS "Polyhedral Gravity Commit Hash      ${POLYHEDRAL_GRAVITY_COMMIT_HASH}")
-message(STATUS "Polyhedral Parallelization Backend  ${POLYHEDRAL_GRAVITY_PARALLELIZATION}")
 message(STATUS "Polyhedral Gravity Logging Level    ${POLYHEDRAL_GRAVITY_LOGGING_LEVEL}")
 message(STATUS "#################################################################")
 message(STATUS "Polyhedral Gravity Documentation    ${BUILD_POLYHEDRAL_GRAVITY_DOCS}")
@@ -79,30 +74,11 @@ message(STATUS "################################################################
 # Including dependencies needed across multiple targets
 #######################################################
 
-include(thrust)
+include(kokkos)
 include(spdlog)
 include(tetgen)
-include(xsimd)
 include(clang_format)
 include(cmake_format)
-
-###############################
-# Thrust Parallelization Set-Up
-###############################
-# Get a version of tbb from the github repository, simplifies compilation for the user since tbb does not need to be
-# preinstalled but rather gets automatically set up via CMake
-# Nevertheless, there is still the option to enforce to use a local installation if one exists
-if (${POLYHEDRAL_GRAVITY_PARALLELIZATION} STREQUAL "TBB")
-    include(tbb)
-    thrust_set_TBB_target(TBB::tbb)
-    add_compile_definitions(POLYHEDRAL_GRAVITY_TBB)
-elseif (${POLYHEDRAL_GRAVITY_PARALLELIZATION} STREQUAL "OMP")
-    add_compile_definitions(POLYHEDRAL_GRAVITY_OMP)
-endif ()
-
-# Thrust set-up i.e. the parallelization library, create targets according to the users specification
-thrust_create_target(Thrust HOST CPP DEVICE ${POLYHEDRAL_GRAVITY_PARALLELIZATION})
-message(STATUS "Set Parallelization: HOST CPP DEVICE ${POLYHEDRAL_GRAVITY_PARALLELIZATION}")
 
 ############################################################
 # Polyhedral Gravity Library & Executable & Python Interface

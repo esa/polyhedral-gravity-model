@@ -16,12 +16,6 @@ namespace polyhedralGravity {
     constexpr std::string_view POLYHEDRAL_GRAVITY_VERSION = "@POLYHEDRAL_GRAVITY_VERSION@";
 
     /**
-     * The API's parallelization backend of the polyhedral gravity model's interface.
-     * The value is set by the CMake configuration.
-     */
-    constexpr std::string_view POLYHEDRAL_GRAVITY_PARALLELIZATION = "@POLYHEDRAL_GRAVITY_PARALLELIZATION@";
-
-    /**
      * The commit hash of the currently compiled version.
      * This is appended with '+modified' in case the working tree is not clean.
      * The value is set by the CMake configuration.

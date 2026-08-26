@@ -1,5 +1,5 @@
 from typing import Tuple, List, Union
-from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation, MetricUnit
+from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation, MetricUnit, ComputeBackend
 import numpy as np
 import pickle
 import pytest
@@ -81,7 +81,7 @@ def test_polyhedral_gravity(
     sol = evaluate(
         polyhedron=polyhedron,
         computation_points=points,
-        parallel=True,
+        backend=ComputeBackend.CPU_PARALLEL,
     )
     potential = np.array([result[0] for result in sol])
     acceleration = np.array([result[1] for result in sol])
@@ -119,7 +119,7 @@ def test_polyhedral_gravity_evaluable(
     evaluable = GravityEvaluable(polyhedron=polyhedron)
     sol = evaluable(
         computation_points=points,
-        parallel=True,
+        backend=ComputeBackend.CPU_PARALLEL,
     )
     potential = np.array([result[0] for result in sol])
     acceleration = np.array([result[1] for result in sol])
@@ -165,7 +165,7 @@ def test_polyhedral_evaluable_pickle(
 
     sol = read_evaluable(
         computation_points=points,
-        parallel=True,
+        backend=ComputeBackend.CPU_PARALLEL,
     )
     potential = np.array([result[0] for result in sol])
     acceleration = np.array([result[1] for result in sol])

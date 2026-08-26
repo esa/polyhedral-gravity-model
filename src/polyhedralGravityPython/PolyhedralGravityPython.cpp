@@ -7,6 +7,7 @@
 #include "pybind11/stl.h"
 
 #include "polyhedralGravity/Info.h"
+#include "polyhedralGravity/kokkos/KokkosSession.h"
 #include "polyhedralGravity/model/GravityEvaluable.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/GravityModelData.h"
@@ -32,7 +33,7 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
 
     .. code-block:: python
 
-        from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation
+        from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation, ComputeBackend
 
         polyhedron = Polyhedron(
             polyhedral_source=(vertices, faces),           # (N,3) and (M,3) array-like
@@ -59,7 +60,7 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
         potential, acceleration, tensor = evaluate(
             polyhedron=polyhedron,
             computation_points=P,
-            parallel=True,
+            backend=ComputeBackend.CPU_PARALLEL,
         )
 
     or via use the cached approach :py:class:`polyhedral_gravity.GravityEvaluable` (desirable for subsequent evaluations using the same :py:class:`polyhedral_gravity.Polyhedron`)
@@ -69,7 +70,7 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
         evaluable = GravityEvaluable(polyhedron=polyhedron)
         potential, acceleration, tensor = evaluable(
             computation_points=P,
-            parallel=True,
+            backend=ComputeBackend.CPU_PARALLEL,
         )
 
     .. note::
@@ -105,7 +106,7 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
 
     // We embedded the version and compilation information into the Python Interface
     m.attr("__version__") = POLYHEDRAL_GRAVITY_VERSION;
-    m.attr("__parallelization__") = POLYHEDRAL_GRAVITY_PARALLELIZATION;
+    m.attr("__parallelization__") = kokkos::getEnabledExecutionSpaces();
     m.attr("__commit__") = POLYHEDRAL_GRAVITY_COMMIT_HASH;
     m.attr("__logging__") = POLYHEDRAL_GRAVITY_LOGGING_LEVEL;
 
@@ -133,6 +134,31 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
         .value("HEAL", PolyhedronIntegrity::HEAL,
                "Verification and Automatic Healing of the NormalOrientation. "
                "A misalignment does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: :math:`O(n^2)`");
+
+    py::enum_<ComputeBackend>(m, "ComputeBackend", R"mydelimiter(
+        The compute backend on which the polyhedral gravity model is evaluated.
+        Every backend is a `Kokkos <https://kokkos.org/>`__ execution space; which of them are compiled in
+        is listed in :code:`polyhedral_gravity.__parallelization__`.
+        )mydelimiter")
+        .value("CPU_SERIAL", ComputeBackend::CPU_SERIAL,
+               "Evaluation on a single CPU thread, i.e. the Kokkos Serial execution space")
+        .value("CPU_PARALLEL", ComputeBackend::CPU_PARALLEL,
+               "Evaluation on all CPU threads, i.e. the Kokkos OpenMP execution space. This is the default.")
+        .value("GPU_PARALLEL", ComputeBackend::GPU_PARALLEL,
+               "Evaluation on the GPU using the vendor's native paradigm, i.e. the Kokkos CUDA (NVIDIA), "
+               "HIP (AMD), or SYCL (Intel) execution space. "
+               "Raises a :code:`RuntimeError` if this build has no GPU backend.");
+
+    py::enum_<ComputePrecision>(m, "ComputePrecision", R"mydelimiter(
+        The floating point precision in which the polyhedral gravity model is evaluated.
+        The polyhedron's mesh and the results are always given in double precision;
+        this only selects the precision of the evaluation itself.
+        )mydelimiter")
+        .value("FLOAT32", ComputePrecision::FLOAT32,
+               "Single precision :math:`[32\\ bit]`. Roughly halves the memory traffic of the evaluation, but the "
+               "polyhedral gravity model cancels large terms against each other, so expect a relative accuracy "
+               "of only about :math:`10^{-4}`.")
+        .value("FLOAT64", ComputePrecision::FLOAT64, "Double precision :math:`[64\\ bit]`. This is the default.");
 
     py::enum_<MetricUnit>(m, "MetricUnit", R"mydelimiter(
         The metric unit of for example a polyhedral mesh source.
@@ -206,7 +232,7 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
                 Only if set to :code:`DISABLE`, then this method might actually return a set with faulty indices.
                 Hence, if you want to know your mesh error. Construct the polyhedron with :code:`integrity_check=DISABLE` and call this method.
             )mydelimiter")
-            .def("__getitem__", &Polyhedron::getResolvedFace, R"mydelimiter(
+            .def("__getitem__", static_cast<Array3Triplet (Polyhedron::*)(size_t) const>(&Polyhedron::getResolvedFace), R"mydelimiter(
             Returns the the three coordinates of the vertices making the face at the requested index.
             This does not return the face as list of vertex indices, but resolved with the actual coordinates.
 
@@ -264,14 +290,18 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
              It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
              )mydelimiter")
-            .def(py::init<const Polyhedron &>(),R"mydelimiter(
+            .def(py::init<const Polyhedron &, const ComputePrecision &>(),R"mydelimiter(
              Creates a new GravityEvaluable for a given constant density polyhedron.
              It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
 
              Args:
                  polyhedron: The polyhedron for which to evaluate the gravity model
-             )mydelimiter", py::arg("polyhedron"))
+                 precision:  The floating point precision of the evaluation (default: :code:`ComputePrecision.FLOAT64`)
+             )mydelimiter", py::arg("polyhedron"), py::arg("precision") = ComputePrecision::FLOAT64)
+            .def_property_readonly("precision", &GravityEvaluable::getComputePrecision,R"mydelimiter(
+            :py:class:`polyhedral_gravity.ComputePrecision`: The floating point precision of this GravityEvaluable (Read-Only).
+            )mydelimiter")
             .def_property_readonly("output_units", &GravityEvaluable::getOutputMetricUnit,R"mydelimiter(
             (3)-array-like of :py:class:`str`: A human-readable string representation of the output units. This depends on the polyhedron's definition (Read-Only).
             )mydelimiter")
@@ -288,27 +318,32 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
 
              Args:
                  computation_points: The computation points as tuple or list of points
-                 parallel:           If :code:`True`, the computation is done in parallel on the CPU using the technology specified by
-                                     :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`)
+                 backend:            The compute backend on which to evaluate
+                                     (default: :code:`ComputeBackend.CPU_PARALLEL`)
 
              Returns:
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
                  and second derivatives :math:`[V_{xx}, V_{yy}, V_{zz}, V_{xy},V_{xz}, V_{yz}]` at the computation points or
                  if multiple computation points are given a list of these triplets
-             )mydelimiter", py::arg("computation_points"), py::arg("parallel") = true)
+
+             Raises:
+                 RuntimeError: If :code:`ComputeBackend.GPU_PARALLEL` is requested, but this build has no GPU backend
+             )mydelimiter", py::arg("computation_points"), py::arg("backend") = ComputeBackend::CPU_PARALLEL)
             .def(py::pickle(
                     [](const GravityEvaluable &evaluable) {
                         const auto &[polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals] = evaluable.getState();
-                        return py::make_tuple(polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals);
+                        return py::make_tuple(polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals,
+                                              evaluable.getComputePrecision());
                     },
                     [](const py::tuple &tuple) {
-                        constexpr size_t GRAVITY_EVALUABLE_STATE_SIZE = 4;
+                        constexpr size_t GRAVITY_EVALUABLE_STATE_SIZE = 5;
                         if (tuple.size() != GRAVITY_EVALUABLE_STATE_SIZE) {
                             throw std::runtime_error("Invalid state!");
                         }
                         GravityEvaluable evaluable{
                                 tuple[0].cast<Polyhedron>(), tuple[1].cast<std::vector<Array3Triplet>>(),
-                                tuple[2].cast<std::vector<Array3>>(), tuple[3].cast<std::vector<Array3Triplet>>()
+                                tuple[2].cast<std::vector<Array3>>(), tuple[3].cast<std::vector<Array3Triplet>>(),
+                                tuple[4].cast<ComputePrecision>()
                         };
                         return evaluable;
                     }
@@ -316,13 +351,14 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
 
     m.def("evaluate", [](const Polyhedron &polyhedron,
                          const std::variant<Array3, std::vector<Array3>> &computationPoints,
-                         bool parallel) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> {
+                         ComputeBackend backend,
+                         ComputePrecision precision) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> {
                     return std::visit(util::overloaded{
                             [&](const Array3 &point) {
-                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, point, parallel));
+                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, point, backend, precision));
                             },
                             [&](const std::vector<Array3> &points) {
-                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, points, parallel));
+                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, points, backend, precision));
                             }
                         }, computationPoints);
           }, R"mydelimiter(
@@ -335,13 +371,20 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
              Args:
                  polyhedron:            The polyhedron for which to evaluate the gravity model
                  computation_points:    The computation points as tuple or list of points
-                 parallel:              If :code:`True`, the computation is done in parallel on the CPU using the technology specified by
-                                        :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`)
+                 backend:               The compute backend on which to evaluate
+                                        (default: :code:`ComputeBackend.CPU_PARALLEL`)
+                 precision:             The floating point precision of the evaluation
+                                        (default: :code:`ComputePrecision.FLOAT64`)
 
              Returns:
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
                  and second derivatives :math:`[V_{xx}, V_{yy}, V_{zz}, V_{xy},V_{xz}, V_{yz}]` at the computation points or
                  if multiple computation points are given a list of these triplets
-             )mydelimiter", py::arg("polyhedron"), py::arg("computation_points"), py::arg("parallel") = true);
+
+             Raises:
+                 RuntimeError: If :code:`ComputeBackend.GPU_PARALLEL` is requested, but this build has no GPU backend
+             )mydelimiter", py::arg("polyhedron"), py::arg("computation_points"),
+             py::arg("backend") = ComputeBackend::CPU_PARALLEL,
+             py::arg("precision") = ComputePrecision::FLOAT64);
 
 }

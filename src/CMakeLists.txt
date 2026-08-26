@@ -19,8 +19,7 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
             spdlog::spdlog
             yaml-cpp::yaml-cpp
             tetgen_lib
-            xsimd
-            Thrust
+            Kokkos::kokkos
             )
 endif ()
 #####################################
@@ -61,7 +60,6 @@ if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
     target_link_libraries(_core PUBLIC
             spdlog::spdlog
             tetgen_lib
-            xsimd
-            Thrust
+            Kokkos::kokkos
             )
 endif()

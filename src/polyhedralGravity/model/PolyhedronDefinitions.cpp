@@ -32,6 +32,39 @@ namespace polyhedralGravity {
         return os;
     }
 
+    std::ostream &operator<<(std::ostream &os, const ComputeBackend &backend) {
+        switch (backend) {
+            case ComputeBackend::CPU_SERIAL:
+                os << "CPU_SERIAL";
+            break;
+            case ComputeBackend::CPU_PARALLEL:
+                os << "CPU_PARALLEL";
+            break;
+            case ComputeBackend::GPU_PARALLEL:
+                os << "GPU_PARALLEL";
+            break;
+            default:
+                os << "Unknown";
+            break;
+        }
+        return os;
+    }
+
+    std::ostream &operator<<(std::ostream &os, const ComputePrecision &precision) {
+        switch (precision) {
+            case ComputePrecision::FLOAT32:
+                os << "float32";
+            break;
+            case ComputePrecision::FLOAT64:
+                os << "float64";
+            break;
+            default:
+                os << "Unknown";
+            break;
+        }
+        return os;
+    }
+
     MetricUnit readMetricUnit(const std::string &unit) {
         if (unit == "m") {
             return MetricUnit::METER;

@@ -1,29 +1,56 @@
 #pragma once
 
-#include <utility>
 #include <array>
-#include <vector>
-#include <algorithm>
-#include <variant>
+#include <limits>
+#include <utility>
 
-#include "thrust/iterator/zip_iterator.h"
-#include "thrust/iterator/transform_iterator.h"
-#include "thrust/iterator/counting_iterator.h"
-#include "thrust/transform.h"
-#include "thrust/transform_reduce.h"
-#include "thrust/execution_policy.h"
-#include "xsimd/xsimd.hpp"
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_MathematicalFunctions.hpp>
 
-#include "Polyhedron.h"
 #include "GravityModelData.h"
-#include "polyhedralGravity/input/TetgenAdapter.h"
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/util/UtilityThrust.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
-#include "polyhedralGravity/output/Logging.h"
 
+/**
+ * The single-source implementation of Tsoulis' polyhedral gravity model for one polyhedral face.
+ *
+ * Every function in here is a KOKKOS_INLINE_FUNCTION and templated over the floating point precision,
+ * so the very same code runs inside a Kokkos kernel on a GPU, inside a Kokkos kernel on the CPU, and
+ * directly on the host (which is what the unit tests do, always in double precision).
+ * Consequently, the functions must not allocate, must not throw, and must only call math functions
+ * from the Kokkos:: namespace, which are available in both worlds.
+ */
 namespace polyhedralGravity::GravityModel::detail {
+
+    /**
+     * The radius around zero which is treated as zero, in the evaluation's own precision.
+     *
+     * This is {@link util::EPSILON_ZERO_OFFSET} scaled by how much coarser the given precision is than double
+     * precision, i.e. it stays at @f$10^{-14}@f$ for double and becomes roughly @f$5 \cdot 10^{-6}@f$ for float.
+     * Scaling it is not cosmetic: the singularity cases of Tsoulis' algorithm are detected by comparing
+     * distances against this radius, and a threshold below the precision's own resolution makes the
+     * evaluation miss them, which produces infinities and NaNs instead of the singularity terms.
+     *
+     * @tparam FloatType the floating point precision of the evaluation
+     */
+    template<typename FloatType>
+    constexpr FloatType EPSILON_ZERO = static_cast<FloatType>(
+            util::EPSILON_ZERO_OFFSET *
+            (static_cast<double>(std::numeric_limits<FloatType>::epsilon()) / std::numeric_limits<double>::epsilon()));
+
+    /**
+     * The singularity terms sing A and sing B of one plane p of the polyhedron.
+     * @tparam FloatType the floating point precision of the evaluation
+     */
+    template<typename FloatType>
+    struct SingularityTerms {
+        /** The scalar singularity term sing A used for the potential and the acceleration */
+        FloatType alpha;
+        /** The vectorial singularity term sing B used for the gradiometric tensor */
+        Vector3<FloatType> beta;
+    };
 
     /**
      * Computes the segment vectors G_ij for one plane of the polyhedron according to Tsoulis (18).
@@ -34,7 +61,13 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param vertex2 the third vertex C
      * @return the segment vectors for a plane
      */
-    Array3Triplet buildVectorsOfSegments(const Array3 &vertex0, const Array3 &vertex1, const Array3 &vertex2);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3Triplet<FloatType> buildVectorsOfSegments(
+            const Vector3<FloatType> &vertex0, const Vector3<FloatType> &vertex1, const Vector3<FloatType> &vertex2) {
+        using util::operator-;
+        //Calculate G_ij
+        return {vertex1 - vertex0, vertex2 - vertex1, vertex0 - vertex2};
+    }
 
     /**
      * Computes the plane unit normal N_p for one plane p of the polyhedron according to Tsoulis (19).
@@ -43,7 +76,12 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param segmentVector2 second edge
      * @return plane unit normal
      */
-    Array3 buildUnitNormalOfPlane(const Array3 &segmentVector1, const Array3 &segmentVector2);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3<FloatType> buildUnitNormalOfPlane(
+            const Vector3<FloatType> &segmentVector1, const Vector3<FloatType> &segmentVector2) {
+        //Calculate N_i as (G_i1 * G_i2) / |G_i1 * G_i2| with * being the cross product
+        return util::normal(segmentVector1, segmentVector2);
+    }
 
     /**
      * Computes the segment unit normals n_pq for one plane p of the polyhedron according to Tsoulis (20).
@@ -52,7 +90,16 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param planeUnitNormal the plane unit normal N_p
      * @return segment unit normals n_pq for plane p with q = {0, 1, 2}
      */
-    Array3Triplet buildUnitNormalOfSegments(const Array3Triplet &segmentVectors, const Array3 &planeUnitNormal);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3Triplet<FloatType> buildUnitNormalOfSegments(
+            const Vector3Triplet<FloatType> &segmentVectors, const Vector3<FloatType> &planeUnitNormal) {
+        Vector3Triplet<FloatType> segmentUnitNormal{};
+        //Calculate n_ij as (G_ij * N_i) / |G_ig * N_i| with * being the cross product
+        for (size_t j = 0; j < 3; ++j) {
+            segmentUnitNormal[j] = util::normal(segmentVectors[j], planeUnitNormal);
+        }
+        return segmentUnitNormal;
+    }
 
     /**
      * Computes the plane unit normal orientation/ direction sigma_p for one plane p of the polyhedron
@@ -65,7 +112,14 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param vertex0 the first vertex of the plane
      * @return plane normal orientation
      */
-    double computeUnitNormalOfPlaneDirection(const Array3 &planeUnitNormal, const Array3 &vertex0);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION FloatType computeUnitNormalOfPlaneDirection(
+            const Vector3<FloatType> &planeUnitNormal, const Vector3<FloatType> &vertex0) {
+        //Calculate N_i * -G_i1 where * is the dot product and then use the inverted sgn
+        //We abstain on the double multiplication with -1 in the line above and beyond since two
+        //times multiplying with -1 equals no change
+        return static_cast<FloatType>(util::sgn(util::dot(planeUnitNormal, vertex0), EPSILON_ZERO<FloatType>));
+    }
 
     /**
      * Calculates the Hessian Plane form spanned by three given points p, q, and r.
@@ -75,7 +129,18 @@ namespace polyhedralGravity::GravityModel::detail {
      * @return HessianPlane
      * @related Cross-Product method https://tutorial.math.lamar.edu/classes/calciii/eqnsofplanes.aspx
      */
-    HessianPlane computeHessianPlane(const Array3 &p, const Array3 &q, const Array3 &r);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION HessianPlaneTemplate<FloatType> computeHessianPlane(
+            const Vector3<FloatType> &p, const Vector3<FloatType> &q, const Vector3<FloatType> &r) {
+        using util::operator-;
+        using util::operator*;
+        constexpr Vector3<FloatType> origin{0.0, 0.0, 0.0};
+        const Vector3<FloatType> crossProduct = util::cross(p - q, p - r);
+        const Vector3<FloatType> res = (origin - p) * crossProduct;
+        const FloatType d = res[0] + res[1] + res[2];
+
+        return {crossProduct[0], crossProduct[1], crossProduct[2], d};
+    }
 
     /**
      * Calculates the (plane) distances h_p of computation point P to the plane S_p given in Hessian Form
@@ -84,7 +149,13 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param hessianPlane Hessian Plane Form of S_p
      * @return plane distance h_p
      */
-    double distanceBetweenOriginAndPlane(const HessianPlane &hessianPlane);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION FloatType distanceBetweenOriginAndPlane(const HessianPlaneTemplate<FloatType> &hessianPlane) {
+        //Compute h_p as D/sqrt(A^2 + B^2 + C^2)
+        return Kokkos::abs(hessianPlane.d / Kokkos::sqrt(hessianPlane.a * hessianPlane.a +
+                                                         hessianPlane.b * hessianPlane.b +
+                                                         hessianPlane.c * hessianPlane.c));
+    }
 
     /**
      * Computes P' for a given plane p according to equation (22) of Tsoulis paper.
@@ -94,8 +165,38 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param hessianPlane the Hessian Plane Form
      * @return P' for this plane
      */
-    Array3 projectPointOrthogonallyOntoPlane(const Array3 &planeUnitNormal, double planeDistance,
-                                             const HessianPlane &hessianPlane);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3<FloatType> projectPointOrthogonallyOntoPlane(
+            const Vector3<FloatType> &planeUnitNormal, FloatType planeDistance,
+            const HessianPlaneTemplate<FloatType> &hessianPlane) {
+        using util::operator*;
+        //Calculate the projection point by (22) P'_ = N_i / norm(N_i) * h_i
+        // norm(N_i) is always 1 since N_i is a "normed" vector --> we do not need this division
+        Vector3<FloatType> orthogonalProjectionPoint = planeUnitNormal * planeDistance;
+
+        //Calculate alpha, beta and gamma as D/A, D/B and D/C (Notice that we "forget" the minus before those
+        // divisions. In consequence, the conditions for signs are reversed below!!!)
+        // These values represent the intersections of each polygonal plane with the axes
+        // Comparison x == 0.0 is ok, since we only want to avoid nan values
+        const Vector3<FloatType> intersections = {
+                hessianPlane.a == 0.0 ? static_cast<FloatType>(0.0) : hessianPlane.d / hessianPlane.a,
+                hessianPlane.b == 0.0 ? static_cast<FloatType>(0.0) : hessianPlane.d / hessianPlane.b,
+                hessianPlane.c == 0.0 ? static_cast<FloatType>(0.0) : hessianPlane.d / hessianPlane.c};
+
+        //Determine the signs of the coordinates of P' according to the intersection values alpha, beta, gamma
+        // denoted as __ below, i.e. -alpha, -beta, -gamma denoted -__
+        for (size_t index = 0; index < 3; ++index) {
+            if (intersections[index] < 0) {
+                //If -__ >= 0 --> __ < 0 then coordinates are positive, we calculate abs(orthogonalProjectionPoint[..])
+                orthogonalProjectionPoint[index] = Kokkos::abs(orthogonalProjectionPoint[index]);
+            } else if (planeUnitNormal[index] > 0) {
+                //If -__ < 0 --> __ >= 0 then the coordinate is negative -orthogonalProjectionPoint[..]
+                orthogonalProjectionPoint[index] = static_cast<FloatType>(-1.0) * orthogonalProjectionPoint[index];
+            }
+            //Else the coordinate is positive and stays as it is
+        }
+        return orthogonalProjectionPoint;
+    }
 
     /**
      * Computes the segment normal orientations/ directions sigma_pq for a given plane p.
@@ -107,19 +208,23 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param segmentUnitNormalsForPlane the segment unit normals sigma_pq for this plane
      * @return the segment normal orientations for the plane p
      */
-    Array3 computeUnitNormalOfSegmentsDirections(const Array3Triplet &vertices, const Array3 &projectionPointOnPlane,
-                                                 const Array3Triplet &segmentUnitNormalsForPlane);
-
-    /**
-     * Computes the orthogonal projection Points P'' foreach segment q of a given plane p.
-     * @param projectionPointOnPlane the projection Point P'
-     * @param segmentNormalOrientations the segment normal orientations sigma_pq for this plane p
-     * @param face the vertices of the plane p
-     * @return the orthogonal projection points of P on the segment P'' foreach segment q of p
-     */
-    Array3Triplet
-    projectPointOrthogonallyOntoSegments(const Array3 &projectionPointOnPlane, const Array3 &segmentNormalOrientations,
-                                         const Array3Triplet &face);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3<FloatType> computeUnitNormalOfSegmentsDirections(
+            const Vector3Triplet<FloatType> &vertices, const Vector3<FloatType> &projectionPointOnPlane,
+            const Vector3Triplet<FloatType> &segmentUnitNormalsForPlane) {
+        using util::operator-;
+        Vector3<FloatType> segmentNormalOrientations{};
+        //Equation (23)
+        //Calculate x_P' - x_ij^1 (x_P' is the projectionPoint and x_ij^1 is the first vertices of one segment,
+        //i.e. the coordinates of the training-planes' nodes --> projectionPointOnPlane - vertex
+        //Calculate n_ij * x_ij with * being the dot product and use the inverted sgn to determine the value of sigma_pq
+        for (size_t j = 0; j < 3; ++j) {
+            const FloatType projection = util::dot(segmentUnitNormalsForPlane[j], projectionPointOnPlane - vertices[j]);
+            segmentNormalOrientations[j] =
+                    static_cast<FloatType>(util::sgn(projection, EPSILON_ZERO<FloatType>)) * static_cast<FloatType>(-1.0);
+        }
+        return segmentNormalOrientations;
+    }
 
     /**
      * Calculates the point P'' for a given Segment consisting of vertices v1 and v2 and the orthogonal projection
@@ -130,8 +235,56 @@ namespace polyhedralGravity::GravityModel::detail {
      * @return P'' for this segment
      * @note If sigma_pq is zero then P'' == P', this is not checked by this method, but has to be assured first
      */
-    Array3 projectPointOrthogonallyOntoSegment(const Array3 &vertex1, const Array3 &vertex2,
-                                               const Array3 &orthogonalProjectionPointOnPlane);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3<FloatType> projectPointOrthogonallyOntoSegment(
+            const Vector3<FloatType> &vertex1, const Vector3<FloatType> &vertex2,
+            const Vector3<FloatType> &orthogonalProjectionPointOnPlane) {
+        using util::operator-;
+        using util::operator/;
+        using Matrix3 = util::Matrix<FloatType, 3, 3>;
+        //Preparing our the planes/ equations in matrix form
+        const Vector3<FloatType> matrixRow1 = vertex2 - vertex1;
+        const Vector3<FloatType> matrixRow2 = util::cross(vertex1 - orthogonalProjectionPointOnPlane, matrixRow1);
+        const Vector3<FloatType> matrixRow3 = util::cross(matrixRow2, matrixRow1);
+        const Vector3<FloatType> d = {util::dot(matrixRow1, orthogonalProjectionPointOnPlane),
+                                      util::dot(matrixRow2, orthogonalProjectionPointOnPlane),
+                                      util::dot(matrixRow3, vertex1)};
+        const Matrix3 columnMatrix = util::transpose(Matrix3{matrixRow1, matrixRow2, matrixRow3});
+        //Calculation and solving the equations of above
+        const FloatType determinant = util::det(columnMatrix);
+        return Vector3<FloatType>{util::det(Matrix3{d, columnMatrix[1], columnMatrix[2]}),
+                                  util::det(Matrix3{columnMatrix[0], d, columnMatrix[2]}),
+                                  util::det(Matrix3{columnMatrix[0], columnMatrix[1], d})} /
+               determinant;
+    }
+
+    /**
+     * Computes the orthogonal projection Points P'' foreach segment q of a given plane p.
+     * @param projectionPointOnPlane the projection Point P'
+     * @param segmentNormalOrientations the segment normal orientations sigma_pq for this plane p
+     * @param face the vertices of the plane p
+     * @return the orthogonal projection points of P on the segment P'' foreach segment q of p
+     */
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3Triplet<FloatType> projectPointOrthogonallyOntoSegments(
+            const Vector3<FloatType> &projectionPointOnPlane, const Vector3<FloatType> &segmentNormalOrientations,
+            const Vector3Triplet<FloatType> &face) {
+        Vector3Triplet<FloatType> orthogonalProjectionPointOnSegmentPerPlane{};
+        //Running over the segments of this plane
+        for (size_t j = 0; j < 3; ++j) {
+            //We actually only accept +0.0 or -0.0, so the equal comparison is ok
+            if (segmentNormalOrientations[j] == 0.0) {
+                //Geometrically trivial case, in neither of the half space --> already on segment
+                orthogonalProjectionPointOnSegmentPerPlane[j] = projectionPointOnPlane;
+            } else {
+                //In one of the half space, evaluate the projection point P'' for the segment
+                //with the endpoints v1 and v2
+                orthogonalProjectionPointOnSegmentPerPlane[j] =
+                        projectPointOrthogonallyOntoSegment(face[j], face[(j + 1) % 3], projectionPointOnPlane);
+            }
+        }
+        return orthogonalProjectionPointOnSegmentPerPlane;
+    }
 
     /**
      * Computes the (segment) distances h_pq between P' for a given plane p and P'' for a given segment q of plane p.
@@ -139,8 +292,20 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param orthogonalProjectionPointOnSegments the orthogonal projection points P'' for each segment q of p
      * @return distances h_pq for plane p
      */
-    Array3 distancesBetweenProjectionPoints(const Array3 &orthogonalProjectionPointOnPlane,
-                                            const Array3Triplet &orthogonalProjectionPointOnSegments);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3<FloatType> distancesBetweenProjectionPoints(
+            const Vector3<FloatType> &orthogonalProjectionPointOnPlane,
+            const Vector3Triplet<FloatType> &orthogonalProjectionPointOnSegments) {
+        using util::operator-;
+        Vector3<FloatType> segmentDistances{};
+        //The inner loop with the running j --> iterating over the segments
+        //Using the values P'_i and P''_ij for the calculation of the distance
+        for (size_t j = 0; j < 3; ++j) {
+            segmentDistances[j] = util::euclideanNorm(
+                    orthogonalProjectionPointOnSegments[j] - orthogonalProjectionPointOnPlane);
+        }
+        return segmentDistances;
+    }
 
     /**
      * Computes the 3D distances l1_pq and l2_pq between the computation point P and the line
@@ -152,9 +317,74 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param face the vertices of plane p
      * @return distances l1_pq and l2_pq and s1_pq and s2_pq foreach segment q of plane p
      */
-    std::array<Distance, 3> distancesToSegmentEndpoints(const Array3Triplet &segmentVectorsForPlane,
-                                                        const Array3Triplet &orthogonalProjectionPointsOnSegmentForPlane,
-                                                        const Array3Triplet &face);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION std::array<DistanceTemplate<FloatType>, 3> distancesToSegmentEndpoints(
+            const Vector3Triplet<FloatType> &segmentVectorsForPlane,
+            const Vector3Triplet<FloatType> &orthogonalProjectionPointsOnSegmentForPlane,
+            const Vector3Triplet<FloatType> &face) {
+        using util::operator-;
+        std::array<DistanceTemplate<FloatType>, 3> distancesForPlane{};
+
+        for (size_t j = 0; j < 3; ++j) {
+            DistanceTemplate<FloatType> distance{};
+            //orthogonal projection point on segment P'' for plane p and segment q
+            const Vector3<FloatType> &orthogonalProjectionPointsOnSegment = orthogonalProjectionPointsOnSegmentForPlane[j];
+
+            //Calculate the 3D distances between P (0, 0, 0) and
+            // the segment endpoints face[j] and face[(j + 1) % 3])
+            distance.l1 = util::euclideanNorm(face[j]);
+            distance.l2 = util::euclideanNorm(face[(j + 1) % 3]);
+            //Calculate the 1D distances between P'' (every segment has its own) and
+            // the segment endpoints face[j] and face[(j + 1) % 3])
+            distance.s1 = util::euclideanNorm(orthogonalProjectionPointsOnSegment - face[j]);
+            distance.s2 = util::euclideanNorm(orthogonalProjectionPointsOnSegment - face[(j + 1) % 3]);
+
+            /*
+             * Additional remark:
+             * Details on these conditions are in the second paper referenced in the README.md (Tsoulis, 2021)
+             * The numbering of these conditions is equal to the numbering scheme of the paper
+             * Assign a sign to those magnitudes depending on the relative position of P'' to the two
+             * segment endpoints
+             */
+
+            //4. Option: |s1 - l1| == 0 && |s2 - l2| == 0 Computation point P is located from the beginning on
+            // the direction of a specific segment (P coincides with P' and P'')
+            if (Kokkos::abs(distance.s1 - distance.l1) < EPSILON_ZERO<FloatType> &&
+                Kokkos::abs(distance.s2 - distance.l2) < EPSILON_ZERO<FloatType>) {
+                //4. Option - Case 2: P is located on the segment from its right side
+                // s1 = -|s1|, s2 = -|s2|, l1 = -|l1|, l2 = -|l2|
+                if (distance.s2 < distance.s1) {
+                    distance.s1 *= -1.0;
+                    distance.s2 *= -1.0;
+                    distance.l1 *= -1.0;
+                    distance.l2 *= -1.0;
+                } else if (Kokkos::abs(distance.s2 - distance.s1) < EPSILON_ZERO<FloatType>) {
+                    //4. Option - Case 1: P is located inside the segment (s2 == s1)
+                    // s1 = -|s1|, s2 = |s2|, l1 = -|l1|, l2 = |l2|
+                    distance.s1 *= -1.0;
+                    distance.l1 *= -1.0;
+                }
+                //4. Option - Case 3: P is located on the segment from its left side
+                // s1 = |s1|, s2 = |s2|, l1 = |l1|, l2 = |l2| --> Nothing to do!
+            } else {
+                const FloatType norm = util::euclideanNorm(segmentVectorsForPlane[j]);
+                if (distance.s1 < norm && distance.s2 < norm) {
+                    //1. Option: |s1| < |G_ij| && |s2| < |G_ij| Point P'' is situated inside the segment
+                    // s1 = -|s1|, s2 = |s2|, l1 = |l1|, l2 = |l2|
+                    distance.s1 *= -1.0;
+                } else if (distance.s2 < distance.s1) {
+                    //2. Option: |s2| < |s1| Point P'' is on the right side of the segment
+                    // s1 = -|s1|, s2 = -|s2|, l1 = |l1|, l2 = |l2|
+                    distance.s1 *= -1.0;
+                    distance.s2 *= -1.0;
+                }
+                //3. Option: |s1| < |s2| Point P'' is on the left side of the segment
+                // s1 = |s1|, s2 = |s2|, l1 = |l1|, l2 = |l2| --> Nothing to do!
+            }
+            distancesForPlane[j] = distance;
+        }
+        return distancesForPlane;
+    }
 
     /**
      * Calculates the Transcendental Expressions LN_pq and AN_pq for every line segment of the polyhedron for
@@ -165,32 +395,148 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param planeDistance the plane distance h_p for plane p
      * @param segmentDistancesForPlane the segment distance h_pq for segment q of plane p
      * @param segmentNormalOrientationsForPlane the segment normal orientations n_pq for a plane p
-     * @param orthogonalProjectionPointOnPlane the orthogonal projection point P' for plane p
-     * @param face the vertices of plane p
+     * @param projectionPointVertexNorms the norms of P' and each vertex of plane p
      * @return LN_pq and AN_pq foreach segment q of plane p
      */
-    std::array<TranscendentalExpression, 3>
-    computeTranscendentalExpressions(const std::array<Distance, 3> &distancesForPlane, double planeDistance,
-                                     const Array3 &segmentDistancesForPlane,
-                                     const Array3 &segmentNormalOrientationsForPlane,
-                                     const Array3 &projectionPointVertexNorms);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION std::array<TranscendentalExpressionTemplate<FloatType>, 3> computeTranscendentalExpressions(
+            const std::array<DistanceTemplate<FloatType>, 3> &distancesForPlane, FloatType planeDistance,
+            const Vector3<FloatType> &segmentDistancesForPlane,
+            const Vector3<FloatType> &segmentNormalOrientationsForPlane,
+            const Vector3<FloatType> &projectionPointVertexNorms) {
+        std::array<TranscendentalExpressionTemplate<FloatType>, 3> transcendentalExpressionsForPlane{};
+
+        for (size_t j = 0; j < 3; ++j) {
+            //distances l1, l2, s1, s1 for this segment q of plane p
+            const DistanceTemplate<FloatType> &distance = distancesForPlane[j];
+            //segment distance h_pq for this segment q of plane p
+            const FloatType segmentDistance = segmentDistancesForPlane[j];
+            //segment normal orientation sigma_pq for this segment q of plane p
+            const FloatType segmentNormalOrientation = segmentNormalOrientationsForPlane[j];
+
+            //Result for this segment
+            TranscendentalExpressionTemplate<FloatType> transcendentalExpressionPerSegment{};
+
+            //Computation of the norm of P' and segment endpoints
+            // If the one of the norms == 0 then P' lies on the corresponding vertex and coincides with P''
+            const FloatType r1Norm = projectionPointVertexNorms[(j + 1) % 3];
+            const FloatType r2Norm = projectionPointVertexNorms[j];
+
+            //Compute LN_pq according to (14)
+            // If sigma_pq == 0 && either of the distances of P' to the two segment endpoints == 0 OR
+            // the 1D and 3D distances are smaller than some EPSILON
+            // then LN_pq can be set to zero
+            if ((segmentNormalOrientation == 0.0 &&
+                 (r1Norm < EPSILON_ZERO<FloatType> || r2Norm < EPSILON_ZERO<FloatType>)) ||
+                (Kokkos::abs(distance.s1 + distance.s2) < EPSILON_ZERO<FloatType> &&
+                 Kokkos::abs(distance.l1 + distance.l2) < EPSILON_ZERO<FloatType>)) {
+                transcendentalExpressionPerSegment.ln = 0.0;
+            } else {
+                //Implementation of
+                // log((s2_pq + l2_pq) / (s1_pq + l1_pq))
+                transcendentalExpressionPerSegment.ln =
+                        Kokkos::log((distance.s2 + distance.l2) / (distance.s1 + distance.l1));
+            }
+
+            //Compute AN_pq according to (15)
+            // If h_p == 0 or h_pq == 0 then AN_pq is zero, too (distances are always positive!)
+            if (planeDistance < EPSILON_ZERO<FloatType> || segmentDistance < EPSILON_ZERO<FloatType>) {
+                transcendentalExpressionPerSegment.an = 0.0;
+            } else {
+                //Implementation of:
+                // atan(h_p * s2_pq / h_pq * l2_pq) - atan(h_p * s1_pq / h_pq * l1_pq)
+                transcendentalExpressionPerSegment.an =
+                        Kokkos::atan((planeDistance * distance.s2) / (segmentDistance * distance.l2)) -
+                        Kokkos::atan((planeDistance * distance.s1) / (segmentDistance * distance.l1));
+            }
+
+            transcendentalExpressionsForPlane[j] = transcendentalExpressionPerSegment;
+        }
+        return transcendentalExpressionsForPlane;
+    }
 
     /**
      * Calculates the singularities (correction) terms according to the Flow text for a given plane p.
      * @param segmentVectorsForPlane the segment vectors for a given plane
      * @param segmentNormalOrientationForPlane the segment orientation sigma_pq
-     * @param projectionPointVertexNorms the projection point P'
+     * @param projectionPointVertexNorms the norms of the projection point P' and the plane's vertices
      * @param planeUnitNormal the plane unit normal N_p
      * @param planeDistance the plane distance h_p
      * @param planeNormalOrientation the plane normal orientation sigma_p
-     * @param face the vertices of plane p
      * @return the singularities for a plane p
      */
-    std::pair<double, Array3>
-    computeSingularityTerms(const Array3Triplet &segmentVectorsForPlane, const Array3 &segmentNormalOrientationForPlane,
-                            const Array3 &projectionPointVertexNorms, const Array3 &planeUnitNormal,
-                            double planeDistance, double planeNormalOrientation);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION SingularityTerms<FloatType> computeSingularityTerms(
+            const Vector3Triplet<FloatType> &segmentVectorsForPlane,
+            const Vector3<FloatType> &segmentNormalOrientationForPlane,
+            const Vector3<FloatType> &projectionPointVertexNorms, const Vector3<FloatType> &planeUnitNormal,
+            FloatType planeDistance, FloatType planeNormalOrientation) {
+        using util::operator*;
+        //1. Case: If all sigma_pq for a given plane p are 1.0 then P' lies inside the plane S_p
+        bool allInside = true;
+        for (size_t j = 0; j < 3; ++j) {
+            allInside &= segmentNormalOrientationForPlane[j] == 1.0;
+        }
+        if (allInside) {
+            const FloatType factor = static_cast<FloatType>(-1.0 * util::PI2);
+            //sing alpha = -2pi*h_p and sing beta = -2pi*sigma_p*N_p
+            return {factor * planeDistance, planeUnitNormal * (factor * planeNormalOrientation)};
+        }
 
+        //2. Case: If sigma_pq == 0 AND norm(P' - v1) < norm(G_ij) && norm(P' - v2) < norm(G_ij) with G_ij
+        // as the vector of v1 and v2
+        // then P' is located on one line segment G_p of plane p, but not on any of its vertices
+        bool anyOnLine = false;
+        for (size_t j = 0; j < 3; ++j) {
+            //segmentNormalOrientation != 0.0
+            if (Kokkos::abs(segmentNormalOrientationForPlane[j]) > EPSILON_ZERO<FloatType>) {
+                continue;
+            }
+            const FloatType segmentVectorNorm = util::euclideanNorm(segmentVectorsForPlane[j]);
+            anyOnLine |= projectionPointVertexNorms[(j + 1) % 3] < segmentVectorNorm &&
+                         projectionPointVertexNorms[j] < segmentVectorNorm &&
+                         projectionPointVertexNorms[(j + 1) % 3] >= EPSILON_ZERO<FloatType> &&
+                         projectionPointVertexNorms[j] >= EPSILON_ZERO<FloatType>;
+        }
+        if (anyOnLine) {
+            const FloatType factor = static_cast<FloatType>(-1.0 * util::PI);
+            //sing alpha = -pi*h_p and sing beta = -pi*sigma_p*N_p
+            return {factor * planeDistance, planeUnitNormal * (factor * planeNormalOrientation)};
+        }
+
+        //3. Case If sigma_pq == 0 AND norm(P' - v1) < 0 || norm(P' - v2) < 0
+        // then P' is located at one of G_p's vertices
+        for (size_t j = 0; j < 3; ++j) {
+            //segmentNormalOrientation != 0.0
+            if (Kokkos::abs(segmentNormalOrientationForPlane[j]) > EPSILON_ZERO<FloatType>) {
+                continue;
+            }
+            const FloatType r1Norm = projectionPointVertexNorms[(j + 1) % 3];
+            const FloatType r2Norm = projectionPointVertexNorms[j];
+            //r1Norm == 0.0 || r2Norm == 0.0
+            if (!(r1Norm < EPSILON_ZERO<FloatType> || r2Norm < EPSILON_ZERO<FloatType>)) {
+                continue;
+            }
+            //Two segment vectors G_1 and G_2 of this plane
+            const Vector3<FloatType> &g1 = r1Norm < EPSILON_ZERO<FloatType>
+                                                   ? segmentVectorsForPlane[j]
+                                                   : segmentVectorsForPlane[(j - 1 + 3) % 3];
+            const Vector3<FloatType> &g2 = r1Norm < EPSILON_ZERO<FloatType>
+                                                   ? segmentVectorsForPlane[(j + 1) % 3]
+                                                   : segmentVectorsForPlane[j];
+            // theta = arcos((G_2 * -G_1) / (|G_2| * |G_1|))
+            const FloatType gdot = util::dot(g1 * static_cast<FloatType>(-1.0), g2);
+            const FloatType theta = gdot == 0.0
+                                            ? static_cast<FloatType>(util::PI_2)
+                                            : Kokkos::acos(gdot / (util::euclideanNorm(g1) * util::euclideanNorm(g2)));
+            //sing alpha = -theta*h_p and sing beta = -theta*sigma_p*N_p
+            const FloatType factor = static_cast<FloatType>(-1.0) * theta;
+            return {factor * planeDistance, planeUnitNormal * (factor * planeNormalOrientation)};
+        }
+
+        //4. Case Otherwise P' is located outside the plane S_p and then the singularity equals zero
+        return {static_cast<FloatType>(0.0), Vector3<FloatType>{0.0, 0.0, 0.0}};
+    }
 
     /**
      * Computes the L2 norms of the orthogonal projection point P' on a plane p with each vertex of that plane p.
@@ -199,8 +545,13 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param face the vertices of plane p
      * @return the norms of p and each vertex
      */
-    Array3
-    computeNormsOfProjectionPointAndVertices(const Array3 &orthogonalProjectionPointOnPlane, const Array3Triplet &face);
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3<FloatType> computeNormsOfProjectionPointAndVertices(
+            const Vector3<FloatType> &orthogonalProjectionPointOnPlane, const Vector3Triplet<FloatType> &face) {
+        using util::operator-;
+        return {util::euclideanNorm(orthogonalProjectionPointOnPlane - face[0]),
+                util::euclideanNorm(orthogonalProjectionPointOnPlane - face[1]),
+                util::euclideanNorm(orthogonalProjectionPointOnPlane - face[2])};
+    }
 
-
-} // namespace polyhedralGravity::GravityModel::detail
+}// namespace polyhedralGravity::GravityModel::detail

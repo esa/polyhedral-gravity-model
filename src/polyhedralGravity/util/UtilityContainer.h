@@ -10,7 +10,169 @@
 #include <string>
 #include <iostream>
 
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_MathematicalFunctions.hpp>
+
 namespace polyhedralGravity::util {
+
+    /*
+     * The overloads taking a std::array below mirror the generic Container versions further down, but are
+     * annotated with KOKKOS_INLINE_FUNCTION and implemented with plain index loops instead of <algorithm>.
+     * This makes them callable from inside a Kokkos kernel, i.e. also on the GPU, where neither std::transform
+     * nor std::inner_product exist. Overload resolution prefers them over the generic versions for any
+     * std::array, so the gravity model's math automatically uses the device-capable implementation.
+     */
+
+    /**
+     * Applies a binary function element-wise to two arrays of the same size.
+     * @tparam T the element type
+     * @tparam N the array size
+     * @tparam BinOp a binary function to apply
+     * @param lhs the first array
+     * @param rhs the second array
+     * @param binOp a binary function like +, -, *, /
+     * @return an array containing the result
+     */
+    template<typename T, size_t N, typename BinOp>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> applyBinaryFunction(const std::array<T, N> &lhs, const std::array<T, N> &rhs, BinOp binOp) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = binOp(lhs[i], rhs[i]);
+        }
+        return ret;
+    }
+
+    /**
+     * Applies a binary function element-wise to an array and a scalar.
+     * @tparam T the element type
+     * @tparam N the array size
+     * @tparam BinOp a binary function to apply
+     * @param lhs the array
+     * @param scalar the scalar used on each element
+     * @param binOp a binary function like +, -, *, /
+     * @return an array containing the result
+     */
+    template<typename T, size_t N, typename BinOp>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> applyBinaryFunction(const std::array<T, N> &lhs, const T &scalar, BinOp binOp) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = binOp(lhs[i], scalar);
+        }
+        return ret;
+    }
+
+    /** Element-wise difference of two arrays. @see applyBinaryFunction */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> operator-(const std::array<T, N> &lhs, const std::array<T, N> &rhs) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = lhs[i] - rhs[i];
+        }
+        return ret;
+    }
+
+    /** Element-wise sum of two arrays. @see applyBinaryFunction */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> operator+(const std::array<T, N> &lhs, const std::array<T, N> &rhs) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = lhs[i] + rhs[i];
+        }
+        return ret;
+    }
+
+    /** Element-wise product of two arrays. @see applyBinaryFunction */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> operator*(const std::array<T, N> &lhs, const std::array<T, N> &rhs) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = lhs[i] * rhs[i];
+        }
+        return ret;
+    }
+
+    /** Element-wise quotient of two arrays. @see applyBinaryFunction */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> operator/(const std::array<T, N> &lhs, const std::array<T, N> &rhs) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = lhs[i] / rhs[i];
+        }
+        return ret;
+    }
+
+    /** Adds a scalar to every element of an array. @see applyBinaryFunction */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> operator+(const std::array<T, N> &lhs, const T &scalar) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = lhs[i] + scalar;
+        }
+        return ret;
+    }
+
+    /** Subtracts a scalar from every element of an array. @see applyBinaryFunction */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> operator-(const std::array<T, N> &lhs, const T &scalar) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = lhs[i] - scalar;
+        }
+        return ret;
+    }
+
+    /** Multiplies every element of an array with a scalar. @see applyBinaryFunction */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> operator*(const std::array<T, N> &lhs, const T &scalar) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = lhs[i] * scalar;
+        }
+        return ret;
+    }
+
+    /** Divides every element of an array by a scalar. @see applyBinaryFunction */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> operator/(const std::array<T, N> &lhs, const T &scalar) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = lhs[i] / scalar;
+        }
+        return ret;
+    }
+
+    /**
+     * Applies the Euclidean norm/ L2-norm to an array.
+     * @tparam T the element type
+     * @tparam N the array size
+     * @param array the array
+     * @return the L2 norm in the array's own precision
+     */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION T euclideanNorm(const std::array<T, N> &array) {
+        T sum{0};
+        for (size_t i = 0; i < N; ++i) {
+            sum += array[i] * array[i];
+        }
+        return Kokkos::sqrt(sum);
+    }
+
+    /**
+     * Computes the absolute value of every element of an array.
+     * @tparam T the element type
+     * @tparam N the array size
+     * @param array the array
+     * @return an array with the modified values
+     */
+    template<typename T, size_t N>
+    KOKKOS_INLINE_FUNCTION std::array<T, N> abs(const std::array<T, N> &array) {
+        std::array<T, N> ret{};
+        for (size_t i = 0; i < N; ++i) {
+            ret[i] = Kokkos::abs(array[i]);
+        }
+        return ret;
+    }
+
 
     /**
      * Alias for a two-dimensional array with size M and N. M is the major size!
@@ -197,7 +359,7 @@ namespace polyhedralGravity::util {
      * @return the determinant
      */
     template<typename T>
-    T det(const Matrix<T, 3, 3> &matrix) {
+    KOKKOS_INLINE_FUNCTION T det(const Matrix<T, 3, 3> &matrix) {
         return matrix[0][0] * matrix[1][1] * matrix[2][2] + matrix[0][1] * matrix[1][2] * matrix[2][0] +
                matrix[0][2] * matrix[1][0] * matrix[2][1] - matrix[0][2] * matrix[1][1] * matrix[2][0] -
                matrix[0][0] * matrix[1][2] * matrix[2][1] - matrix[0][1] * matrix[1][0] * matrix[2][2];
@@ -212,7 +374,7 @@ namespace polyhedralGravity::util {
      * @return the transposed
      */
     template<typename T, size_t M, size_t N>
-    Matrix<T, M, N> transpose(const Matrix<T, M, N> &matrix) {
+    KOKKOS_INLINE_FUNCTION Matrix<T, M, N> transpose(const Matrix<T, M, N> &matrix) {
         Matrix<T, N, M> transposed;
         for (size_t i = 0; i < M; ++i) {
             for (size_t j = 0; j < N; ++j) {
@@ -230,7 +392,7 @@ namespace polyhedralGravity::util {
     * @return cross product
     */
     template<typename T>
-    std::array<T, 3> cross(const std::array<T, 3> &lhs, const std::array<T, 3> &rhs) {
+    KOKKOS_INLINE_FUNCTION std::array<T, 3> cross(const std::array<T, 3> &lhs, const std::array<T, 3> &rhs) {
         std::array<T, 3> result{};
         result[0] = lhs[1] * rhs[2] - lhs[2] * rhs[1];
         result[1] = lhs[2] * rhs[0] - lhs[0] * rhs[2];
@@ -247,9 +409,9 @@ namespace polyhedralGravity::util {
      * @return the normal (normed)
      */
     template<typename T>
-    std::array<T, 3> normal(const std::array<T, 3> &first, const std::array<T, 3> &second) {
+    KOKKOS_INLINE_FUNCTION std::array<T, 3> normal(const std::array<T, 3> &first, const std::array<T, 3> &second) {
         const std::array<T, 3> crossProduct = cross(first, second);
-        const double norm = euclideanNorm(crossProduct);
+        const T norm = euclideanNorm(crossProduct);
         return crossProduct / norm;
     }
 
@@ -261,7 +423,7 @@ namespace polyhedralGravity::util {
     * @return dot product
     */
     template<typename T>
-    T dot(const std::array<T, 3> &lhs, const std::array<T, 3> &rhs) {
+    KOKKOS_INLINE_FUNCTION T dot(const std::array<T, 3> &lhs, const std::array<T, 3> &rhs) {
         return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
     }
 
@@ -273,7 +435,7 @@ namespace polyhedralGravity::util {
      * @return -1, 0, 1 depending on the sign and the given EPSILON
      */
     template<typename T>
-    int sgn(T val, double cutoffEpsilon) {
+    KOKKOS_INLINE_FUNCTION int sgn(T val, double cutoffEpsilon) {
         return val < -cutoffEpsilon ? -1 : val > cutoffEpsilon ? 1 : 0;
     }
 
@@ -287,14 +449,13 @@ namespace polyhedralGravity::util {
      * @return a new array of size M+N with type T
      */
     template<typename T, size_t M, size_t N>
-    std::array<T, M + N> concat(const std::array<T, M> &first, const std::array<T, N> &second) {
+    KOKKOS_INLINE_FUNCTION std::array<T, M + N> concat(const std::array<T, M> &first, const std::array<T, N> &second) {
         std::array<T, M + N> result{};
-        size_t index = 0;
-        for (const auto &el: first) {
-            result[index++] = el;
+        for (size_t i = 0; i < M; ++i) {
+            result[i] = first[i];
         }
-        for (const auto &el: second) {
-            result[index++] = el;
+        for (size_t i = 0; i < N; ++i) {
+            result[M + i] = second[i];
         }
         return result;
     }
@@ -305,7 +466,7 @@ namespace polyhedralGravity::util {
      * @return surface area
      */
     template<typename T>
-    T surfaceArea(const Matrix<T, 3, 3> &triangle) {
+    KOKKOS_INLINE_FUNCTION T surfaceArea(const Matrix<T, 3, 3> &triangle) {
         return 0.5 * euclideanNorm(cross(triangle[1] - triangle[0], triangle[2] - triangle[0]));
     }
 

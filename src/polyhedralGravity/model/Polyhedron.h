@@ -7,12 +7,6 @@
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
-#include "thrust/copy.h"
-#include "thrust/device_vector.h"
-#include "thrust/execution_policy.h"
-#include "thrust/iterator/counting_iterator.h"
-#include "thrust/iterator/transform_iterator.h"
-#include "thrust/transform_reduce.h"
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -270,21 +264,18 @@ namespace polyhedralGravity {
         [[nodiscard]] std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation, MetricUnit> getState() const;
 
         /**
-         * An iterator transforming the polyhedron's coordinates on demand by a given offset.
-         * This function returns a pair of transform iterators (first = begin(), second = end()).
-         * @param offset the offset to apply
-         * @return pair of transform iterators
+         * Returns the resolved face at the given index with all of its vertices shifted by an offset.
+         * Tsoulis' equations require the computation point P to be relocated into the origin, which is what
+         * this offset is used for.
+         * @param index size_t
+         * @param offset the offset to subtract from every vertex, e.g. the computation point P
+         * @return triplet of the face's vertices' cartesian coordinates, each shifted by -offset
          */
-        [[nodiscard]] inline auto transformIterator(const Array3 &offset = {0.0, 0.0, 0.0}) const {
-            //The offset must be captured by value to ensure its lifetime!
-            const auto lambdaOffsetApplication = [this, offset](const IndexArray3 &face) -> Array3Triplet {
-                using namespace util;
-                return {this->getVertex(face[0]) - offset, this->getVertex(face[1]) - offset,
-                        this->getVertex(face[2]) - offset};
-            };
-            auto first = thrust::make_transform_iterator(this->getFaces().begin(), lambdaOffsetApplication);
-            auto last = thrust::make_transform_iterator(this->getFaces().end(), lambdaOffsetApplication);
-            return std::make_pair(first, last);
+        [[nodiscard]] inline Array3Triplet getResolvedFace(const size_t index, const Array3 &offset) const {
+            using namespace util;
+            const IndexArray3 &face = this->getFace(index);
+            return {this->getVertex(face[0]) - offset, this->getVertex(face[1]) - offset,
+                    this->getVertex(face[2]) - offset};
         }
 
         /**

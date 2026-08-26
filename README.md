@@ -40,7 +40,7 @@
 
 ## References
 
-This code is a validated implementation in C++17 of the Polyhedral Gravity Model
+This code is a validated implementation in C++20 of the Polyhedral Gravity Model
 by Tsoulis et al.. Additionally, the model provides a Python binding.
 It was initially created in a collaborative project between
 TU Munich and ESA's Advanced Concepts Team.
@@ -105,7 +105,7 @@ around a cube:
 
 ```python
 import numpy as np
-from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation, MetricUnit
+from polyhedral_gravity import Polyhedron, GravityEvaluable, evaluate, PolyhedronIntegrity, NormalOrientation, MetricUnit, ComputeBackend, ComputePrecision
 
 # We define the cube as a polyhedron with 8 vertices and 12 triangular faces
 # The polyhedron's normals point outwards (see below for checking this)
@@ -141,7 +141,7 @@ Continuing, the simplest way to compute the gravity is to use the `evaluate` fun
 potential, acceleration, tensor = evaluate(
   polyhedron=cube_polyhedron,
   computation_points=computation_point,
-  parallel=True,
+  backend=ComputeBackend.CPU_PARALLEL,
 )
 ```
 
@@ -154,10 +154,46 @@ for multiple computation points but don't know the "future points" in advance.
 evaluable = GravityEvaluable(polyhedron=cube_polyhedron) # stores intermediate computation steps
 potential, acceleration, tensor = evaluable(
   computation_points=computation_point,
-  parallel=True,
+  backend=ComputeBackend.CPU_PARALLEL,
 )
 # Any future evaluable call after this one will be faster
 ```
+
+#### Choosing the Compute Backend and Precision
+
+The evaluation is implemented once with [Kokkos](https://kokkos.org/) and runs on any of the
+`ComputeBackend`s the library was compiled with:
+
+| `ComputeBackend`                   | Kokkos execution space                              |
+|------------------------------------|-----------------------------------------------------|
+| `ComputeBackend.CPU_SERIAL`        | `Serial`, i.e. one CPU thread                       |
+| `ComputeBackend.CPU_PARALLEL`      | `OpenMP`, i.e. all CPU threads (**default**)        |
+| `ComputeBackend.GPU_PARALLEL`      | `Cuda` (NVIDIA), `HIP` (AMD), or `SYCL` (Intel)     |
+
+The backends this build actually offers are listed in `polyhedral_gravity.__parallelization__`.
+Requesting `GPU_PARALLEL` on a build without a GPU backend raises a `RuntimeError` rather than
+silently computing somewhere else:
+
+```python
+import polyhedral_gravity
+print(polyhedral_gravity.__parallelization__)   # e.g. 'Serial, OpenMP, Cuda'
+```
+
+Independently of where it runs, the evaluation can compute in single or double precision.
+The mesh you hand in and the results you get back are always double precision; only the evaluation
+itself changes:
+
+```python
+evaluable = GravityEvaluable(
+  polyhedron=cube_polyhedron,
+  precision=ComputePrecision.FLOAT32,           # default is ComputePrecision.FLOAT64
+)
+```
+
+> [!IMPORTANT]
+> `FLOAT32` roughly halves the evaluation's memory traffic, but *Tsoulis et al.*'s formulation cancels
+> large terms against each other. Expect a relative accuracy of only about $10^{-4}$, and prefer
+> `FLOAT64` whenever the result matters more than the throughput.
 
 Note that the `computation_point` could also be (N, 3)-shaped array to compute multiple points at once.
 In this case, the return value of `evaluate(..)` or an `GravityEvaluable` will
@@ -205,26 +241,27 @@ double density = 1.0;
 Polyhedron polyhedron{vertices, faces, density};
 std::vector<std::array<double, 3>> points = ...
 std::array<double, 3> point = points[0];
-bool parallel = true;
+ComputeBackend backend = ComputeBackend::CPU_PARALLEL;
 ```
 
 The C++ library provides also two ways to compute the gravity. Via
 the free function `evaluate`...
 
 ```cpp
-const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, parallel);
+const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, backend);
 ```
 
 ... or via the `GravityEvaluable` class.
 
 ```cpp
 // Instantiation of the GravityEvaluable object
+// It optionally takes the ComputePrecision as a second argument (default: FLOAT64)
 GravityEvaluable evaluable{polyhedron};
 
 // From now, we can evaluate the gravity model for any point with
-const auto[potential, acceleration, tensor] = evaluable(point, parallel);
+const auto[potential, acceleration, tensor] = std::get<GravityModelResult>(evaluable(point, backend));
 // or for multiple points with
-const auto results = evaluable(points, parallel);
+const auto results = std::get<std::vector<GravityModelResult>>(evaluable(points, backend));
 ```
 
 Similarly to Python, the C++ implementation also provides mesh checking capabilities.
@@ -262,7 +299,7 @@ Binaries for the most common platforms are available on PyPI, including
 Windows, Linux, and macOS. For macOS and Linux, binaries for
 `x86_64` and `aarch64` are provided.
 In case `pip` uses the source distribution, please make sure that
-you have a C++17 capable compiler and CMake installed.
+you have a C++20 capable compiler and CMake installed.
 
 ### From source
 
@@ -273,11 +310,10 @@ all of them are **automatically** set up via CMake:
 - spdlog (1.13.0 or compatible), required for logging
 - tetgen (1.6 or compatible), required for I/O
 - yaml-cpp (0.8.0 or compatible), required for I/O
-- thrust (2.1.0 or compatible), required for parallelization and utility
-- xsimd (11.1.0 or compatible), required for vectorization of the `atan(..)`
+- Kokkos (5.1.1 or compatible), required for the parallelization on the CPU and the GPU
 - pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
 
-The module will be built using a C++17 capable compiler,
+The module will be built using a C++20 capable compiler,
 CMake. Just execute the following command in
 the repository root folder:
 
@@ -285,13 +321,13 @@ the repository root folder:
 pip install .
 ```
 
-To modify the build options (like parallelization) have a look
+To modify the build options (like the GPU backend) have a look
 at the [next paragraph](#building-the-c-library--executable). The options
 are modified by setting the environment variables before executing
 the `pip install .` command, e.g.:
 
 ```bash
-export POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
+export POLYHEDRAL_GRAVITY_DEVICE_BACKEND="CUDA"
 pip install .
 ```
 
@@ -315,22 +351,27 @@ cmake --build .
 
 The following options are available:
 
-|                                               Name (Default) | Options                                                                                     |
-|-------------------------------------------------------------:|:--------------------------------------------------------------------------------------------|
-|                   POLYHEDRAL_GRAVITY_PARALLELIZATION (`CPP`) | `CPP` = Serial Execution / `OMP` or `TBB` = Parallel Execution with OpenMP or Intel\'s TBB  |
-|                    POLYHEDRAL_GRAVITY_LOGGING_LEVEL (`INFO`) | `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`, `OFF`                                |
-|                        BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`) | Build this documentation                                                                    |
-|                        BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`) | Build the Tests                                                                             |
-|             BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (`ON`) | Build the Python interface                                                                  |
+|                                              Name (Default) | Options                                                                                          |
+|------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------|
+|              POLYHEDRAL_GRAVITY_DEVICE_BACKEND (`AUTO`)      | `AUTO` = detect the vendor paradigm / `NONE` = CPU-only build / `CUDA`, `HIP`, or `SYCL`         |
+|                   POLYHEDRAL_GRAVITY_LOGGING_LEVEL (`INFO`)  | `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`, `OFF`                                     |
+|                       BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`)  | Build this documentation                                                                         |
+|                       BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`)  | Build the Tests                                                                                  |
+|            BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (`ON`)  | Build the Python interface                                                                       |
 
-During testing POLYHEDRAL_GRAVITY_PARALLELIZATION=`TBB` has been the most performant.
-It is further not recommended to change the POLYHEDRAL_GRAVITY_LOGGING_LEVEL to something else than `INFO=2`.
+The host backends need no configuration: the Kokkos `Serial` backend is always compiled in and the
+`OpenMP` backend is enabled whenever an OpenMP installation is found (on macOS this is Homebrew's
+`libomp`; without it `CPU_PARALLEL` falls back to serial execution).
 
-The recommended CMake settings using the `TBB` backend would look like this:
+`POLYHEDRAL_GRAVITY_DEVICE_BACKEND=AUTO` picks the GPU vendor's native paradigm from the toolchain
+that is installed: CUDA if `nvcc` is found, HIP if the ROCm compiler is found, SYCL for the Intel
+LLVM compiler, and no GPU backend otherwise. Set it explicitly to override that detection:
 
 ```bash
-cmake .. -POLYHEDRAL_GRAVITY_PARALLELIZATION="TBB"
+cmake .. -DPOLYHEDRAL_GRAVITY_DEVICE_BACKEND="CUDA"
 ```
+
+It is not recommended to change the POLYHEDRAL_GRAVITY_LOGGING_LEVEL to something else than `INFO=2`.
 
 ### Running the C++ Executable
 

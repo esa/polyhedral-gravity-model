@@ -1,5 +1,9 @@
 #include "Polyhedron.h"
 
+#include <Kokkos_Core.hpp>
+
+#include "polyhedralGravity/kokkos/KokkosSession.h"
+
 namespace polyhedralGravity {
 
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
@@ -131,43 +135,40 @@ namespace polyhedralGravity {
     }
 
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
+        kokkos::ensureInitialized();
         // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
-        const auto &[polyBegin, polyEnd] = this->transformIterator();
         const size_t n = this->countFaces();
-        // Vector contains TRUE if the corrspeonding index VIOLATES the OUTWARDS cirteria
-        // Vector contains FALSE if the cooresponding index FULFILLS the OUTWARDS criteria
-        thrust::device_vector<bool> violatingBoolOutwards(n, false);
-        thrust::transform(
-                thrust::device,
-                polyBegin,
-                polyEnd,
-                violatingBoolOutwards.begin(),
-                [&](const auto &face) {
+        // Entry is 1 if the corresponding index VIOLATES the OUTWARDS criteria
+        // Entry is 0 if the corresponding index FULFILLS the OUTWARDS criteria
+        // This is a char and not a bool since the threads below write into distinct elements concurrently
+        std::vector<char> violatesOutwards(n, 0);
+        size_t numberOfOutwardsViolations = 0;
+        // The ray casting below is host-only code, so it runs on the host execution space no matter which
+        // compute backend the user later evaluates the gravity model on
+        Kokkos::parallel_reduce(
+                "polyhedralGravity::checkPlaneUnitNormalOrientation",
+                Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, n),
+                [&](const size_t index, size_t &violations) {
                     // If the ray intersects the polyhedron odd number of times the normal points inwards
                     // Hence, violating the OUTWARDS constraint
-                    const size_t intersects = this->countRayPolyhedronIntersections(face);
-                    return intersects % 2 != 0;
-                });
-        const size_t numberOfOutwardsViolations = std::count(violatingBoolOutwards.cbegin(), violatingBoolOutwards.cend(), true);
-        // 2. Step: Create a set with only the indices violating the constraint
-        std::set<size_t> violatingIndices{};
-        auto countingIterator = thrust::make_counting_iterator<size_t>(0);
+                    const size_t intersects = this->countRayPolyhedronIntersections(this->getResolvedFace(index));
+                    violatesOutwards[index] = static_cast<char>(intersects % 2 != 0);
+                    violations += violatesOutwards[index];
+                },
+                numberOfOutwardsViolations);
 
-        if (numberOfOutwardsViolations <= n / 2) {
-            std::copy_if(countingIterator, countingIterator + n, std::inserter(violatingIndices, violatingIndices.end()), [&violatingBoolOutwards](const size_t &index) {
-                return violatingBoolOutwards[index];
-            });
-            // 3a. Step: Return the outwards pointing as major orientation
-            // and the violating faces, i.e. which have inwards pointing normals
-            return std::make_pair(NormalOrientation::OUTWARDS, violatingIndices);
-        } else {
-            std::copy_if(countingIterator, countingIterator + n, std::inserter(violatingIndices, violatingIndices.end()), [&violatingBoolOutwards](const size_t &index) {
-                return !violatingBoolOutwards[index];
-            });
-            // 3b. Step: Return the inwards pointing as major orientation and
-            // the violating faces, i.e. which have outwards pointing normals
-            return std::make_pair(NormalOrientation::INWARDS, violatingIndices);
+        // 2. Step: Create a set with only the indices violating the constraint
+        // 3a. Step: If the majority points outwards, return it as the major orientation
+        // and the violating faces, i.e. which have inwards pointing normals (and vice versa in 3b.)
+        const bool majorityIsOutwards = numberOfOutwardsViolations <= n / 2;
+        std::set<size_t> violatingIndices{};
+        for (size_t index = 0; index < n; ++index) {
+            if (static_cast<bool>(violatesOutwards[index]) == majorityIsOutwards) {
+                violatingIndices.insert(index);
+            }
         }
+        return std::make_pair(majorityIsOutwards ? NormalOrientation::OUTWARDS : NormalOrientation::INWARDS,
+                              violatingIndices);
     }
 
     void Polyhedron::runIntegrityMeasures(const PolyhedronIntegrity &integrity) {
@@ -214,14 +215,17 @@ namespace polyhedralGravity {
     }
 
     bool Polyhedron::checkTrianglesNotDegenerated() const {
-        const auto &[begin, end] = this->transformIterator();
+        kokkos::ensureInitialized();
         // All triangles surface area needs to be greater than zero
-        return thrust::transform_reduce(
-                thrust::device,
-                begin, end, [](const Array3Triplet &face) {
-                    return util::surfaceArea(face) > 0.0;
+        size_t degenerated = 0;
+        Kokkos::parallel_reduce(
+                "polyhedralGravity::checkTrianglesNotDegenerated",
+                Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, this->countFaces()),
+                [&](const size_t index, size_t &accumulator) {
+                    accumulator += util::surfaceArea(this->getResolvedFace(index)) > 0.0 ? 0 : 1;
                 },
-                true, thrust::logical_and<bool>());
+                degenerated);
+        return degenerated == 0;
     }
 
     void Polyhedron::healPlaneUnitNormalOrientation(const NormalOrientation &actualOrientation, const std::set<size_t> &violatingIndices) {
@@ -248,14 +252,14 @@ namespace polyhedralGravity {
         const Array3 rayOrigin = centroid + (rayVector * EPSILON_ZERO_OFFSET);
 
         // Count every triangular face which is intersected by the ray
-        const auto &[begin, end] = this->transformIterator();
         std::set<Array3> intersections{};
-        std::for_each(begin, end, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &otherFace) {
-            const std::unique_ptr<Array3> intersection = rayIntersectsTriangle(rayOrigin, rayVector, otherFace);
+        for (size_t index = 0; index < this->countFaces(); ++index) {
+            const std::unique_ptr<Array3> intersection =
+                    rayIntersectsTriangle(rayOrigin, rayVector, this->getResolvedFace(index));
             if (intersection != nullptr) {
                 intersections.insert(*intersection);
             }
-        });
+        }
         return intersections.size();
     }
 

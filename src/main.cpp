@@ -1,5 +1,6 @@
 #include "polyhedralGravity/Info.h"
 #include "polyhedralGravity/input/ConfigSource.h"
+#include "polyhedralGravity/kokkos/KokkosSession.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
@@ -15,7 +16,7 @@ int main(const int argc, char *argv[]) {
     POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Model Version:                 {}", POLYHEDRAL_GRAVITY_VERSION);
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Commit Hash:                   {}", POLYHEDRAL_GRAVITY_COMMIT_HASH);
-    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Model Parallelization Backend: {}", POLYHEDRAL_GRAVITY_PARALLELIZATION);
+    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Model Execution Spaces:         {}", kokkos::getEnabledExecutionSpaces());
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Logging Level:                 {}", POLYHEDRAL_GRAVITY_LOGGING_LEVEL);
     POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
 
@@ -54,7 +55,7 @@ int main(const int argc, char *argv[]) {
         POLYHEDRAL_GRAVITY_LOG_INFO("Gravity Evaluation has started!");
         const auto startCalc = std::chrono::high_resolution_clock::now();
 
-        const auto result = GravityModel::evaluate(polyhedron, computationPoints, true);
+        const auto result = GravityModel::evaluate(polyhedron, computationPoints, ComputeBackend::CPU_PARALLEL);
 
         const auto endCalc = std::chrono::high_resolution_clock::now();
         const auto durationCalc = endCalc - startCalc;

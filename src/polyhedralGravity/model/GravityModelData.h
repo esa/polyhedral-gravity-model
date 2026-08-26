@@ -9,32 +9,44 @@
 #include <ostream>
 #include <tuple>
 
+#include <Kokkos_Macros.hpp>
+
 namespace polyhedralGravity {
+
+    /*
+     * The three structs below are plain aggregates of floating point values which the gravity model builds
+     * per polyhedral segment. They are templated over the precision because the evaluation runs either in
+     * single or double precision (see ComputePrecision), and they are trivially copyable so that a
+     * Kokkos::View can hold them and so that they can live in a kernel's registers.
+     * The aliases Distance, TranscendentalExpression, and HessianPlane keep the double precision spelling
+     * that the rest of the library and the tests use.
+     */
 
     /**
      * Contains the 3D distances l1_pq and l2_pq between P and the endpoints of segment pq and
      * the 1D distances s1_pq and s2_pq between P'' and the segment endpoints.
      * @note This struct is basically a named tuple
      */
-    struct Distance {
+    template<typename FloatType>
+    struct DistanceTemplate {
         /**
          * the 3D distance between computation point P and the first endpoint of line segment pq
          */
-        double l1;
+        FloatType l1;
         /**
          * the 3D distance between computation point P and the second endpoint of line segment pq
          */
-        double l2;
+        FloatType l2;
         /**
          * the 1D distance between projection of the computation point on line segment pq and the first endpoint of
          * line segment pq
          */
-        double s1;
+        FloatType s1;
         /**
          * the 1D distance between projection of the computation point on line segment pq and the second endpoint of
          * line segment pq
          */
-        double s2;
+        FloatType s2;
 
         /**
          * Checks two Distance structs for equality with another one by ensuring that the members are
@@ -44,7 +56,7 @@ namespace polyhedralGravity {
          *
          * @note Just used for testing purpose
          */
-        bool operator==(const Distance &rhs) const {
+        bool operator==(const DistanceTemplate &rhs) const {
             return util::almostEqualRelative(l1, rhs.l1) &&
                    util::almostEqualRelative(l2, rhs.l2) &&
                    util::almostEqualRelative(s1, rhs.s1) &&
@@ -59,7 +71,7 @@ namespace polyhedralGravity {
          *
          * @note Just used for testing purpose
          */
-        bool operator!=(const Distance &rhs) const {
+        bool operator!=(const DistanceTemplate &rhs) const {
             return !(rhs == *this);
         }
 
@@ -69,7 +81,7 @@ namespace polyhedralGravity {
          * @param distance a Distance struct
          * @return os
          */
-        friend std::ostream &operator<<(std::ostream &os, const Distance &distance) {
+        friend std::ostream &operator<<(std::ostream &os, const DistanceTemplate &distance) {
             os << "l1: " << distance.l1 << " l2: " << distance.l2 << " s1: " << distance.s1 << " s2: " << distance.s2;
             return os;
         }
@@ -79,19 +91,20 @@ namespace polyhedralGravity {
      * Contains the Transcendental Expressions LN_pq and AN_pq for a given line segment pq of the polyhedron.
      * @note This struct is basically a named tuple
      */
-    struct TranscendentalExpression {
+    template<typename FloatType>
+    struct TranscendentalExpressionTemplate {
         /**
          * The LN values for plane p and segment q of this plane is calculated in the following way:
          * LN_pq = ln ((s_2_pq + l_2_pq) / (s_1_pq + l_1_pq))
          * @note see Tsoulis Paper Equation (14)
          */
-        double ln;
+        FloatType ln;
         /**
          * The AN values for plane p and segment q of this plane is calculated in the following way:
          * AN_pq = arctan ((h_p * s_2_pq) / (h_pq * l_2_pq)) - arctan ((h_pq * s_1_pq) / (h_pq * l_1_pq))
          * @note see Tsoulis Paper Equation (15)
          */
-        double an;
+        FloatType an;
 
         /**
          * Checks two TranscendentalExpressions for equality with another one by ensuring that the members are
@@ -101,7 +114,7 @@ namespace polyhedralGravity {
          *
          * @note Just used for testing purpose
          */
-        bool operator==(const TranscendentalExpression &rhs) const {
+        bool operator==(const TranscendentalExpressionTemplate &rhs) const {
             return util::almostEqualRelative(ln, rhs.ln) && util::almostEqualRelative(an, rhs.an);
         }
 
@@ -113,7 +126,7 @@ namespace polyhedralGravity {
          *
          * @note Just used for testing purpose
          */
-        bool operator!=(const TranscendentalExpression &rhs) const {
+        bool operator!=(const TranscendentalExpressionTemplate &rhs) const {
             return !(rhs == *this);
         }
 
@@ -123,7 +136,7 @@ namespace polyhedralGravity {
          * @param expression a TranscendentalExpression
          * @return os
          */
-        friend std::ostream &operator<<(std::ostream &os, const TranscendentalExpression &expression) {
+        friend std::ostream &operator<<(std::ostream &os, const TranscendentalExpressionTemplate &expression) {
             os << "ln: " << expression.ln << " an: " << expression.an;
             return os;
         }
@@ -136,23 +149,24 @@ namespace polyhedralGravity {
      * where a,b,c are the plane's normal
      * and d as the signed distance to the plane from the origin along the normal.
      */
-    struct HessianPlane {
+    template<typename FloatType>
+    struct HessianPlaneTemplate {
         /**
          * part of the planes normal [a, b, c]
          */
-        double a;
+        FloatType a;
         /**
          * part of the panes normal [a, b, c]
          */
-        double b;
+        FloatType b;
         /**
          * part of the planes normal [a, b, c]
          */
-        double c;
+        FloatType c;
         /**
          * the signed distance to the plane from the origin along the normal
          */
-        double d;
+        FloatType d;
 
         /**
          * Checking the equality of two this Hessian Plane with another one by ensuring that the members are
@@ -162,7 +176,7 @@ namespace polyhedralGravity {
          *
          * @note Just used for testing purpose
          */
-        bool operator==(const HessianPlane &rhs) const {
+        bool operator==(const HessianPlaneTemplate &rhs) const {
             return util::almostEqualRelative(a, rhs.a) &&
                    util::almostEqualRelative(b, rhs.b) &&
                    util::almostEqualRelative(c, rhs.c) &&
@@ -177,7 +191,7 @@ namespace polyhedralGravity {
          *
          * @note Just used for testing purpose
          */
-        bool operator!=(const HessianPlane &rhs) const {
+        bool operator!=(const HessianPlaneTemplate &rhs) const {
             return !(rhs == *this);
         }
 
@@ -187,10 +201,20 @@ namespace polyhedralGravity {
          * @param hessianPlane a HessianPlane
          * @return os
          */
-        friend std::ostream &operator<<(std::ostream &os, const HessianPlane &hessianPlane) {
+        friend std::ostream &operator<<(std::ostream &os, const HessianPlaneTemplate &hessianPlane) {
             os << "a: " << hessianPlane.a << " b: " << hessianPlane.b << " c: " << hessianPlane.c << " d: " << hessianPlane.d;
             return os;
         }
     };
+
+
+    /** The distances l1, l2, s1, s2 of one segment in double precision. @see DistanceTemplate */
+    using Distance = DistanceTemplate<double>;
+
+    /** The transcendental expressions LN_pq and AN_pq of one segment in double precision. @see TranscendentalExpressionTemplate */
+    using TranscendentalExpression = TranscendentalExpressionTemplate<double>;
+
+    /** A plane in Hessian Normal Form in double precision. @see HessianPlaneTemplate */
+    using HessianPlane = HessianPlaneTemplate<double>;
 
 }
