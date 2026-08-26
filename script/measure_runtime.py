@@ -1,5 +1,6 @@
 #!python3
-from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable
+from pathspec import backend
+from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable, ComputeBackend, ComputePrecision
 import polyhedral_gravity
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,7 +28,7 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
 
     start_time = timeit.default_timer()
     for i in range(sample_size):
-        evaluate(polyhedron, computation_points[i])
+        evaluate(polyhedron, computation_points[i], backend=ComputeBackend.CPU)
     end_time = timeit.default_timer()
 
     total_time = end_time - start_time
@@ -39,7 +40,7 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
     results[f"evaluate \n ${sample_size} \\times 1$ point"] = delta
 
     start_time = timeit.default_timer()
-    evaluate(polyhedron, computation_points)
+    evaluate(polyhedron, computation_points, backend=ComputeBackend.CPU)
     end_time = timeit.default_timer()
 
     total_time = end_time - start_time
@@ -50,7 +51,7 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
     logger.info(f"Time taken:    {delta:.3f} microseconds per point")
     results[f"evaluate \n $1 \\times {sample_size}$ points"] = delta
 
-    evaluable = GravityEvaluable(polyhedron)
+    evaluable = GravityEvaluable(polyhedron, backend=ComputeBackend.CPU)
 
     start_time = timeit.default_timer()
     for i in range(sample_size):
@@ -65,7 +66,7 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
     logger.info(f"Time taken:    {delta:.3f} microseconds per point")
     results[f"GravityEvaluable \n ${sample_size} \\times 1$ point"] = delta
 
-    evaluable = GravityEvaluable(polyhedron)
+    evaluable = GravityEvaluable(polyhedron, backend=ComputeBackend.CPU)
 
     start_time = timeit.default_timer()
     evaluable(computation_points)
@@ -79,6 +80,20 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
     logger.info(f"Time taken:    {delta:.3f} microseconds per point")
     logger.info("##########################################################")
     results[f"GravityEvaluable \n $1 \\times {sample_size}$ points"] = delta
+
+
+    evaluable = GravityEvaluable(polyhedron, backend=ComputeBackend.OPENCL, precision=ComputePrecision.FLOAT32)
+    start_time = timeit.default_timer()
+    evaluable(computation_points)
+    end_time = timeit.default_timer()
+
+    total_time = end_time - start_time
+    delta = total_time / sample_size * 1e6
+    logger.info("##########################################################")
+    logger.info(f"Benchmarking one time {sample_size} points with OpenCL")
+    logger.info(f"Total Runtime: {total_time:.3f} seconds")
+    logger.info(f"Time taken:    {delta:.3f} microseconds per point")
+    logger.info("##########################################################")
     return results
 
 

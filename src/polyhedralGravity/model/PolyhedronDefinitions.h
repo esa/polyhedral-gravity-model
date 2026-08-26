@@ -137,4 +137,63 @@ namespace polyhedralGravity {
      */
     MetricUnit readMetricUnit(const std::string &unit);
 
+    /**
+     * The compute backend used to evaluate the polyhedral gravity model.
+     * The chosen backend only influences how the result is computed, not the result itself
+     * (up to the floating point precision selected via {@link ComputePrecision}).
+     */
+    enum class ComputeBackend : char {
+        /**
+         * Evaluation on the host using the parallelization technology the library was compiled with
+         * (see POLYHEDRAL_GRAVITY_PARALLELIZATION).
+         */
+        CPU,
+        /**
+         * Evaluation on an OpenCL device, i.e. typically a GPU.
+         * Requires the library to be compiled with POLYHEDRAL_GRAVITY_ENABLE_OPENCL.
+         * Falls back to {@link ComputeBackend::CPU} if no OpenCL device supporting the requested
+         * {@link ComputePrecision} is available.
+         */
+        OPENCL,
+    };
+
+    /**
+     * Stream operator for the ComputeBackend enum. Prints the enum to a human-readable string.
+     * @param os The output stream to write the string representation to.
+     * @param backend the compute backend to print
+     * @return The output stream after writing the string representation.
+     */
+    std::ostream &operator<<(std::ostream &os, const ComputeBackend &backend);
+
+    /**
+     * The floating point precision in which a {@link ComputeBackend} evaluates the gravity model.
+     *
+     * This exclusively concerns the device-side computation. The host-side interface is always
+     * double precision, and the {@link ComputeBackend::CPU} backend always computes in double
+     * precision, so this setting is ignored for it.
+     */
+    enum class ComputePrecision : char {
+        /**
+         * Single precision (32 bit) evaluation.
+         * Considerably faster on most GPUs and the only option on devices without @c cl_khr_fp64,
+         * such as every Apple Silicon GPU. Note that Tsoulis' algorithm evaluates differences of
+         * transcendental terms which are prone to cancellation, so single precision noticeably
+         * reduces the accuracy of the result.
+         */
+        FLOAT32,
+        /**
+         * Double precision (64 bit) evaluation, matching the accuracy of the CPU backend.
+         * Requires the OpenCL device to support the @c cl_khr_fp64 extension.
+         */
+        FLOAT64,
+    };
+
+    /**
+     * Stream operator for the ComputePrecision enum. Prints the enum to a human-readable string.
+     * @param os The output stream to write the string representation to.
+     * @param precision the compute precision to print
+     * @return The output stream after writing the string representation.
+     */
+    std::ostream &operator<<(std::ostream &os, const ComputePrecision &precision);
+
 }

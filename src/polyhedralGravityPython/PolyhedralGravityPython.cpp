@@ -141,6 +141,34 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
     .value("KILOMETER", MetricUnit::KILOMETER, "Representing kilometer :math:`[km]`")
     .value("UNITLESS", MetricUnit::UNITLESS, "Representing no unit :math:`[1]`");
 
+    py::enum_<ComputeBackend>(m, "ComputeBackend", R"mydelimiter(
+        The backend on which the polyhedral gravity model is evaluated.
+        The backend only influences how the result is computed, not the result itself
+        (up to the floating point precision selected via :py:class:`polyhedral_gravity.ComputePrecision`).
+        )mydelimiter")
+        .value("CPU", ComputeBackend::CPU,
+               "Evaluation on the host, using the parallelization technology given by "
+               ":code:`polyhedral_gravity.__parallelization__`")
+        .value("OPENCL", ComputeBackend::OPENCL,
+               "Evaluation on an OpenCL device, i.e. typically a GPU. This is the default. "
+               "Falls back to :code:`CPU` if this build has no OpenCL support or if no OpenCL device "
+               "supporting the requested precision is available.");
+
+    py::enum_<ComputePrecision>(m, "ComputePrecision", R"mydelimiter(
+        The floating point precision in which a :py:class:`polyhedral_gravity.ComputeBackend` evaluates.
+
+        This concerns the device-side computation only. The interface is always double precision, and the
+        :code:`CPU` backend always computes in double precision, so this setting is ignored for it.
+        )mydelimiter")
+        .value("FLOAT32", ComputePrecision::FLOAT32,
+               "Single precision (32 bit). Considerably faster on most GPUs and the only option on devices "
+               "without :code:`cl_khr_fp64`, such as every Apple Silicon GPU. Note that Tsoulis' algorithm "
+               "evaluates differences of transcendental terms which are prone to cancellation, so single "
+               "precision noticeably reduces the accuracy of the result.")
+        .value("FLOAT64", ComputePrecision::FLOAT64,
+               "Double precision (64 bit), matching the accuracy of the CPU backend. This is the default. "
+               "Requires the OpenCL device to support the :code:`cl_khr_fp64` extension.");
+
     py::class_<Polyhedron>(m, "Polyhedron", R"mydelimiter(
             A constant density Polyhedron stores the mesh data consisting of vertices and triangular faces.
 
@@ -264,14 +292,37 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
              It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
              )mydelimiter")
-            .def(py::init<const Polyhedron &>(),R"mydelimiter(
+            .def(py::init<const Polyhedron &, const ComputeBackend &, const ComputePrecision &>(),R"mydelimiter(
              Creates a new GravityEvaluable for a given constant density polyhedron.
              It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
 
              Args:
-                 polyhedron: The polyhedron for which to evaluate the gravity model
-             )mydelimiter", py::arg("polyhedron"))
+                 polyhedron:  The polyhedron for which to evaluate the gravity model
+                 backend:     The backend to evaluate on. One of :py:class:`polyhedral_gravity.ComputeBackend`
+                              (default: :code:`OPENCL`)
+                 precision:   The floating point precision the backend computes in. One of
+                              :py:class:`polyhedral_gravity.ComputePrecision` (default: :code:`FLOAT64`)
+
+             Note:
+                 Requesting :code:`OPENCL` is a preference, not a demand. If this build has no OpenCL support,
+                 or no OpenCL device supporting :code:`precision` is available, the evaluation silently falls
+                 back to the CPU. Read :py:attr:`polyhedral_gravity.GravityEvaluable.compute_backend` to learn
+                 which backend is actually in use.
+             )mydelimiter",
+                 py::arg("polyhedron"),
+                 py::arg("backend") = ComputeBackend::OPENCL,
+                 py::arg("precision") = ComputePrecision::FLOAT64)
+            .def_property_readonly("compute_backend", &GravityEvaluable::getComputeBackend,R"mydelimiter(
+            :py:class:`polyhedral_gravity.ComputeBackend`: The backend this GravityEvaluable actually evaluates on.
+            This is :code:`CPU` rather than the requested :code:`OPENCL` if OpenCL turned out to be
+            unavailable (Read-Only).
+            )mydelimiter")
+            .def_property_readonly("compute_precision", &GravityEvaluable::getComputePrecision,R"mydelimiter(
+            :py:class:`polyhedral_gravity.ComputePrecision`: The floating point precision the device-side
+            evaluation uses. Meaningless for the :code:`CPU` backend, which always computes in double
+            precision (Read-Only).
+            )mydelimiter")
             .def_property_readonly("output_units", &GravityEvaluable::getOutputMetricUnit,R"mydelimiter(
             (3)-array-like of :py:class:`str`: A human-readable string representation of the output units. This depends on the polyhedron's definition (Read-Only).
             )mydelimiter")
@@ -289,7 +340,9 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
              Args:
                  computation_points: The computation points as tuple or list of points
                  parallel:           If :code:`True`, the computation is done in parallel on the CPU using the technology specified by
-                                     :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`)
+                                     :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`).
+                                     Ignored on the :code:`OPENCL` backend, which parallelizes over the
+                                     polyhedron's faces on the device regardless.
 
              Returns:
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
@@ -299,16 +352,18 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
             .def(py::pickle(
                     [](const GravityEvaluable &evaluable) {
                         const auto &[polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals] = evaluable.getState();
-                        return py::make_tuple(polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals);
+                        return py::make_tuple(polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals,
+                                              evaluable.getComputeBackend(), evaluable.getComputePrecision());
                     },
                     [](const py::tuple &tuple) {
-                        constexpr size_t GRAVITY_EVALUABLE_STATE_SIZE = 4;
+                        constexpr size_t GRAVITY_EVALUABLE_STATE_SIZE = 6;
                         if (tuple.size() != GRAVITY_EVALUABLE_STATE_SIZE) {
                             throw std::runtime_error("Invalid state!");
                         }
                         GravityEvaluable evaluable{
                                 tuple[0].cast<Polyhedron>(), tuple[1].cast<std::vector<Array3Triplet>>(),
-                                tuple[2].cast<std::vector<Array3>>(), tuple[3].cast<std::vector<Array3Triplet>>()
+                                tuple[2].cast<std::vector<Array3>>(), tuple[3].cast<std::vector<Array3Triplet>>(),
+                                tuple[4].cast<ComputeBackend>(), tuple[5].cast<ComputePrecision>()
                         };
                         return evaluable;
                     }
@@ -316,13 +371,15 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
 
     m.def("evaluate", [](const Polyhedron &polyhedron,
                          const std::variant<Array3, std::vector<Array3>> &computationPoints,
-                         bool parallel) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> {
+                         bool parallel,
+                         const ComputeBackend &backend,
+                         const ComputePrecision &precision) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> {
                     return std::visit(util::overloaded{
                             [&](const Array3 &point) {
-                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, point, parallel));
+                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, point, parallel, backend, precision));
                             },
                             [&](const std::vector<Array3> &points) {
-                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, points, parallel));
+                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, points, parallel, backend, precision));
                             }
                         }, computationPoints);
           }, R"mydelimiter(
@@ -336,12 +393,24 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
                  polyhedron:            The polyhedron for which to evaluate the gravity model
                  computation_points:    The computation points as tuple or list of points
                  parallel:              If :code:`True`, the computation is done in parallel on the CPU using the technology specified by
-                                        :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`)
+                                        :code:`polyhedral_gravity.__parallelization__` (default: :code:`True`).
+                                        Ignored on the :code:`OPENCL` backend.
+                 backend:               The backend to evaluate on. One of :py:class:`polyhedral_gravity.ComputeBackend`
+                                        (default: :code:`OPENCL`)
+                 precision:             The floating point precision the backend computes in. One of
+                                        :py:class:`polyhedral_gravity.ComputePrecision` (default: :code:`FLOAT64`)
 
              Returns:
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
                  and second derivatives :math:`[V_{xx}, V_{yy}, V_{zz}, V_{xy},V_{xz}, V_{yz}]` at the computation points or
                  if multiple computation points are given a list of these triplets
-             )mydelimiter", py::arg("polyhedron"), py::arg("computation_points"), py::arg("parallel") = true);
+
+             Note:
+                 Each call sets up its own evaluable, which on the :code:`OPENCL` backend means uploading the
+                 polyhedron to the device again. Prefer :py:class:`polyhedral_gravity.GravityEvaluable` for
+                 repeated evaluations of the same polyhedron.
+             )mydelimiter", py::arg("polyhedron"), py::arg("computation_points"), py::arg("parallel") = true,
+             py::arg("backend") = ComputeBackend::OPENCL,
+             py::arg("precision") = ComputePrecision::FLOAT64);
 
 }

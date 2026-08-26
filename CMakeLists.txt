@@ -44,6 +44,13 @@ option(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE "Set this to on if the python i
 # Option to build tests or not
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
 
+# Option to build the OpenCL compute backend. Enabled by default wherever an OpenCL runtime is
+# installed, since ComputeBackend::OPENCL is the default backend of a GravityEvaluable and falls
+# back to the CPU on its own if no suitable device turns up at runtime.
+find_package(OpenCL QUIET)
+option(POLYHEDRAL_GRAVITY_ENABLE_OPENCL
+        "Builds the OpenCL compute backend (Default: ON if an OpenCL runtime is found)" ${OpenCL_FOUND})
+
 if (_LIBCPP_DISABLE_AVAILABILITY)
     message(STATUS "Disabling availability macros for libc++")
     add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
@@ -74,6 +81,7 @@ message(STATUS "Polyhedral Gravity Library          ${BUILD_POLYHEDRAL_GRAVITY_L
 message(STATUS "Polyhedral Gravity C++ Executable   ${BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE}")
 message(STATUS "Polyhedral Gravity Python Interface ${BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE}")
 message(STATUS "Polyhedral Gravity Tests            ${BUILD_POLYHEDRAL_GRAVITY_TESTS}")
+message(STATUS "Polyhedral Gravity OpenCL Backend   ${POLYHEDRAL_GRAVITY_ENABLE_OPENCL}")
 message(STATUS "#################################################################")
 #######################################################
 # Including dependencies needed across multiple targets
@@ -85,6 +93,13 @@ include(tetgen)
 include(xsimd)
 include(clang_format)
 include(cmake_format)
+
+####################
+# OpenCL Backend Set-Up
+####################
+if (POLYHEDRAL_GRAVITY_ENABLE_OPENCL)
+    include(opencl)
+endif ()
 
 ###############################
 # Thrust Parallelization Set-Up

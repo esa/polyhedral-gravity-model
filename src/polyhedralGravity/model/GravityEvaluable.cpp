@@ -1,7 +1,96 @@
 #include "GravityEvaluable.h"
 
+#ifdef POLYHEDRAL_GRAVITY_ENABLE_OPENCL
+#include "polyhedralGravity/opencl/OpenCLEvaluation.h"
+#endif
 
 namespace polyhedralGravity {
+
+    namespace {
+
+        /**
+         * Creates the OpenCL engine for the polyhedron, or returns nullptr if the evaluation has to
+         * happen on the host.
+         *
+         * Requesting OpenCL is a preference, not a demand: a library compiled without OpenCL, a machine
+         * without a suitable device, and a device lacking @c cl_khr_fp64 for a FLOAT64 request all lead
+         * back to the CPU backend rather than to an error, so that the default backend works everywhere.
+         *
+         * @param polyhedron the polyhedron to upload
+         * @param backend the requested backend
+         * @param precision the requested precision
+         * @return the OpenCL engine, or nullptr to evaluate on the host
+         */
+        std::shared_ptr<opencl::OpenCLEvaluation> createOpenCLEvaluation(
+                [[maybe_unused]] const Polyhedron &polyhedron,
+                const ComputeBackend backend,
+                [[maybe_unused]] const ComputePrecision precision) {
+            if (backend != ComputeBackend::OPENCL) {
+                return nullptr;
+            }
+#ifndef POLYHEDRAL_GRAVITY_ENABLE_OPENCL
+            POLYHEDRAL_GRAVITY_LOG_DEBUG("The OpenCL backend was requested, but this library was compiled "
+                                         "without OpenCL support. Falling back to the CPU backend.");
+            return nullptr;
+#else
+            try {
+                return std::make_shared<opencl::OpenCLEvaluation>(polyhedron, precision);
+            } catch (const std::exception &e) {
+                POLYHEDRAL_GRAVITY_LOG_WARN("The OpenCL backend is unavailable, falling back to the CPU "
+                                            "backend. Reason: {}", e.what());
+                return nullptr;
+            }
+#endif
+        }
+
+    }// namespace
+
+    GravityEvaluable::GravityEvaluable(const Polyhedron &polyhedron, const ComputeBackend backend,
+                                       const ComputePrecision precision)
+        : _polyhedron{polyhedron},
+          _backend{backend},
+          _precision{precision},
+          _openCLEvaluation{createOpenCLEvaluation(polyhedron, backend, precision)} {
+        if (_openCLEvaluation == nullptr) {
+            _backend = ComputeBackend::CPU;
+            // The host-side caches are what the CPU backend evaluates from, so they cannot be deferred
+            this->prepare();
+            _prepared = true;
+        }
+    }
+
+    GravityEvaluable::GravityEvaluable(const Polyhedron &polyhedron,
+                                       const std::vector<Array3Triplet> &segmentVectors,
+                                       const std::vector<Array3> &planeUnitNormals,
+                                       const std::vector<Array3Triplet> &segmentUnitNormals,
+                                       const ComputeBackend backend, const ComputePrecision precision)
+        : _polyhedron{polyhedron},
+          _segmentVectors{segmentVectors},
+          _planeUnitNormals{planeUnitNormals},
+          _segmentUnitNormals{segmentUnitNormals},
+          _backend{backend},
+          _precision{precision},
+          _openCLEvaluation{createOpenCLEvaluation(polyhedron, backend, precision)},
+          _prepared{true} {
+        if (_openCLEvaluation == nullptr) {
+            _backend = ComputeBackend::CPU;
+        }
+    }
+
+    void GravityEvaluable::ensurePrepared() const {
+        if (!_prepared) {
+            this->prepare();
+            _prepared = true;
+        }
+    }
+
+    ComputeBackend GravityEvaluable::getComputeBackend() const {
+        return _backend;
+    }
+
+    ComputePrecision GravityEvaluable::getComputePrecision() const {
+        return _precision;
+    }
 
     void GravityEvaluable::prepare() const {
         using namespace GravityModel::detail;
@@ -35,6 +124,13 @@ namespace polyhedralGravity {
         using namespace util;
         POLYHEDRAL_GRAVITY_LOG_DEBUG("Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
                 computationPoint[0], computationPoint[1], computationPoint[2], _polyhedron.getDensity());
+#ifdef POLYHEDRAL_GRAVITY_ENABLE_OPENCL
+        // The device parallelizes over the polyhedron's faces itself, so the host-side
+        // Parallelization flag has no meaning here
+        if (_openCLEvaluation != nullptr) {
+            return _openCLEvaluation->evaluate(computationPoint);
+        }
+#endif
         /*
          * Calculate V and Vx, Vy, Vz and Vxx, Vyy, Vzz, Vxy, Vxz, Vyz
          */
@@ -74,6 +170,13 @@ namespace polyhedralGravity {
 
     template<bool Parallelization>
     std::vector<GravityModelResult> GravityEvaluable::evaluate(const std::vector<Array3> &computationPoints) const {
+#ifdef POLYHEDRAL_GRAVITY_ENABLE_OPENCL
+        // The points are evaluated one after another: the device is already saturated by a single
+        // point's faces, and its command queue and kernel arguments cannot be driven concurrently
+        if (_openCLEvaluation != nullptr) {
+            return _openCLEvaluation->evaluate(computationPoints);
+        }
+#endif
         std::vector<GravityModelResult> result{computationPoints.size()};
         if constexpr (Parallelization) {
             thrust::transform(thrust::device, computationPoints.begin(), computationPoints.end(), result.begin(),
@@ -232,7 +335,14 @@ namespace polyhedralGravity {
         std::stringstream sstream;
         const auto[unitPotential, unitAcceleration, unitGradiometricTensor] = getOutputMetricUnit();
         sstream << "<polyhedral_gravity.GravityEvaluable, polyhedron = " << _polyhedron.toString()
-                << ", output_units = " << unitPotential << ", " << unitAcceleration << ", " << unitGradiometricTensor << ">";
+                << ", output_units = " << unitPotential << ", " << unitAcceleration << ", " << unitGradiometricTensor
+                << ", backend = " << _backend;
+#ifdef POLYHEDRAL_GRAVITY_ENABLE_OPENCL
+        if (_openCLEvaluation != nullptr) {
+            sstream << " (" << _openCLEvaluation->getDeviceName() << ", " << _precision << ")";
+        }
+#endif
+        sstream << ">";
         return sstream.str();
     }
 
@@ -248,6 +358,8 @@ namespace polyhedralGravity {
 
     std::tuple<Polyhedron, std::vector<Array3Triplet>, std::vector<Array3>, std::vector<Array3Triplet>>
     GravityEvaluable::getState() const {
+        // On the OpenCL backend the caches are filled lazily, and reading the state is what needs them
+        this->ensurePrepared();
         return std::make_tuple(_polyhedron, _segmentVectors, _planeUnitNormals, _segmentUnitNormals);
     }
 

@@ -7,7 +7,18 @@ file(GLOB_RECURSE PYTHON_INTERFACE_SRC
     )
 list(FILTER PYTHON_INTERFACE_SRC EXCLUDE REGEX ".*YAML.*")
 
+# The OpenCL backend is only compiled in when it is enabled
+if (NOT POLYHEDRAL_GRAVITY_ENABLE_OPENCL)
+    list(FILTER PYTHON_INTERFACE_SRC EXCLUDE REGEX "/opencl/")
+endif ()
+
 pybind11_add_module(_core ${PYTHON_INTERFACE_SRC} PolyhedralGravityPython.cpp)
+
+if (POLYHEDRAL_GRAVITY_ENABLE_OPENCL)
+    target_link_libraries(_core PUBLIC polyhedral_gravity_opencl)
+    # The generated kernel headers have to exist before the OpenCL sources are compiled
+    add_dependencies(_core polyhedral_gravity_opencl_kernels)
+endif ()
 
 # Checks if MinGW is used, in this case, the .dll of the the standard library need to be linked statically to the
 # Python interface since otherwise they won't be found

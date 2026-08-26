@@ -25,11 +25,19 @@ namespace polyhedralGravity::GravityModel {
      *
      * @param polyhedron the polyhedron consisting of vertices and triangular faces
      * @param computationPoint the computation Point P
-     * @param parallel whether to evaluate in parallel or serial
+     * @param parallel whether to evaluate in parallel or serial (ignored by the OpenCL backend, which
+     *          parallelizes over the polyhedron's faces on the device regardless)
+     * @param backend the compute backend to evaluate on (default: OPENCL, falling back to CPU if unavailable)
+     * @param precision the floating point precision the backend computes in (default: FLOAT64)
      * @return the GravityModelResult containing the potential, the acceleration, and the change of acceleration
      * at computation Point P
+     *
+     * @note Every call sets up its own {@link GravityEvaluable}, which on the OpenCL backend means
+     * uploading the polyhedron to the device again. Prefer a {@link GravityEvaluable} for repeated evaluations.
      */
-    GravityModelResult evaluate(const Polyhedron &polyhedron, const Array3 &computationPoint, bool parallel = true);
+    GravityModelResult evaluate(const Polyhedron &polyhedron, const Array3 &computationPoint, bool parallel = true,
+                                ComputeBackend backend = ComputeBackend::OPENCL,
+                                ComputePrecision precision = ComputePrecision::FLOAT64);
 
     /**
      * Evaluates the polyhedral gravity model for a given constant density polyhedron at multiple computation
@@ -41,11 +49,19 @@ namespace polyhedralGravity::GravityModel {
      *
      * @param polyhedron the polyhedron consisting of vertices and triangular faces
      * @param computationPoints vector of computation points
-     * @param parallel whether to evaluate in parallel or serial
+     * @param parallel whether to evaluate in parallel or serial (ignored by the OpenCL backend, which
+     *          parallelizes over the polyhedron's faces on the device regardless)
+     * @param backend the compute backend to evaluate on (default: OPENCL, falling back to CPU if unavailable)
+     * @param precision the floating point precision the backend computes in (default: FLOAT64)
      * @return the GravityModelResult containing the potential, the acceleration, and the change of acceleration
      * foreach computation Point P
+     *
+     * @note Every call sets up its own {@link GravityEvaluable}, which on the OpenCL backend means
+     * uploading the polyhedron to the device again. Prefer a {@link GravityEvaluable} for repeated evaluations.
      */
     std::vector<GravityModelResult>
-    evaluate(const Polyhedron &polyhedron, const std::vector<Array3> &computationPoints, bool parallel = true);
+    evaluate(const Polyhedron &polyhedron, const std::vector<Array3> &computationPoints, bool parallel = true,
+             ComputeBackend backend = ComputeBackend::OPENCL,
+             ComputePrecision precision = ComputePrecision::FLOAT64);
 
 }

@@ -184,6 +184,39 @@ cube_polyhedron = Polyhedron(
 )
 ```
 
+#### Choosing the Compute Backend
+
+By default, both `evaluate(..)` and the `GravityEvaluable` run on the GPU via OpenCL in double
+precision, summing over the polyhedron's faces on the device. You can select the backend and the
+device-side floating point precision explicitly:
+
+```python
+from polyhedral_gravity import ComputeBackend, ComputePrecision
+
+evaluable = GravityEvaluable(
+  polyhedron=cube_polyhedron,
+  backend=ComputeBackend.OPENCL,      # OPENCL (default) or CPU
+  precision=ComputePrecision.FLOAT64, # FLOAT64 (default) or FLOAT32
+)
+```
+
+Requesting `OPENCL` is a *preference, not a demand*. If the package was built without OpenCL, or no
+OpenCL device supporting the requested precision is present, the evaluation transparently falls back
+to the CPU. Read back what is actually in use:
+
+```python
+print(evaluable.compute_backend, evaluable.compute_precision)
+```
+
+> [!IMPORTANT]
+> `FLOAT32` is markedly less accurate than `FLOAT64`. Tsoulis' algorithm evaluates differences of
+> transcendental terms which are prone to cancellation, so single precision typically agrees with the
+> CPU reference only to a relative $10^{-4}$. Use it when throughput matters more than accuracy.
+
+> [!NOTE]
+> Apple Silicon GPUs do not support `cl_khr_fp64`, so the default `FLOAT64` request always falls back
+> to the CPU there. Pass `ComputePrecision.FLOAT32` to actually use the GPU on those machines.
+
 > [!TIP]
 > More examples and plots are depicted in the
 [jupyter notebook](script/polyhedral-gravity.ipynb) and the [second jupyter notebook](script/Kleopatra.ipynb)
@@ -225,6 +258,15 @@ GravityEvaluable evaluable{polyhedron};
 const auto[potential, acceleration, tensor] = evaluable(point, parallel);
 // or for multiple points with
 const auto results = evaluable(points, parallel);
+```
+
+Both take the compute backend and the device-side precision as optional arguments, defaulting to
+OpenCL in double precision and falling back to the CPU where that is unavailable:
+
+```cpp
+GravityEvaluable evaluable{polyhedron, ComputeBackend::OPENCL, ComputePrecision::FLOAT64};
+// Reports CPU if OpenCL turned out to be unavailable on this machine
+const ComputeBackend inUse = evaluable.getComputeBackend();
 ```
 
 Similarly to Python, the C++ implementation also provides mesh checking capabilities.
@@ -277,6 +319,10 @@ all of them are **automatically** set up via CMake:
 - xsimd (11.1.0 or compatible), required for vectorization of the `atan(..)`
 - pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
 
+The OpenCL backend additionally requires an OpenCL runtime plus the Khronos C and C++ headers
+(`opencl-headers` and `opencl-clhpp-headers`), which are *not* fetched automatically. Where they are
+missing, configure with `-DPOLYHEDRAL_GRAVITY_ENABLE_OPENCL=OFF` to build the CPU backend alone.
+
 The module will be built using a C++17 capable compiler,
 CMake. Just execute the following command in
 the repository root folder:
@@ -322,6 +368,7 @@ The following options are available:
 |                        BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`) | Build this documentation                                                                    |
 |                        BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`) | Build the Tests                                                                             |
 |             BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (`ON`) | Build the Python interface                                                                  |
+| POLYHEDRAL_GRAVITY_ENABLE_OPENCL (`ON` if OpenCL is found) | Build the OpenCL compute backend, which evaluates the model on a GPU                        |
 
 During testing POLYHEDRAL_GRAVITY_PARALLELIZATION=`TBB` has been the most performant.
 It is further not recommended to change the POLYHEDRAL_GRAVITY_LOGGING_LEVEL to something else than `INFO=2`.

@@ -40,6 +40,20 @@ Cached Evaluation
    :special-members: __init__, __call__, __repr__
 
 
+Enums to specify the Compute Backend
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Both :py:func:`polyhedral_gravity.evaluate` and :py:class:`polyhedral_gravity.GravityEvaluable`
+evaluate on an OpenCL device in double precision by default, and fall back to the CPU where that is
+unavailable. Note that Apple Silicon GPUs do not support :code:`cl_khr_fp64`, so the default request
+always falls back to the CPU there; pass :code:`ComputePrecision.FLOAT32` to use the GPU on those
+machines.
+
+.. autoclass:: polyhedral_gravity.ComputeBackend
+
+.. autoclass:: polyhedral_gravity.ComputePrecision
+
+
 Embedded Information
 --------------------
 

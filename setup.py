@@ -33,6 +33,7 @@ CMAKE_OPTIONS = {
     "BUILD_SHARED_LIBS": "OFF",
     # Required since CMake 4.0 (doesn't do anything before that) due to the outdated TetGen build system
     "CMAKE_POLICY_VERSION_MINIMUM": "3.5",
+    "POLYHEDRAL_GRAVITY_ENABLE_OPENCL": "ON",
 }
 # ---------------------------------------------------------------------------------
 

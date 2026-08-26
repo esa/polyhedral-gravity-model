@@ -87,15 +87,16 @@ Build Options
 
 The available options are the following:
 
-====================================================== ============================================================================================================
+====================================================== ================================================================================================================================
 Name (Default)                                         Options
-====================================================== ============================================================================================================
+====================================================== ================================================================================================================================
 POLYHEDRAL_GRAVITY_PARALLELIZATION (:code:`CPP`)       :code:`CPP` = Serial Execution / :code:`OMP` or :code:`TBB`  = Parallel Execution with OpenMP or Intel's TBB
 POLYHEDRAL_GRAVITY_LOGGING_LEVEL (:code:`INFO`)        :code:`TRACE`, :code:`DEBUG`, :code:`INFO`, :code:`WARN`, :code:`ERROR`, :code:`CRITICAL`, :code:`OFF`
 BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)            Build this documentation
 BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)            Build the Tests
 BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (:code:`ON`) Build the Python interface
-====================================================== ============================================================================================================
+POLYHEDRAL_GRAVITY_ENABLE_OPENCL (:code:`ON` if found) Build the OpenCL compute backend, which evaluates the model on a GPU. Needs an OpenCL runtime plus the Khronos C and C++ headers
+====================================================== ================================================================================================================================
 
 Dependencies (automatically set-up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,6 +110,10 @@ Dependencies (all of them are automatically set-up via :code:`CMake`):
 - thrust (2.1.0 or compatible), required for parallelization and utility
 - xsimd (11.1.0 or compatible), required for vectorization of the :code:`atan(..)`
 - pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
+
+The OpenCL backend additionally requires an OpenCL runtime and the Khronos C and C++ headers
+(:code:`opencl-headers` and :code:`opencl-clhpp-headers`), which are **not** fetched automatically.
+Configure with :code:`-DPOLYHEDRAL_GRAVITY_ENABLE_OPENCL=OFF` to build the CPU backend alone.
 
 Build this documentation
 ------------------------
