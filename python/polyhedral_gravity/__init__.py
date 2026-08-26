@@ -1,2 +1,9 @@
 from ._core import *
-from ._core import __version__, __parallelization__, __commit__, __logging__
+from ._core import (
+    __version__,
+    __parallelization__,
+    __commit__,
+    __logging__,
+    __host_compiler__,
+    __device_compiler__,
+)

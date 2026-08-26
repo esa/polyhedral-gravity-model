@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "polyhedralGravity/kokkos/KokkosSession.h"
+#include "polyhedralGravity/model/KokkosSession.h"
 #include "polyhedralGravity/model/GravityEvaluable.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"

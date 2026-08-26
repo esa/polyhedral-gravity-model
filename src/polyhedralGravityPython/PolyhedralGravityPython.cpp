@@ -1,20 +1,230 @@
-#include <tuple>
-#include <variant>
-#include <string>
 #include <array>
+#include <cstdint>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <variant>
 #include <vector>
+
+#include "pybind11/numpy.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include "polyhedralGravity/Info.h"
-#include "polyhedralGravity/kokkos/KokkosSession.h"
 #include "polyhedralGravity/model/GravityEvaluable.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/KokkosSession.h"
+#include "polyhedralGravity/model/PolyhedralMesh.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 
 
 namespace py = pybind11;
+
+namespace {
+
+    using namespace polyhedralGravity;
+
+    /**
+     * Keeps a Python object alive for as long as an unmanaged Kokkos view aliases its buffer.
+     *
+     * A {@link Polyhedron} built from a NumPy array or a PyTorch tensor does not copy it, so the array has
+     * to outlive the polyhedron and every GravityEvaluable sharing its mesh. Holding a reference to the
+     * object achieves that without the user having to think about it.
+     *
+     * @param object the array whose buffer is handed over
+     * @return an owner which releases the reference once the last view of the buffer is gone
+     */
+    std::shared_ptr<void> keepAlive(py::object object) {
+        auto *reference = new py::object{std::move(object)};
+        return std::shared_ptr<void>{reference, [](void *pointer) {
+                                         // The last mesh may be released from C++ code without the GIL held
+                                         const py::gil_scoped_acquire gil{};
+                                         delete static_cast<py::object *>(pointer);
+                                     }};
+    }
+
+    /**
+     * A mesh buffer of an array library which lives on an accelerator, as described by its
+     * @code __cuda_array_interface__ @endcode.
+     */
+    struct DeviceBuffer {
+        /** The address of the first element in the device's memory */
+        const void *data;
+        /** The number of rows, i.e. the number of vertices or faces */
+        size_t count;
+        /** The NumPy type string of the elements, e.g. @code "<f4" @endcode */
+        std::string typestr;
+    };
+
+    /**
+     * Reads the @code __cuda_array_interface__ @endcode of an array which lives on an accelerator.
+     *
+     * This is the protocol PyTorch, JAX, CuPy, and Numba expose their device pointers through. Only
+     * C-contiguous @f$(N, 3)@f$ arrays are accepted, since anything else would have to be copied and can be
+     * made contiguous by the caller much more cheaply.
+     *
+     * @param array the array exposing the interface
+     * @param name the name of the argument, for the error messages
+     * @return the device pointer together with its shape and element type
+     *
+     * @throws std::invalid_argument if the array is not a C-contiguous (N, 3) array
+     *
+     * @note The caller has to make sure that the work producing the array has finished, e.g. by calling
+     * torch.cuda.synchronize(), since the buffer is read without synchronizing on the producing stream.
+     */
+    DeviceBuffer readDeviceBuffer(const py::object &array, const std::string &name) {
+        const auto interface = array.attr("__cuda_array_interface__").cast<py::dict>();
+        const auto shape = interface["shape"].cast<std::vector<size_t>>();
+        if (shape.size() != 2 || shape[1] != 3) {
+            throw std::invalid_argument{"The " + name + " must be an (N, 3) array, but the given array has " +
+                                        std::to_string(shape.size()) + " dimensions!"};
+        }
+        if (interface.contains("strides") && !interface["strides"].is_none()) {
+            throw std::invalid_argument{"The " + name +
+                                        " on the device must be C-contiguous, i.e. not a strided view. "
+                                        "Call .contiguous() on it before handing it over!"};
+        }
+        const auto data = interface["data"].cast<py::tuple>();
+        return {reinterpret_cast<const void *>(data[0].cast<uintptr_t>()), shape[0],
+                interface["typestr"].cast<std::string>()};
+    }
+
+    /**
+     * Builds a mesh from two device buffers, resolving the element type of the faces at runtime.
+     *
+     * @tparam VertexType the element type the vertex buffer has already been resolved to
+     * @param vertices the vertex buffer
+     * @param faces the face buffer
+     * @param owner an owner of both buffers
+     * @return the mesh aliasing both buffers
+     *
+     * @throws std::invalid_argument if the face buffer's element type is not a 32 or 64 bit integer
+     */
+    template<typename VertexType>
+    PolyhedralMesh meshFromDeviceBuffers(const DeviceBuffer &vertices, const DeviceBuffer &faces,
+                                         std::shared_ptr<void> owner) {
+        const auto build = [&](const auto *typedFaces) {
+            return PolyhedralMesh::fromBuffers(static_cast<const VertexType *>(vertices.data), vertices.count,
+                                               typedFaces, faces.count, MemoryLocation::DEVICE, std::move(owner));
+        };
+        // The type string's first character is the byte order, which is always the platform's own for a
+        // device buffer, so only the kind and the width matter
+        const std::string kind = faces.typestr.substr(1);
+        if (kind == "i4") {
+            return build(static_cast<const int32_t *>(faces.data));
+        }
+        if (kind == "i8") {
+            return build(static_cast<const int64_t *>(faces.data));
+        }
+        if (kind == "u4") {
+            return build(static_cast<const uint32_t *>(faces.data));
+        }
+        if (kind == "u8") {
+            return build(static_cast<const uint64_t *>(faces.data));
+        }
+        throw std::invalid_argument{"The faces on the device have the unsupported element type '" +
+                                    faces.typestr + "'. Use a 32 or 64 bit integer type!"};
+    }
+
+    /**
+     * Builds a mesh from the vertices and faces given by the user, copying as little as possible.
+     *
+     * An array which lives on an accelerator is recognized by its @code __cuda_array_interface__ @endcode
+     * and its buffer is used where it is. Everything else is read through the buffer protocol, which does
+     * not copy a C-contiguous NumPy array of the matching element type either.
+     *
+     * @param vertices the vertices as an @f$(N, 3)@f$ array-like
+     * @param faces the faces as an @f$(M, 3)@f$ array-like
+     * @return the mesh, aliasing the given arrays wherever possible
+     */
+    PolyhedralMesh makeMesh(const py::object &vertices, const py::object &faces) {
+        const bool verticesOnDevice = py::hasattr(vertices, "__cuda_array_interface__");
+        const bool facesOnDevice = py::hasattr(faces, "__cuda_array_interface__");
+        if (verticesOnDevice != facesOnDevice) {
+            throw std::invalid_argument{
+                    "The vertices and the faces of a polyhedron must live in the same memory, but only one of "
+                    "them was given as an array on the device!"};
+        }
+        if (verticesOnDevice) {
+            const DeviceBuffer vertexBuffer = readDeviceBuffer(vertices, "vertices");
+            const DeviceBuffer faceBuffer = readDeviceBuffer(faces, "faces");
+            auto owner = keepAlive(py::make_tuple(vertices, faces));
+            const std::string vertexKind = vertexBuffer.typestr.substr(1);
+            if (vertexKind == "f4") {
+                return meshFromDeviceBuffers<float>(vertexBuffer, faceBuffer, std::move(owner));
+            }
+            if (vertexKind == "f8") {
+                return meshFromDeviceBuffers<double>(vertexBuffer, faceBuffer, std::move(owner));
+            }
+            throw std::invalid_argument{"The vertices on the device have the unsupported element type '" +
+                                        vertexBuffer.typestr + "'. Use float32 or float64!"};
+        }
+        // pybind11 only copies here if the array is not already a C-contiguous array of the target type,
+        // i.e. a float64 NumPy array and a uint64 index array are handed over as they are
+        const py::array_t<double, py::array::c_style | py::array::forcecast> vertexArray{vertices};
+        const py::array_t<size_t, py::array::c_style | py::array::forcecast> faceArray{faces};
+        if (vertexArray.ndim() != 2 || vertexArray.shape(1) != 3) {
+            throw std::invalid_argument{"The vertices must be an (N, 3) array-like!"};
+        }
+        if (faceArray.ndim() != 2 || faceArray.shape(1) != 3) {
+            throw std::invalid_argument{"The faces must be an (M, 3) array-like!"};
+        }
+        return PolyhedralMesh::fromBuffers(vertexArray.data(), static_cast<size_t>(vertexArray.shape(0)),
+                                           faceArray.data(), static_cast<size_t>(faceArray.shape(0)),
+                                           MemoryLocation::HOST,
+                                           keepAlive(py::make_tuple(vertexArray, faceArray)));
+    }
+
+    /**
+     * Turns whatever the user passed as polyhedral_source into a mesh.
+     *
+     * @param polyhedralSource either a list of mesh file names or a pair of vertices and faces
+     * @return the mesh of the polyhedron
+     *
+     * @throws std::invalid_argument if the source is neither of the two
+     */
+    PolyhedralMesh readPolyhedralSource(const py::object &polyhedralSource) {
+        if (py::isinstance<py::str>(polyhedralSource)) {
+            throw std::invalid_argument{
+                    "The polyhedral_source must be a list of mesh file names or a pair of vertices and faces, "
+                    "not a single string!"};
+        }
+        const auto source = py::cast<py::sequence>(polyhedralSource);
+        if (py::len(source) > 0 && py::isinstance<py::str>(source[0])) {
+            const auto [vertices, faces] = MeshReader::getPolyhedralSource(polyhedralSource.cast<PolyhedralFiles>());
+            return PolyhedralMesh{vertices, faces};
+        }
+        if (py::len(source) != 2) {
+            throw std::invalid_argument{
+                    "The polyhedral_source must be a pair of vertices and faces, but a sequence of " +
+                    std::to_string(py::len(source)) + " elements was given!"};
+        }
+        return makeMesh(source[0], source[1]);
+    }
+
+    /**
+     * Exposes a host resident @f$(N, 3)@f$ view as a read-only NumPy array without copying it.
+     *
+     * @tparam Scalar the element type of the view
+     * @param view the view to expose
+     * @param owner the Python object keeping the view alive, i.e. the polyhedron
+     * @return the NumPy array aliasing the view's memory
+     */
+    template<typename Scalar>
+    py::array_t<Scalar> asReadOnlyArray(const kokkos::Vector3View<Scalar, kokkos::HostMemory> &view,
+                                        const py::object &owner) {
+        py::array_t<Scalar> array{{view.extent(0), view.extent(1)},
+                                  {sizeof(Scalar) * 3, sizeof(Scalar)},
+                                  view.data(),
+                                  owner};
+        array.attr("setflags")(py::arg("write") = false);
+        return array;
+    }
+
+}// namespace
 
 PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
     using namespace polyhedralGravity;
@@ -109,6 +319,8 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
     m.attr("__parallelization__") = kokkos::getEnabledExecutionSpaces();
     m.attr("__commit__") = POLYHEDRAL_GRAVITY_COMMIT_HASH;
     m.attr("__logging__") = POLYHEDRAL_GRAVITY_LOGGING_LEVEL;
+    m.attr("__host_compiler__") = POLYHEDRAL_GRAVITY_HOST_COMPILER;
+    m.attr("__device_compiler__") = POLYHEDRAL_GRAVITY_DEVICE_COMPILER;
 
     py::enum_<NormalOrientation>(m, "NormalOrientation", R"mydelimiter(
         The orientation of the plane unit normals of the polyhedron.
@@ -177,7 +389,13 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
             of the polyhedron. Otherwise the results are negated.
             The class by default enforces this constraints and offers utility to (automatically) make the input data obey to this constraint.
             )mydelimiter")
-            .def(py::init<const std::variant<PolyhedralSource, PolyhedralFiles> &, double, const NormalOrientation &, const PolyhedronIntegrity &, const MetricUnit &>(), R"mydelimiter(
+            .def(py::init([](const py::object &polyhedralSource, const double density,
+                             const NormalOrientation &normalOrientation, const PolyhedronIntegrity &integrityCheck,
+                             const MetricUnit &metricUnit) {
+                     return Polyhedron{readPolyhedralSource(polyhedralSource), density, normalOrientation,
+                                       integrityCheck, metricUnit};
+                 }),
+                 R"mydelimiter(
             Creates a new Polyhedron from vertices and faces and a constant density.
             If the integrity_check is not set to DISABLE, the mesh integrity is checked
             (so that it fits the specification of the polyhedral model by *Tsoulis et al.*)
@@ -208,6 +426,18 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
                 The check requires :math:`O(n^2)` operations. You want to turn this off, when you know you mesh!
                 The faces array's indexing is shifted by -1 if the indexing started previously from vertex one (i.e., the first index is referred to as one).
                 In other words, the first vertex is always referred to as vertex zero not one!
+
+            Note:
+                The vertices and faces are handed over through the buffer protocol, i.e. they are **not copied**
+                if they already are C-contiguous arrays of :code:`float64` (vertices) and :code:`uint64` (faces).
+                Any other :code:`dtype` or a non-contiguous array costs one conversion.
+                The polyhedron keeps a reference to the arrays alive for as long as it needs them.
+
+                An array which lives on an accelerator, i.e. a CUDA :code:`torch.Tensor` or a GPU
+                :code:`jax.Array`, is recognized by its :code:`__cuda_array_interface__` and is used **where it
+                is**, so its mesh never travels through the host. Make sure the work producing such an array has
+                finished (e.g. :code:`torch.cuda.synchronize()`) before handing it over, and note that a build
+                without a GPU backend raises a :code:`RuntimeError` for it.
             )mydelimiter",
                  py::arg("polyhedral_source"),
                  py::arg("density"),
@@ -248,11 +478,22 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
             .def("__repr__", &Polyhedron::toString, R"mydelimiter(
             :py:class:`str`: A string representation of this polyhedron
             )mydelimiter")
-            .def_property_readonly("vertices", &Polyhedron::getVertices, R"mydelimiter(
-            (N, 3)-array-like of :py:class:`float`: The vertices of the polyhedron. Coordinates in the unit of the mesh (Read-Only).
+            .def_property_readonly("vertices", [](const py::object &self) {
+                        return asReadOnlyArray(self.cast<const Polyhedron &>().getMesh().getHostMesh().vertices, self);
+                    }, R"mydelimiter(
+            (N, 3) :py:class:`numpy.ndarray` of :py:class:`numpy.float64`: The vertices of the polyhedron.
+            Coordinates in the unit of the mesh (Read-Only).
+
+            This is a view of the polyhedron's own memory and therefore not writeable. If the polyhedron's mesh
+            lives on an accelerator, reading this property downloads it to the host once.
             )mydelimiter")
-            .def_property_readonly("faces", &Polyhedron::getFaces, R"mydelimiter(
-            (M, 3)-array-like of :py:class:`int`: The faces of the polyhedron (Read-Only).
+            .def_property_readonly("faces", [](const py::object &self) {
+                        return asReadOnlyArray(self.cast<const Polyhedron &>().getMesh().getHostMesh().faces, self);
+                    }, R"mydelimiter(
+            (M, 3) :py:class:`numpy.ndarray` of :py:class:`numpy.uint64`: The faces of the polyhedron (Read-Only).
+
+            This is a view of the polyhedron's own memory and therefore not writeable. If the polyhedron's mesh
+            lives on an accelerator, reading this property downloads it to the host once.
             )mydelimiter")
             .def_property("density", &Polyhedron::getDensity, &Polyhedron::setDensity, R"mydelimiter(
             :py:class:`float`: The density of the polyhedron in :math:`[kg/X^3]` with X being the unit of the mesh (Read/ Write).

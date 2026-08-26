@@ -2,6 +2,7 @@
 
 #include "polyhedralGravity/input/MeshReader.h"
 #include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/PolyhedralMesh.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
@@ -28,25 +29,32 @@ namespace polyhedralGravity {
     /**
      * Data structure containing the model data of one polyhedron. This includes nodes, edges (faces) and elements.
      * The index always starts with zero!
+     *
+     * @note Constructing a Polyhedron puts its mesh into the memory of the compute devices and therefore
+     * initializes the Kokkos runtime. Kokkos may only be initialized after the program has entered main(),
+     * so a Polyhedron must not be a global or a static class member. A function local static, which is
+     * constructed on its first use, is fine.
     */
     class Polyhedron {
 
         /**
-         * A vector containing the vertices of the polyhedron.
-         * Each node is an array of size three containing the xyz coordinates.
-         * The mesh must be scaled in the same units as the density is given
-         * (the unit must match to the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
-         */
-        const std::vector<Array3> _vertices;
-
-        /**
-         * A vector containing the faces (triangles) of the polyhedron.
+         * The vertices and the triangular faces of the polyhedron, as Kokkos views in the memory of the
+         * compute devices.
+         *
+         * Each vertex is an array of size three containing the xyz coordinates. The mesh must be scaled in
+         * the same units as the density is given (the unit must match to the mesh, e.g., mesh in @f$[m]@f$
+         * requires density in @f$[kg/m^3]@f$).
+         *
          * Each face is an array of size three containing the indices of the nodes forming the face.
-         * Since every face consists of three nodes, every face consists of three segments. Each segment consists of
-         * two nodes.
-         * For example, a face consisting of {1, 2, 3} --> segments: {1, 2}, {2, 3}, {3, 1}
+         * Since every face consists of three nodes, every face consists of three segments. Each segment
+         * consists of two nodes. For example, a face consisting of {1, 2, 3} --> segments: {1, 2}, {2, 3},
+         * {3, 1}.
+         *
+         * Copying a Polyhedron shares this mesh instead of duplicating it, since a Kokkos view is a
+         * reference counted handle. That is sound because the mesh is only ever modified while a Polyhedron
+         * is being constructed, i.e. before anybody else can hold a copy.
          */
-        std::vector<IndexArray3> _faces;
+        PolyhedralMesh _mesh;
 
         /** The constant density of the polyhedron (the unit must match to the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$) */
         double _density;
@@ -144,6 +152,66 @@ namespace polyhedralGravity {
                    );
 
         /**
+         * Generates a polyhedron from an already built mesh.
+         * If the indexing of the polyhedron's vertices in the faces' array starts with one, it is shifted so that it starts with zero.
+         * @param mesh the vertices and triangular faces, possibly aliasing a foreign buffer
+         * @param density the density of the polyhedron in @f$[kg/X^3]@f$.
+         *          It must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
+         * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
+         *
+         * @throws std::invalid_argument depending on the {@link integrity} flag
+         */
+        Polyhedron(PolyhedralMesh mesh, double density,
+                   const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
+                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                   const MetricUnit &metricUnit = MetricUnit::METER
+                   );
+
+        /**
+         * Generates a polyhedron directly from the buffers of an array library, i.e. of NumPy, PyTorch, or
+         * JAX, without copying them.
+         *
+         * The buffers are only copied if their element type differs from the library's own, i.e. if the
+         * vertices are not double precision or the face indices are not of the platform's @c size_t. Such a
+         * conversion happens in the memory space the buffers already live in, so a mesh which is handed in
+         * as a device pointer never travels through the host.
+         *
+         * @tparam VertexType the element type of the vertex buffer, e.g. float or double
+         * @tparam IndexType the element type of the face buffer, e.g. int32_t or size_t
+         * @param vertices the first element of a C-contiguous @f$(N, 3)@f$ vertex buffer
+         * @param vertexCount the number of vertices N
+         * @param faces the first element of a C-contiguous @f$(M, 3)@f$ face buffer
+         * @param faceCount the number of faces M
+         * @param density the density of the polyhedron in @f$[kg/X^3]@f$
+         * @param location whether the buffers live in the host's or in the device's memory (default: HOST)
+         * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
+         * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
+         * @param keepAlive an owner of the buffers which is held for the lifetime of this polyhedron
+         *
+         * @throws std::invalid_argument depending on the {@link integrity} flag
+         * @throws std::runtime_error if DEVICE is given, but this build has no GPU backend
+         *
+         * @note If no keepAlive is given, the caller has to guarantee that the buffers outlive this
+         * polyhedron and every {@link GravityEvaluable} built from it.
+         */
+        template<typename VertexType, typename IndexType>
+        Polyhedron(const VertexType *vertices, const size_t vertexCount,
+                   const IndexType *faces, const size_t faceCount,
+                   const double density,
+                   const MemoryLocation location = MemoryLocation::HOST,
+                   const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
+                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                   const MetricUnit &metricUnit = MetricUnit::METER,
+                   std::shared_ptr<void> keepAlive = {})
+            : Polyhedron{PolyhedralMesh::fromBuffers(vertices, vertexCount, faces, faceCount, location,
+                                                     std::move(keepAlive)),
+                         density, orientation, integrity, metricUnit} {
+        }
+
+        /**
          * Default destructor
          */
         ~Polyhedron() = default;
@@ -152,14 +220,14 @@ namespace polyhedralGravity {
          * Returns the vertices of this polyhedron
          * @return vector of cartesian coordinates
          */
-        [[nodiscard]] const std::vector<Array3> &getVertices() const;
+        [[nodiscard]] std::vector<Array3> getVertices() const;
 
         /**
          * Returns the vertex at a specific index
          * @param index size_t
          * @return cartesian coordinates of the vertex at index
          */
-        [[nodiscard]] const Array3 &getVertex(size_t index) const;
+        [[nodiscard]] Array3 getVertex(size_t index) const;
 
         /**
          * The number of points (nodes) that make up the polyhedron.
@@ -171,14 +239,14 @@ namespace polyhedralGravity {
          * Returns the triangular faces of this polyhedron
          * @return vector of triangular faces, where each element size_t references a vertex in the vertices vector
          */
-        [[nodiscard]] const std::vector<IndexArray3> &getFaces() const;
+        [[nodiscard]] std::vector<IndexArray3> getFaces() const;
 
         /**
          * Returns the indices of the vertices making up the face at the given index.
          * @param index size_t
          * @return triplet of the vertices indices forming the face
          */
-        [[nodiscard]] const IndexArray3 &getFace(size_t index) const;
+        [[nodiscard]] IndexArray3 getFace(size_t index) const;
 
         /**
          * Returns the resolved face with its concrete cartesian coordinates at the given index.
@@ -272,11 +340,19 @@ namespace polyhedralGravity {
          * @return triplet of the face's vertices' cartesian coordinates, each shifted by -offset
          */
         [[nodiscard]] inline Array3Triplet getResolvedFace(const size_t index, const Array3 &offset) const {
-            using namespace util;
-            const IndexArray3 &face = this->getFace(index);
-            return {this->getVertex(face[0]) - offset, this->getVertex(face[1]) - offset,
-                    this->getVertex(face[2]) - offset};
+            return _mesh.getHostMesh().resolveFace(index, offset);
         }
+
+        /**
+         * Returns the polyhedron's mesh, i.e. its vertices and faces as they live in the memory of the
+         * compute devices.
+         *
+         * This is what a {@link GravityEvaluable} extends into a
+         * {@link kokkos::GravitationalMeshView} by adding the caches of Tsoulis' algorithm.
+         *
+         * @return the mesh of this polyhedron
+         */
+        [[nodiscard]] const PolyhedralMesh &getMesh() const;
 
         /**
          * This method determines the majority vertex ordering of a polyhedron and the set of faces which

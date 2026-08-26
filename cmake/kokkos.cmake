@@ -72,6 +72,34 @@ elseif (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "SYCL")
     set(Kokkos_ENABLE_SYCL ON CACHE BOOL "Enable the Kokkos SYCL backend" FORCE)
 endif ()
 
+##################################################################
+# Which compilers actually translate the host and the device code
+##################################################################
+set(POLYHEDRAL_GRAVITY_HOST_COMPILER "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+
+if (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "NONE")
+    set(POLYHEDRAL_GRAVITY_DEVICE_COMPILER "None")
+elseif (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "CUDA" AND CMAKE_CUDA_COMPILER)
+    # Kokkos compiles the device code as CXX, so the CUDA language is never enabled (see below) and CMake
+    # never identifies nvcc itself. Asking the binary is the only way to get a version out of it.
+    execute_process(COMMAND "${CMAKE_CUDA_COMPILER}" --version OUTPUT_VARIABLE NVCC_VERSION_OUTPUT ERROR_QUIET)
+    if (NVCC_VERSION_OUTPUT MATCHES "release ([0-9]+\\.[0-9]+)")
+        set(POLYHEDRAL_GRAVITY_DEVICE_COMPILER "NVIDIA nvcc ${CMAKE_MATCH_1}")
+    else ()
+        set(POLYHEDRAL_GRAVITY_DEVICE_COMPILER "NVIDIA nvcc")
+    endif ()
+elseif (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "HIP" AND CMAKE_HIP_COMPILER)
+    execute_process(COMMAND "${CMAKE_HIP_COMPILER}" --version OUTPUT_VARIABLE HIPCC_VERSION_OUTPUT ERROR_QUIET)
+    if (HIPCC_VERSION_OUTPUT MATCHES "HIP version: ([0-9][^\n]*)")
+        set(POLYHEDRAL_GRAVITY_DEVICE_COMPILER "AMD hipcc ${CMAKE_MATCH_1}")
+    else ()
+        set(POLYHEDRAL_GRAVITY_DEVICE_COMPILER "AMD hipcc")
+    endif ()
+else ()
+    # SYCL, and a CUDA/ HIP build whose device code the C++ compiler understands by itself
+    set(POLYHEDRAL_GRAVITY_DEVICE_COMPILER "${POLYHEDRAL_GRAVITY_DEVICE_BACKEND} via ${POLYHEDRAL_GRAVITY_HOST_COMPILER}")
+endif ()
+
 message(STATUS "Kokkos: Host Backend   ${CMAKE_CXX_COMPILER_ID} (Serial + OpenMP: ${OpenMP_CXX_FOUND})")
 message(STATUS "Kokkos: Device Backend ${POLYHEDRAL_GRAVITY_DEVICE_BACKEND}")
 

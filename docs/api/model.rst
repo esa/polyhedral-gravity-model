@@ -61,6 +61,22 @@ GravityModel
 .. doxygennamespace:: polyhedralGravity::GravityModel
 
 
+Polyhedral Mesh
+---------------
+
+The vertices and the triangular faces of a :cpp:class:`polyhedralGravity::Polyhedron` are held by a
+:cpp:class:`polyhedralGravity::PolyhedralMesh` as `Kokkos <https://kokkos.org/>`__ views in the memory of
+the compute device. Every view is declared with its exact extents, i.e. only the number of vertices or
+faces is a runtime dimension while the trailing dimensions are compile time constants, and its layout is
+that of a C-contiguous array. A mesh can therefore be built directly on top of the buffer of NumPy,
+PyTorch, or JAX, no matter whether that buffer lives on the host or on an accelerator
+(see :cpp:enum:`polyhedralGravity::MemoryLocation`).
+
+.. doxygenclass:: polyhedralGravity::PolyhedralMesh
+
+.. doxygenenum:: polyhedralGravity::MemoryLocation
+
+
 Kokkos Backend
 --------------
 
@@ -68,6 +84,13 @@ The namespace :cpp:any:`polyhedralGravity::kokkos` contains everything which dir
 the runtime session, the device-resident polyhedron, and the kernels. A user of this library never has
 to interact with it, since the Kokkos runtime is initialized on demand and finalized when the process
 exits.
+
+The mesh views come as a small hierarchy: a :cpp:struct:`polyhedralGravity::kokkos::PolyhedralMeshView`
+holds the elementary properties of a polyhedron, i.e. its vertices and faces, and belongs to the
+:cpp:class:`polyhedralGravity::Polyhedron`. A
+:cpp:struct:`polyhedralGravity::kokkos::GravitationalMeshView` extends it by the caches of Tsoulis'
+algorithm, which only make sense inside a :cpp:class:`polyhedralGravity::GravityEvaluable` and are
+therefore allocated there.
 
 .. doxygennamespace:: polyhedralGravity::kokkos
 

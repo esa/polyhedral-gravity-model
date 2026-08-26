@@ -229,6 +229,57 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
         results = evaluable(computation_points, backend=ComputeBackend.CPU_PARALLEL)
 
 
+Handing over the mesh without copying it
+---------------------------------------
+
+The vertices and faces are read through Python's buffer protocol, i.e. the
+:code:`Polyhedron` uses the array's memory directly instead of copying it. That happens whenever
+the arrays already are C-contiguous and of the element type the library stores the mesh in,
+which is :code:`float64` for the vertices and :code:`uint64` for the faces. Any other
+:code:`dtype` or a non-contiguous array costs exactly one conversion.
+
+.. code-block:: python
+
+    import numpy as np
+    from polyhedral_gravity import Polyhedron, PolyhedronIntegrity
+
+    vertices = np.ascontiguousarray(vertices, dtype=np.float64)  # (N, 3)
+    faces = np.ascontiguousarray(faces, dtype=np.uint64)         # (M, 3)
+
+    polyhedron = Polyhedron((vertices, faces), density, integrity_check=PolyhedronIntegrity.DISABLE)
+
+    # The polyhedron's mesh is the very same memory as the arrays above
+    assert polyhedron.vertices.__array_interface__["data"][0] == vertices.__array_interface__["data"][0]
+
+The :code:`vertices` and :code:`faces` properties hand that memory back as read-only NumPy
+arrays, again without copying. The polyhedron keeps a reference to the arrays it was given, so
+they may go out of scope on the Python side.
+
+An array which lives on an accelerator is recognized by its
+:code:`__cuda_array_interface__`, which PyTorch, JAX, CuPy, and Numba expose. Its buffer is used
+where it is, so the mesh never travels through the host:
+
+.. code-block:: python
+
+    import torch
+    from polyhedral_gravity import Polyhedron, PolyhedronIntegrity, ComputeBackend, evaluate
+
+    vertices = torch.tensor(..., dtype=torch.float32, device="cuda").contiguous()  # (N, 3)
+    faces = torch.tensor(..., dtype=torch.int32, device="cuda").contiguous()       # (M, 3)
+    torch.cuda.synchronize()
+
+    polyhedron = Polyhedron((vertices, faces), density, integrity_check=PolyhedronIntegrity.DISABLE)
+    results = evaluate(polyhedron, computation_points, backend=ComputeBackend.GPU_PARALLEL)
+
+.. note::
+   Make sure the work producing such an array has finished, e.g. with
+   :code:`torch.cuda.synchronize()`, since the buffer is read without synchronizing on the
+   producing stream. A build without a GPU backend raises a :code:`RuntimeError` for a device
+   array; :code:`polyhedral_gravity.__device_compiler__` tells you whether this build has one.
+   Reading :code:`polyhedron.vertices` or :code:`polyhedron.faces` downloads the mesh to the
+   host once.
+
+
 PyTorch Interface (Differentiable)
 -----------------------------------
 

@@ -3,6 +3,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "polyhedralGravity/model/GravityModelDetail.h"
+#include "polyhedralGravity/model/MeshView.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 
@@ -50,46 +51,6 @@ namespace polyhedralGravity::kokkos {
     };
 
     /**
-     * The polyhedron as it lives in the memory of one execution space.
-     *
-     * Besides the mesh itself, this holds the three caches which only depend on the polyhedron and not on the
-     * computation point. They are filled once by {@link KokkosEvaluation}'s initialization kernel and reused
-     * for every subsequent evaluation.
-     *
-     * @tparam FloatType the floating point precision of the evaluation
-     * @tparam MemorySpace the Kokkos memory space the views are allocated in
-     */
-    template<typename FloatType, typename MemorySpace>
-    struct MeshViews {
-        /** The polyhedron's vertices as cartesian coordinates */
-        Kokkos::View<Vector3<FloatType> *, MemorySpace> vertices;
-        /** The polyhedron's triangular faces, each referencing three vertices by index */
-        Kokkos::View<IndexArray3 *, MemorySpace> faces;
-        /** The segment vectors G_pq foreach face */
-        Kokkos::View<Vector3Triplet<FloatType> *, MemorySpace> segmentVectors;
-        /** The plane unit normals N_p foreach face */
-        Kokkos::View<Vector3<FloatType> *, MemorySpace> planeUnitNormals;
-        /** The segment unit normals n_pq foreach face */
-        Kokkos::View<Vector3Triplet<FloatType> *, MemorySpace> segmentUnitNormals;
-
-        /**
-         * Resolves the face at the given index into cartesian coordinates relative to a computation point,
-         * i.e. it re-locates the computation point into the origin as Tsoulis' equations require.
-         * @param faceIndex the index of the face
-         * @param computationPoint the computation point P
-         * @return the face's three vertices, each shifted by -P
-         */
-        KOKKOS_INLINE_FUNCTION Vector3Triplet<FloatType> resolveFace(
-                const size_t faceIndex, const Vector3<FloatType> &computationPoint) const {
-            using util::operator-;
-            const IndexArray3 &face = faces(faceIndex);
-            return {vertices(face[0]) - computationPoint,
-                    vertices(face[1]) - computationPoint,
-                    vertices(face[2]) - computationPoint};
-        }
-    };
-
-    /**
      * Determines whether two values are so far apart in magnitude that adding them absorbs the smaller one.
      *
      * This is the device-capable counterpart of {@link util::isCriticalDifference}: it compares the binary
@@ -123,14 +84,14 @@ namespace polyhedralGravity::kokkos {
      *
      * @tparam FloatType the floating point precision of the evaluation
      * @tparam MemorySpace the memory space of the mesh
-     * @param mesh the device-resident polyhedron
+     * @param mesh the device-resident polyhedron together with its caches
      * @param faceIndex the index of the face to evaluate
      * @param computationPoint the computation point P
      * @return this face's contribution to the potential, the acceleration, and the gradiometric tensor
      */
     template<typename FloatType, typename MemorySpace>
     KOKKOS_INLINE_FUNCTION FaceContribution<FloatType> evaluateFace(
-            const MeshViews<FloatType, MemorySpace> &mesh, const size_t faceIndex,
+            const GravitationalMeshView<FloatType, MemorySpace> &mesh, const size_t faceIndex,
             const Vector3<FloatType> &computationPoint) {
         using namespace GravityModel::detail;
         using util::operator+;
@@ -140,9 +101,9 @@ namespace polyhedralGravity::kokkos {
         //1-01 to 1-03 Step: The segment vectors, plane unit normals, and segment unit normals only depend on
         // the polyhedron and were therefore already computed once by the initialization kernel
         const Vector3Triplet<FloatType> face = mesh.resolveFace(faceIndex, computationPoint);
-        const Vector3Triplet<FloatType> &segmentVectors = mesh.segmentVectors(faceIndex);
-        const Vector3<FloatType> &planeUnitNormal = mesh.planeUnitNormals(faceIndex);
-        const Vector3Triplet<FloatType> &segmentUnitNormals = mesh.segmentUnitNormals(faceIndex);
+        const Vector3Triplet<FloatType> segmentVectors = mesh.getSegmentVectors(faceIndex);
+        const Vector3<FloatType> planeUnitNormal = mesh.getPlaneUnitNormal(faceIndex);
+        const Vector3Triplet<FloatType> segmentUnitNormals = mesh.getSegmentUnitNormals(faceIndex);
 
         //1-04 Step: Compute Plane Normal Orientation sigma_p (direction of N_p in relation to P)
         const FloatType planeNormalOrientation = computeUnitNormalOfPlaneDirection(planeUnitNormal, face[0]);

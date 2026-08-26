@@ -1,6 +1,6 @@
 #include "polyhedralGravity/Info.h"
 #include "polyhedralGravity/input/ConfigSource.h"
-#include "polyhedralGravity/kokkos/KokkosSession.h"
+#include "polyhedralGravity/model/KokkosSession.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
@@ -18,6 +18,8 @@ int main(const int argc, char *argv[]) {
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Commit Hash:                   {}", POLYHEDRAL_GRAVITY_COMMIT_HASH);
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Model Execution Spaces:         {}", kokkos::getEnabledExecutionSpaces());
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Logging Level:                 {}", POLYHEDRAL_GRAVITY_LOGGING_LEVEL);
+    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Host Compiler:                 {}", POLYHEDRAL_GRAVITY_HOST_COMPILER);
+    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Device Compiler:               {}", POLYHEDRAL_GRAVITY_DEVICE_COMPILER);
     POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
 
     if (argc != 2) {

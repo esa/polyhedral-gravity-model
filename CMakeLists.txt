@@ -57,12 +57,17 @@ endif()
 add_compile_definitions(FMT_HEADER_ONLY)
 
 include(git)
+# Kokkos determines which compilers translate the host and the device code, which the version.cmake below
+# embeds into Info.h, so it has to be set up first
+include(kokkos)
 include(version.cmake)
 
 message(STATUS "#################################################################")
 message(STATUS "Polyhedral Gravity Version          ${POLYHEDRAL_GRAVITY_VERSION}")
 message(STATUS "Polyhedral Gravity Commit Hash      ${POLYHEDRAL_GRAVITY_COMMIT_HASH}")
 message(STATUS "Polyhedral Gravity Logging Level    ${POLYHEDRAL_GRAVITY_LOGGING_LEVEL}")
+message(STATUS "Polyhedral Gravity Host Compiler    ${POLYHEDRAL_GRAVITY_HOST_COMPILER}")
+message(STATUS "Polyhedral Gravity Device Compiler  ${POLYHEDRAL_GRAVITY_DEVICE_COMPILER}")
 message(STATUS "#################################################################")
 message(STATUS "Polyhedral Gravity Documentation    ${BUILD_POLYHEDRAL_GRAVITY_DOCS}")
 message(STATUS "Polyhedral Gravity Library          ${BUILD_POLYHEDRAL_GRAVITY_LIBRARY}")
@@ -74,7 +79,6 @@ message(STATUS "################################################################
 # Including dependencies needed across multiple targets
 #######################################################
 
-include(kokkos)
 include(spdlog)
 include(tetgen)
 include(clang_format)

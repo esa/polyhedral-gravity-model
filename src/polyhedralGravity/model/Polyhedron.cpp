@@ -2,28 +2,28 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "polyhedralGravity/kokkos/KokkosSession.h"
+#include "polyhedralGravity/model/KokkosSession.h"
 
 namespace polyhedralGravity {
 
-    Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
-                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
-        : _vertices{vertices},
-          _faces{faces},
+    Polyhedron::Polyhedron(PolyhedralMesh mesh, const double density, const NormalOrientation &orientation,
+                           const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
+        : _mesh{std::move(mesh)},
           _density{density},
           _orientation{orientation},
           _metricUnit{metricUnit} {
-        using util::operator-;
         // Checks that the node with index zero is actually used
         // In case it is not used, the indexing presumably starts mathematically at one
         // In this case, we shift it by -1, so that the indexing start with zero
-        if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](const auto &face) {
-                return face[0] == 0 || face[1] == 0 || face[2] == 0;
-            })) {
+        if (_mesh.shiftFaceIndicesToZeroBased()) {
             POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
-            std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) {return face - 1;});
         }
         this->runIntegrityMeasures(integrity);
+    }
+
+    Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
+                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+        : Polyhedron{PolyhedralMesh{vertices, faces}, density, orientation, integrity, metricUnit} {
     }
 
     Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
@@ -39,32 +39,36 @@ namespace polyhedralGravity {
                      density, orientation, integrity, metricUnit} {
     }
 
-    const std::vector<Array3> &Polyhedron::getVertices() const {
-        return _vertices;
+    const PolyhedralMesh &Polyhedron::getMesh() const {
+        return _mesh;
     }
 
-    const Array3 &Polyhedron::getVertex(size_t index) const {
-        return _vertices[index];
+    std::vector<Array3> Polyhedron::getVertices() const {
+        return _mesh.getVertices();
+    }
+
+    Array3 Polyhedron::getVertex(size_t index) const {
+        return _mesh.getHostMesh().getVertex(index);
     }
 
     size_t Polyhedron::countVertices() const {
-        return _vertices.size();
+        return _mesh.countVertices();
     }
 
-    const std::vector<IndexArray3> &Polyhedron::getFaces() const {
-        return _faces;
+    std::vector<IndexArray3> Polyhedron::getFaces() const {
+        return _mesh.getFaces();
     }
 
-    const IndexArray3 &Polyhedron::getFace(size_t index) const {
-        return _faces[index];
+    IndexArray3 Polyhedron::getFace(size_t index) const {
+        return _mesh.getHostMesh().getFace(index);
     }
 
     Array3Triplet Polyhedron::getResolvedFace(size_t index) const {
-        return {_vertices[_faces[index][0]], _vertices[_faces[index][1]], _vertices[_faces[index][2]]};
+        return _mesh.getHostMesh().resolveFace(index, Array3{0.0, 0.0, 0.0});
     }
 
     size_t Polyhedron::countFaces() const {
-        return _faces.size();
+        return _mesh.countFaces();
     }
 
     double Polyhedron::getDensity() const {
@@ -131,7 +135,7 @@ namespace polyhedralGravity {
     }
 
     std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation, MetricUnit> Polyhedron::getState() const {
-        return std::make_tuple(_vertices, _faces, _density, _orientation, _metricUnit);
+        return std::make_tuple(_mesh.getVertices(), _mesh.getFaces(), _density, _orientation, _metricUnit);
     }
 
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
@@ -232,9 +236,13 @@ namespace polyhedralGravity {
         // Assign the majority plane unit normal orientation
         _orientation = actualOrientation;
         // Fix the vioalting faces by exchaning the vertex ordering (exchaning index 0 with index 1 in the face)
-        std::for_each(violatingIndices.cbegin(), violatingIndices.cend(), [this](size_t i) {
-            std::swap(this->_faces[i][0], this->_faces[i][1]);
+        // The faces are written back as a whole, since they may alias a buffer of the caller which this
+        // library must not modify in place
+        std::vector<IndexArray3> faces = _mesh.getFaces();
+        std::for_each(violatingIndices.cbegin(), violatingIndices.cend(), [&faces](size_t i) {
+            std::swap(faces[i][0], faces[i][1]);
         });
+        _mesh.setFaces(faces);
     }
 
     size_t Polyhedron::countRayPolyhedronIntersections(const Array3Triplet &face) const {

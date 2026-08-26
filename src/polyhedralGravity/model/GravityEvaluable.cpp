@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "polyhedralGravity/kokkos/KokkosEvaluation.h"
+#include "polyhedralGravity/model/KokkosEvaluation.h"
 
 namespace polyhedralGravity {
 

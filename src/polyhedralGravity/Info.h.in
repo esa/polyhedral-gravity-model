@@ -28,4 +28,17 @@ namespace polyhedralGravity {
      */
     constexpr std::string_view POLYHEDRAL_GRAVITY_LOGGING_LEVEL = "@POLYHEDRAL_GRAVITY_LOGGING_LEVEL@";
 
+    /**
+     * The compiler which translated the host code, e.g. @code "GNU 13.2.0" @endcode.
+     * The value is set by the CMake configuration.
+     */
+    constexpr std::string_view POLYHEDRAL_GRAVITY_HOST_COMPILER = "@POLYHEDRAL_GRAVITY_HOST_COMPILER@";
+
+    /**
+     * The compiler which translated the device code, e.g. @code "NVIDIA nvcc 12.4" @endcode.
+     * This is @code "None" @endcode if the library was compiled without a GPU backend.
+     * The value is set by the CMake configuration.
+     */
+    constexpr std::string_view POLYHEDRAL_GRAVITY_DEVICE_COMPILER = "@POLYHEDRAL_GRAVITY_DEVICE_COMPILER@";
+
 }// namespace polyhedralGravity

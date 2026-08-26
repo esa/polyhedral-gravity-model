@@ -84,6 +84,20 @@ Below is the list of the available attributes:
 
     This corresponds to the value defined by the ``POLYHEDRAL_GRAVITY_LOGGING_LEVEL`` C++ variable.
 
+.. py:attribute:: __host_compiler__
+
+    Specifies the compiler which translated the host code, e.g. :code:`'GNU 13.2.0'`.
+
+    This corresponds to the value of the ``POLYHEDRAL_GRAVITY_HOST_COMPILER`` C++ variable.
+
+.. py:attribute:: __device_compiler__
+
+    Specifies the compiler which translated the device code, e.g. :code:`'NVIDIA nvcc 12.4'`.
+    It is :code:`'None'` if the module was compiled without a GPU backend, i.e. if requesting
+    :code:`ComputeBackend.GPU_PARALLEL` raises a :code:`RuntimeError`.
+
+    This corresponds to the value of the ``POLYHEDRAL_GRAVITY_DEVICE_COMPILER`` C++ variable.
+
 
 PyTorch Interface (Differentiable)
 -----------------------------------

@@ -20,10 +20,21 @@ protected:
 
     const static inline polyhedralGravity::PolyhedralFiles FILENAMES{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"};
 
-    const static inline polyhedralGravity::Polyhedron CORRECT_POLYHEDRON{
-        FILENAMES, 1.0,
-        polyhedralGravity::NormalOrientation::OUTWARDS, polyhedralGravity::PolyhedronIntegrity::DISABLE
-    };
+    /**
+     * The reference polyhedron, constructed on the first use.
+     *
+     * It deliberately is a function local static and not a static member: constructing a Polyhedron
+     * initializes the Kokkos runtime, which must not happen before main() has started.
+     *
+     * @return the polyhedron with a consistent, OUTWARDS pointing vertex ordering
+     */
+    static const polyhedralGravity::Polyhedron &getCorrectPolyhedron() {
+        const static polyhedralGravity::Polyhedron CORRECT_POLYHEDRON{
+            FILENAMES, 1.0,
+            polyhedralGravity::NormalOrientation::OUTWARDS, polyhedralGravity::PolyhedronIntegrity::DISABLE
+        };
+        return CORRECT_POLYHEDRON;
+    }
 
     static constexpr size_t FACES_COUNT = 14744;
     static constexpr size_t SET_SIZE = 100;
@@ -37,12 +48,12 @@ protected:
      */
     polyhedralGravity::Polyhedron createViolatingPolyhedron(const std::set<size_t> &violatinIndices) {
         using namespace polyhedralGravity;
-        std::vector<IndexArray3> violatingFaces = CORRECT_POLYHEDRON.getFaces();
+        std::vector<IndexArray3> violatingFaces = getCorrectPolyhedron().getFaces();
         for (const size_t index: violatinIndices) {
             std::swap(violatingFaces[index][0], violatingFaces[index][1]);
         }
         return {
-            CORRECT_POLYHEDRON.getVertices(), violatingFaces,
+            getCorrectPolyhedron().getVertices(), violatingFaces,
             1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE
         };
     }

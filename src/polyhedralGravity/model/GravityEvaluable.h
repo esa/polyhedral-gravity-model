@@ -33,10 +33,12 @@ namespace polyhedralGravity {
         ComputePrecision _precision;
 
         /**
-         * The polyhedron as it lives in the memory of the compute devices, together with the caches which only
-         * depend on it (the segment vectors, the plane unit normals, and the segment unit normals).
-         * Held by shared pointer so that a GravityEvaluable stays copyable and so that copies share the
-         * uploaded polyhedron instead of uploading it again.
+         * The caches which only depend on the polyhedron (the segment vectors, the plane unit normals, and the
+         * segment unit normals), next to the polyhedron's own mesh in the memory of the compute devices.
+         *
+         * The mesh itself belongs to the polyhedron above and is shared with it rather than uploaded again;
+         * only these caches are allocated here. Held by shared pointer so that a GravityEvaluable stays
+         * copyable and so that copies share the caches instead of recomputing them.
          */
         std::shared_ptr<kokkos::KokkosEvaluationBase> _evaluation;
 

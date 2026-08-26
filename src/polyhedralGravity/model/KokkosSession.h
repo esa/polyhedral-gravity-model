@@ -38,6 +38,16 @@ namespace polyhedralGravity::kokkos {
     using DeviceSpace = Kokkos::DefaultExecutionSpace;
 
     /**
+     * The memory space of the compute device, i.e. the GPU's memory on a build with a device backend.
+     * On a build without one this is the host's memory, which makes every device view below alias its
+     * host mirror instead of duplicating it.
+     */
+    using DeviceMemory = DeviceSpace::memory_space;
+
+    /** The memory space of the CPU */
+    using HostMemory = Kokkos::HostSpace;
+
+    /**
      * Whether the library was compiled with a GPU backend.
      * Kokkos only makes its default execution space differ from the default host execution space if
      * one of the device backends (CUDA, HIP, SYCL) is enabled.

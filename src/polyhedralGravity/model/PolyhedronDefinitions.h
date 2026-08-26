@@ -196,6 +196,31 @@ namespace polyhedralGravity {
     std::ostream &operator<<(std::ostream &os, const ComputePrecision &precision);
 
     /**
+     * Where a raw pointer handed to the library points to.
+     *
+     * This is what makes a {@link Polyhedron} constructible from the buffer of an array library without
+     * copying it: a NumPy array lives in {@link MemoryLocation::HOST}, a PyTorch or JAX array on an
+     * accelerator in {@link MemoryLocation::DEVICE}.
+     */
+    enum class MemoryLocation : char {
+        /** The pointer addresses the CPU's memory */
+        HOST,
+        /**
+         * The pointer addresses the compute device's memory, i.e. the GPU's.
+         * @throws std::runtime_error if the library was compiled without a GPU backend
+         */
+        DEVICE,
+    };
+
+    /**
+     * Stream operator for the MemoryLocation enum. Prints the enum to a human-readable string.
+     * @param os The output stream to write the string representation to.
+     * @param location the memory location to print
+     * @return The output stream after writing the string representation.
+     */
+    std::ostream &operator<<(std::ostream &os, const MemoryLocation &location);
+
+    /**
      * Converts a given string representation of a metric unit into the corresponding MetricUnit enum value.
      * This function maps input strings to enum values such as "METER", "KILOMETER", or "UNITLESS".
      * If the input does not match a valid metric unit representation, appropriate handling is expected.

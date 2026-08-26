@@ -176,8 +176,37 @@ silently computing somewhere else:
 
 ```python
 import polyhedral_gravity
-print(polyhedral_gravity.__parallelization__)   # e.g. 'Serial, OpenMP, Cuda'
+print(polyhedral_gravity.__parallelization__)    # e.g. 'Serial, OpenMP, Cuda'
+print(polyhedral_gravity.__host_compiler__)      # e.g. 'GNU 13.2.0'
+print(polyhedral_gravity.__device_compiler__)    # e.g. 'NVIDIA nvcc 12.4', or 'None' without a GPU backend
 ```
+
+#### Handing over the Mesh without Copying it
+
+The vertices and faces are read through Python's buffer protocol, i.e. the `Polyhedron` uses the
+array's memory directly instead of copying it. That happens whenever the arrays already are
+C-contiguous and of the element type the library stores the mesh in, which is `float64` for the
+vertices and `uint64` for the faces. Any other `dtype` or a non-contiguous array costs exactly one
+conversion. The `vertices` and `faces` properties hand that memory back as read-only NumPy arrays,
+again without copying.
+
+An array which lives on an accelerator is recognized by its `__cuda_array_interface__`, which
+PyTorch, JAX, CuPy, and Numba expose. Its buffer is used where it is, so the mesh never travels
+through the host:
+
+```python
+vertices = torch.tensor(..., dtype=torch.float32, device="cuda").contiguous()   # (N, 3)
+faces = torch.tensor(..., dtype=torch.int32, device="cuda").contiguous()        # (M, 3)
+torch.cuda.synchronize()
+
+polyhedron = Polyhedron((vertices, faces), density, integrity_check=PolyhedronIntegrity.DISABLE)
+results = evaluate(polyhedron, computation_points, backend=ComputeBackend.GPU_PARALLEL)
+```
+
+> [!IMPORTANT]
+> Make sure the work producing such an array has finished, e.g. with `torch.cuda.synchronize()`,
+> since the buffer is read without synchronizing on the producing stream. A build without a GPU
+> backend raises a `RuntimeError` for a device array.
 
 Independently of where it runs, the evaluation can compute in single or double precision.
 The mesh you hand in and the results you get back are always double precision; only the evaluation

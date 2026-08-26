@@ -65,6 +65,21 @@ namespace polyhedralGravity {
         return os;
     }
 
+    std::ostream &operator<<(std::ostream &os, const MemoryLocation &location) {
+        switch (location) {
+            case MemoryLocation::HOST:
+                os << "HOST";
+            break;
+            case MemoryLocation::DEVICE:
+                os << "DEVICE";
+            break;
+            default:
+                os << "Unknown";
+            break;
+        }
+        return os;
+    }
+
     MetricUnit readMetricUnit(const std::string &unit) {
         if (unit == "m") {
             return MetricUnit::METER;
