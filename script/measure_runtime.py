@@ -1,5 +1,7 @@
 #!python3
-from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable
+from readline import backend
+
+from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable, ComputePrecision, ComputeBackend
 import polyhedral_gravity
 import numpy as np
 import matplotlib.pyplot as plt
@@ -65,10 +67,11 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
     logger.info(f"Time taken:    {delta:.3f} microseconds per point")
     results[f"GravityEvaluable \n ${sample_size} \\times 1$ point"] = delta
 
-    evaluable = GravityEvaluable(polyhedron)
+    evaluable = GravityEvaluable(polyhedron, precision=ComputePrecision.FLOAT32)
 
     start_time = timeit.default_timer()
-    evaluable(computation_points)
+    # evaluable(computation_points, backend=ComputeBackend.CPU_PARALLEL)
+    evaluable(computation_points, backend=ComputeBackend.GPU_PARALLEL)
     end_time = timeit.default_timer()
 
     total_time = end_time - start_time
