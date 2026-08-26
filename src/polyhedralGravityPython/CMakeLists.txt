@@ -7,7 +7,21 @@ file(GLOB_RECURSE PYTHON_INTERFACE_SRC
     )
 list(FILTER PYTHON_INTERFACE_SRC EXCLUDE REGEX ".*YAML.*")
 
-pybind11_add_module(_core ${PYTHON_INTERFACE_SRC} PolyhedralGravityPython.cpp)
+# pybind11 adds link time optimization to the module by default. That cannot be combined with a Kokkos
+# device backend: every object then also carries the device code as a fatbin, and the LTO stage re-emits
+# those into a single assembly file, where they collide with
+# "Error: symbol `fatbinData' is already defined". NO_EXTRAS switches pybind11's LTO off; the stripping,
+# which is the other half of the extras, is requested explicitly below.
+if (Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP OR Kokkos_ENABLE_SYCL)
+    message(STATUS "Building the Python interface without link time optimization, as it is incompatible "
+            "with the Kokkos device backend")
+    pybind11_add_module(_core NO_EXTRAS ${PYTHON_INTERFACE_SRC} PolyhedralGravityPython.cpp)
+    if (NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|RelWithDebInfo|None)$")
+        pybind11_strip(_core)
+    endif ()
+else ()
+    pybind11_add_module(_core ${PYTHON_INTERFACE_SRC} PolyhedralGravityPython.cpp)
+endif ()
 
 # Checks if MinGW is used, in this case, the .dll of the the standard library need to be linked statically to the
 # Python interface since otherwise they won't be found
