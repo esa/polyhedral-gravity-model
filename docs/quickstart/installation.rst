@@ -105,6 +105,23 @@ The host backends need no configuration: the Kokkos :code:`Serial` backend is al
 toolchain: CUDA if :code:`nvcc` is found, HIP if the ROCm compiler is found, SYCL for the Intel LLVM
 compiler, and no GPU backend otherwise.
 
+Kokkos compiles the device code with the **C++ compiler**, not with a separate CUDA/ HIP compiler, so
+:code:`CXX` has to be one that understands the paradigm: a CUDA-capable :code:`clang++` or NVIDIA's
+:code:`nvcc_wrapper` for CUDA, :code:`hipcc` for HIP, and :code:`icpx` for SYCL. If :code:`clang++`
+rejects your CUDA version, either point it at an older toolkit with
+:code:`-DKokkos_CUDA_DIR=/path/to/cuda` or build with :code:`nvcc_wrapper`:
+
+.. code-block:: bash
+
+    CXX=/path/to/nvcc_wrapper cmake .. -DPOLYHEDRAL_GRAVITY_DEVICE_BACKEND=CUDA
+
+Kokkos determines the GPU architecture by running a probe at configure time, which needs a visible GPU.
+On a login node without one, name the architecture yourself instead:
+
+.. code-block:: bash
+
+    cmake .. -DKokkos_ARCH_AMPERE80=ON
+
 Dependencies (automatically set-up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -373,6 +373,30 @@ cmake .. -DPOLYHEDRAL_GRAVITY_DEVICE_BACKEND="CUDA"
 
 It is not recommended to change the POLYHEDRAL_GRAVITY_LOGGING_LEVEL to something else than `INFO=2`.
 
+Kokkos compiles the device code with the **C++ compiler**, not with a separate CUDA/HIP compiler, so
+`CXX` has to be one that understands the paradigm:
+
+| Device backend | Supported `CXX`                                                     |
+|----------------|---------------------------------------------------------------------|
+| `CUDA`         | a CUDA-capable `clang++`, or NVIDIA's [`nvcc_wrapper`](https://github.com/kokkos/kokkos/blob/master/bin/nvcc_wrapper) |
+| `HIP`          | `hipcc` (or `amdclang++`)                                           |
+| `SYCL`         | `icpx` from the Intel oneAPI toolkit                                |
+
+If `clang++` rejects your CUDA version (it only supports releases it knows about), either point it at an
+older toolkit with `-DKokkos_CUDA_DIR=/path/to/cuda`, or build with `nvcc_wrapper`:
+
+```bash
+CXX=/path/to/nvcc_wrapper cmake .. -DPOLYHEDRAL_GRAVITY_DEVICE_BACKEND=CUDA
+```
+
+Kokkos determines the GPU architecture by running a probe at configure time, which needs a **visible GPU**.
+On a login node without one, name the architecture yourself instead:
+
+```bash
+cmake .. -DKokkos_ARCH_AMPERE80=ON
+```
+
+
 ### Running the C++ Executable
 
 After the build, the gravity model can be run by executing:

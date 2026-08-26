@@ -51,11 +51,22 @@ if (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "AUTO")
     endif ()
 endif ()
 
+# Kokkos compiles the device code as CXX, using nvcc_wrapper/ hipcc/ a CUDA-capable Clang, and passes the
+# architecture flags itself. So we must NOT enable_language(CUDA/HIP) here: that would put the language into
+# ENABLED_LANGUAGES with an empty CMAKE_CUDA_ARCHITECTURES, which makes Kokkos' own architecture
+# auto-detection fail to even generate its try_run project ("CUDA_ARCHITECTURES is empty for target ...").
 if (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "CUDA")
-    enable_language(CUDA)
     set(Kokkos_ENABLE_CUDA ON CACHE BOOL "Enable the Kokkos CUDA backend" FORCE)
+    # The kernels call constexpr host functions (e.g. std::array::operator[]) from device code. Kokkos
+    # defaults this to ON for Clang but to OFF for nvcc, where it becomes -expt-relaxed-constexpr.
+    set(Kokkos_ENABLE_CUDA_CONSTEXPR ON CACHE BOOL "Allow constexpr host functions in device code" FORCE)
+    # Kokkos detects the compute capability by briefly enabling the CUDA language itself and building a
+    # probe. That probe needs a non-empty architecture list, so give it one unless the user picked their own.
+    # "all-major" is used rather than "native" because it does not require a visible GPU at configure time.
+    if (NOT CMAKE_CUDA_ARCHITECTURES AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.23)
+        set(CMAKE_CUDA_ARCHITECTURES "all-major")
+    endif ()
 elseif (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "HIP")
-    enable_language(HIP)
     set(Kokkos_ENABLE_HIP ON CACHE BOOL "Enable the Kokkos HIP backend" FORCE)
 elseif (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "SYCL")
     set(Kokkos_ENABLE_SYCL ON CACHE BOOL "Enable the Kokkos SYCL backend" FORCE)
@@ -63,6 +74,17 @@ endif ()
 
 message(STATUS "Kokkos: Host Backend   ${CMAKE_CXX_COMPILER_ID} (Serial + OpenMP: ${OpenMP_CXX_FOUND})")
 message(STATUS "Kokkos: Device Backend ${POLYHEDRAL_GRAVITY_DEVICE_BACKEND}")
+
+# The device code is compiled by the C++ compiler, so it has to be one that understands the device paradigm
+if (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "CUDA" AND
+        NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+        NOT CMAKE_CXX_COMPILER_ID STREQUAL "NVIDIA" AND
+        NOT CMAKE_CXX_COMPILER MATCHES "nvcc_wrapper")
+    message(WARNING "Kokkos: The CUDA backend compiles the device code with the C++ compiler "
+            "(${CMAKE_CXX_COMPILER_ID}), which Kokkos only supports for Clang and NVIDIA's nvcc_wrapper. "
+            "If the build fails, configure with CXX pointing to nvcc_wrapper, or set "
+            "POLYHEDRAL_GRAVITY_DEVICE_BACKEND=NONE for a CPU-only build.")
+endif ()
 
 ##########################################
 # Get Kokkos itself, preferring a local one
