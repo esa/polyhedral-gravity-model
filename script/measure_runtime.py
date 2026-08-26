@@ -1,6 +1,4 @@
 #!python3
-from readline import backend
-
 from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable, ComputePrecision, ComputeBackend
 import polyhedral_gravity
 import numpy as np
