@@ -1,4 +1,4 @@
-#!python3
+#!/usr/bin/env python3
 from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable, ComputePrecision, ComputeBackend
 import polyhedral_gravity
 import numpy as np
