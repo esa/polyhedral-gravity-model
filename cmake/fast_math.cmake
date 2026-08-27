@@ -15,18 +15,30 @@ option(POLYHEDRAL_GRAVITY_FAST_MATH
         OFF)
 
 if (POLYHEDRAL_GRAVITY_FAST_MATH)
-    if (CMAKE_CXX_COMPILER MATCHES "nvcc_wrapper" OR CMAKE_CXX_COMPILER_ID STREQUAL "NVIDIA")
-        # nvcc applies this to the device code only, the host compiler behind it never sees it
-        add_compile_options(-use_fast_math)
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|IntelLLVM")
-        # Covers a Clang CUDA build as well as the HIP and SYCL backends. Unlike nvcc's flag, this one also
-        # applies to the host code compiled from the same translation unit.
-        add_compile_options(-ffast-math)
+    # Which flag is right is decided by whoever compiles the *device* code, not by CMAKE_CXX_COMPILER_ID.
+    # With the CUDA backend, Kokkos substitutes its own nvcc_wrapper as the compile rule while the cache
+    # entry still names the host compiler, so CMAKE_CXX_COMPILER_ID reads "GNU" for a build whose kernels
+    # nvcc translates. Keying on it would hand nvcc_wrapper a -ffast-math, which it forwards to the host
+    # compiler, leaving the FLOAT32 kernels -- the only thing this option is about -- untouched.
+    if (POLYHEDRAL_GRAVITY_DEVICE_BACKEND STREQUAL "CUDA" AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        # nvcc, reached either through nvcc_wrapper or directly. Applies to the device code only.
+        set(POLYHEDRAL_GRAVITY_FAST_MATH_FLAG "-use_fast_math")
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|IntelLLVM|GNU")
+        # Clang compiling CUDA itself, the HIP and SYCL backends, and a CPU-only build, where this is the
+        # only way to reach the FLOAT32 evaluation at all. Unlike nvcc's flag, this one also applies to the
+        # host code of the targets it is attached to.
+        set(POLYHEDRAL_GRAVITY_FAST_MATH_FLAG "-ffast-math")
     else ()
-        message(WARNING "POLYHEDRAL_GRAVITY_FAST_MATH is ON, but ${CMAKE_CXX_COMPILER_ID} is not one of the "
-                "compilers this project knows a fast math flag for. It has no effect.")
-        set(POLYHEDRAL_GRAVITY_FAST_MATH OFF)
+        # Never downgrade silently: whoever asked for this has to learn that they did not get it
+        message(FATAL_ERROR "POLYHEDRAL_GRAVITY_FAST_MATH is ON, but this project does not know a fast math "
+                "flag for ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER}) with device backend "
+                "${POLYHEDRAL_GRAVITY_DEVICE_BACKEND}. Configure with -DPOLYHEDRAL_GRAVITY_FAST_MATH=OFF, or "
+                "add the compiler to cmake/fast_math.cmake.")
     endif ()
+    # Deliberately NOT add_compile_options(): that would reach the bundled dependencies too, and TetGen's
+    # exact geometric predicates depend on the IEEE semantics this flag relaxes. The flag is attached to the
+    # project's own targets only, in src/CMakeLists.txt.
+    message(STATUS "Fast Math: compiling the polyhedral gravity targets with ${POLYHEDRAL_GRAVITY_FAST_MATH_FLAG}")
 endif ()
 
 # Spelled as a C++ bool literal for Info.h

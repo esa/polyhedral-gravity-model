@@ -14,6 +14,12 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
             "${CMAKE_CURRENT_SOURCE_DIR}"
             )
 
+    # Fast, less accurate FLOAT32 arithmetic, if requested (see cmake/fast_math.cmake). Attached per target so
+    # that the bundled dependencies, TetGen's exact predicates above all, keep their IEEE semantics.
+    if (POLYHEDRAL_GRAVITY_FAST_MATH)
+        target_compile_options(${PROJECT_NAME}_lib PRIVATE ${POLYHEDRAL_GRAVITY_FAST_MATH_FLAG})
+    endif ()
+
     # Link libraries needed in all targets
     target_link_libraries(${PROJECT_NAME}_lib
             spdlog::spdlog
@@ -69,6 +75,10 @@ if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
     target_include_directories(_core PUBLIC
             "${CMAKE_CURRENT_SOURCE_DIR}"
             )
+
+    if (POLYHEDRAL_GRAVITY_FAST_MATH)
+        target_compile_options(_core PRIVATE ${POLYHEDRAL_GRAVITY_FAST_MATH_FLAG})
+    endif ()
 
     target_link_libraries(_core PUBLIC
             spdlog::spdlog

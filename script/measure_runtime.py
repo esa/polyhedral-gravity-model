@@ -68,8 +68,8 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
     evaluable = GravityEvaluable(
         polyhedron,
         precision=ComputePrecision.FLOAT32,
-        # backend=ComputeBackend.GPU_PARALLEL,
-        backend=ComputeBackend.CPU_PARALLEL,
+        backend=ComputeBackend.GPU_PARALLEL,
+        # backend=ComputeBackend.CPU_PARALLEL,
     )
 
     start_time = timeit.default_timer()
