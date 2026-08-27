@@ -52,14 +52,26 @@ The module will be build using CMake. Just execute in repository root:
 
     pip install .
 
-To modify the build options (like the GPU backend) have a look
-at the :ref:`build-options` for an overview of options.
-The pip installation will call CMake. To modify build options, just set them as
-environment variable before executing the :code:`pip install .` command, e.g.:
+The build is driven by `scikit-build-core <https://github.com/scikit-build/scikit-build-core>`__,
+which calls CMake. Have a look at :ref:`build-options` for an overview of the options.
+Any of them can be set per install with pip's :code:`--config-settings`, abbreviated :code:`-C`:
 
-.. code-block::
+.. code-block:: bash
+
+    pip install . -C cmake.define.POLYHEDRAL_GRAVITY_DEVICE_BACKEND=CUDA
+
+.. code-block:: bash
+
+    pip install . -C cmake.define.POLYHEDRAL_GRAVITY_FAST_MATH=ON
+
+For :code:`POLYHEDRAL_GRAVITY_DEVICE_BACKEND`, :code:`POLYHEDRAL_GRAVITY_LOGGING_LEVEL`, and
+:code:`POLYHEDRAL_GRAVITY_FAST_MATH` the equally named environment variables of the previous,
+setuptools-based build keep working as well:
+
+.. code-block:: bash
 
     export POLYHEDRAL_GRAVITY_DEVICE_BACKEND="CUDA"
+    pip install .
 
 
 Build C++ library/ executable
@@ -92,6 +104,7 @@ Name (Default)                                         Options
 ====================================================== ==========================================================================================================================
 POLYHEDRAL_GRAVITY_DEVICE_BACKEND (:code:`AUTO`)       :code:`AUTO` = detect the GPU vendor's paradigm / :code:`NONE` = CPU-only build / :code:`CUDA`, :code:`HIP`, or :code:`SYCL`
 POLYHEDRAL_GRAVITY_LOGGING_LEVEL (:code:`INFO`)        :code:`TRACE`, :code:`DEBUG`, :code:`INFO`, :code:`WARN`, :code:`ERROR`, :code:`CRITICAL`, :code:`OFF`
+POLYHEDRAL_GRAVITY_FAST_MATH (:code:`OFF`)             Faster, less accurate FLOAT32 arithmetic. FLOAT64 is bit-identical either way
 BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)            Build this documentation
 BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)            Build the Tests
 BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (:code:`ON`) Build the Python interface

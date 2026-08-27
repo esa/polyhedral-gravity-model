@@ -1,7 +1,9 @@
 #include "polyhedralGravity/util/KokkosSession.h"
 
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "polyhedralGravity/output/Logging.h"
@@ -9,6 +11,58 @@
 namespace polyhedralGravity::kokkos {
 
     namespace {
+
+        /**
+         * Redirects everything written to @c std::cout and @c std::cerr for as long as it exists into the
+         * library's log, at the DEBUG level.
+         *
+         * Kokkos reports its initialization diagnostics by writing to @c std::cerr directly -- most
+         * prominently the OMP_PROC_BIND warning, which it emits whenever that environment variable is
+         * unset. That is reasonable for an application, but this is a library: its diagnostics belong in
+         * its own log and not in the output of whichever program happens to link it, which for the Python
+         * interface is an interactive interpreter.
+         *
+         * The redirection is process-global, so it is kept to the shortest possible scope: the single
+         * call to @c Kokkos::initialize() or @c Kokkos::finalize() it wraps.
+         *
+         * @note The obvious alternative, setting @c OMP_PROC_BIND from within the process so that the
+         * warning has nothing to complain about, does not work. libgomp parses @c OMP_PROC_BIND and
+         * @c OMP_PLACES in a load-time constructor, i.e. before any code of this library runs, so a
+         * @c setenv() here silences the warning without binding a single thread. The variables have to be
+         * set in the environment of the process before it starts to have any effect at all.
+         */
+        class CapturedStandardStreams {
+        public:
+            CapturedStandardStreams()
+                : _outBuffer{std::cout.rdbuf(_capture.rdbuf())}, _errBuffer{std::cerr.rdbuf(_capture.rdbuf())} {}
+
+            CapturedStandardStreams(const CapturedStandardStreams &) = delete;
+            CapturedStandardStreams &operator=(const CapturedStandardStreams &) = delete;
+
+            ~CapturedStandardStreams() {
+                std::cout.rdbuf(_outBuffer);
+                std::cerr.rdbuf(_errBuffer);
+                // A diagnostic must never be the reason a process terminates, and this destructor may well
+                // run while an exception from Kokkos is propagating
+                try {
+                    std::istringstream lines{_capture.str()};
+                    std::string line{};
+                    while (std::getline(lines, line)) {
+                        // Kokkos pads its warnings with blank lines, which carry nothing worth a log record
+                        if (line.find_first_not_of(" \t\r") != std::string::npos) {
+                            POLYHEDRAL_GRAVITY_LOG_DEBUG("Kokkos: {}", line);
+                        }
+                    }
+                } catch (...) {
+                }
+            }
+
+        private:
+            /** Collects both streams, so that their relative order is preserved */
+            std::ostringstream _capture{};
+            std::streambuf *_outBuffer;
+            std::streambuf *_errBuffer;
+        };
 
         /**
          * Owns the Kokkos runtime for the lifetime of the process.
@@ -24,7 +78,10 @@ namespace polyhedralGravity::kokkos {
 
             SessionGuard() {
                 if (!Kokkos::is_initialized() && !Kokkos::is_finalized()) {
-                    Kokkos::initialize();
+                    {
+                        const CapturedStandardStreams capture{};
+                        Kokkos::initialize();
+                    }// the capture forwards whatever Kokkos printed to the log when it goes out of scope
                     owned = true;
                     POLYHEDRAL_GRAVITY_LOG_DEBUG("Initialized the Kokkos runtime with the execution spaces {}",
                                                  getEnabledExecutionSpaces());
@@ -33,6 +90,7 @@ namespace polyhedralGravity::kokkos {
 
             ~SessionGuard() {
                 if (owned && Kokkos::is_initialized() && !Kokkos::is_finalized()) {
+                    const CapturedStandardStreams capture{};
                     Kokkos::finalize();
                 }
             }

@@ -3,7 +3,8 @@ channels:
   - conda-forge
 dependencies:
   - python==3.12
-  - setuptools
+  - scikit-build-core
+  - hatch-fancy-pypi-readme
   - numpy
   - pytest
   - pytest-xdist

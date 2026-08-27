@@ -346,7 +346,7 @@ all of them are **automatically** set up via CMake:
 - tetgen (1.6 or compatible), required for I/O
 - yaml-cpp (0.8.0 or compatible), required for I/O
 - Kokkos (5.1.1 or compatible), required for the parallelization on the CPU and the GPU
-- pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
+- pybind11 (3.1.0 or compatible), required for the Python interface, but not the C++ standalone
 
 The module will be built using a C++20 capable compiler,
 CMake. Just execute the following command in
@@ -356,10 +356,20 @@ the repository root folder:
 pip install .
 ```
 
-To modify the build options (like the GPU backend) have a look
-at the [next paragraph](#building-the-c-library--executable). The options
-are modified by setting the environment variables before executing
-the `pip install .` command, e.g.:
+The build is driven by [scikit-build-core](https://github.com/scikit-build/scikit-build-core),
+so every CMake option (see the [next paragraph](#building-the-c-library--executable)) can be set
+per install with pip's `--config-settings`, abbreviated `-C`:
+
+```bash
+pip install . -C cmake.define.POLYHEDRAL_GRAVITY_DEVICE_BACKEND=CUDA
+```
+
+```bash
+pip install . -C cmake.define.POLYHEDRAL_GRAVITY_FAST_MATH=ON
+```
+
+The environment variables of the previous, setuptools-based build keep working
+for the three options most people change:
 
 ```bash
 export POLYHEDRAL_GRAVITY_DEVICE_BACKEND="CUDA"
@@ -390,6 +400,7 @@ The following options are available:
 |------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------|
 |              POLYHEDRAL_GRAVITY_DEVICE_BACKEND (`AUTO`)      | `AUTO` = detect the vendor paradigm / `NONE` = CPU-only build / `CUDA`, `HIP`, or `SYCL`         |
 |                   POLYHEDRAL_GRAVITY_LOGGING_LEVEL (`INFO`)  | `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`, `OFF`                                     |
+|                       POLYHEDRAL_GRAVITY_FAST_MATH (`OFF`)  | Faster, less accurate `FLOAT32` arithmetic. `FLOAT64` is bit-identical either way                 |
 |                       BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`)  | Build this documentation                                                                         |
 |                       BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`)  | Build the Tests                                                                                  |
 |            BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (`ON`)  | Build the Python interface                                                                       |

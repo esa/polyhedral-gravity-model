@@ -27,7 +27,10 @@ jobs:
           lfs: true
       - name: Install polyhedral-gravity from recent source for sphinx.ext.autodoc
         shell: bash -l {0}
-        run: pip install . -vv --no-build-isolation
+        # --no-build-isolation means pip does not install the build backend itself, so it has to be here
+        run: |
+          pip install scikit-build-core hatch-fancy-pypi-readme
+          pip install . -vv --no-build-isolation
       - id: deployment
         uses: sphinx-notes/pages@v3
         with:

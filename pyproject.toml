@@ -1,0 +1,131 @@
+# ---------------------------------------------------------------------------------------------------
+# The build of the Python interface. CMake does the actual work, scikit-build-core is the PEP 517 build
+# backend which drives it and turns its output into a wheel.
+#
+# Every knob of the C++ build stays a CMake option; this file only chooses the defaults for a pip build.
+# To change one for a single install, pass it through pip:
+#
+#     pip install . -C cmake.define.POLYHEDRAL_GRAVITY_FAST_MATH=ON
+#
+# The equally named environment variables, which the old setup.py honoured, work as well:
+#
+#     POLYHEDRAL_GRAVITY_FAST_MATH=ON pip install .
+# ---------------------------------------------------------------------------------------------------
+[build-system]
+requires = ["scikit-build-core>=0.11", "hatch-fancy-pypi-readme"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "polyhedral_gravity"
+description = """\
+    Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points \
+    according to the geodetic convention\
+    """
+authors = [{ name = "Jonas Schuhmacher", email = "jonas.schuhmacher@tum.de" }]
+requires-python = ">=3.9"
+license = { text = "GPL-3.0-or-later" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: C++",
+    "Programming Language :: Python",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+# The version comes from version.cmake and the long description from README.md, see the two providers below
+dynamic = ["version", "readme"]
+
+[project.urls]
+Homepage = "https://github.com/esa/polyhedral-gravity-model"
+Source = "https://github.com/esa/polyhedral-gravity-model"
+Documentation = "https://esa.github.io/polyhedral-gravity-model/"
+Issues = "https://github.com/esa/polyhedral-gravity-model/issues"
+Changelog = "https://github.com/esa/polyhedral-gravity-model/releases"
+
+# ---------------------------------------------------------------------------------------------------
+# How the wheel is built
+# ---------------------------------------------------------------------------------------------------
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+cmake.version = ">=3.16"
+build-dir = "build/{wheel_tag}"
+# The pure Python part of the package. CMake installs _core next to it, see src/polyhedralGravityPython
+wheel.packages = ["python/polyhedral_gravity"]
+# Only the module itself, not the install rules of the bundled dependencies: Kokkos, spdlog, and yaml-cpp
+# would otherwise put their headers and static libraries into site-packages alongside the package
+install.components = ["PolyhedralGravityPython"]
+
+[tool.scikit-build.cmake.define]
+# Everything the Python interface does not need. The library, the C++ executable, the tests, and the docs
+# are separate CMake targets which a wheel has no use for. Leaving them on is not merely wasteful: the
+# library target is the one which pulls in yaml-cpp (src/CMakeLists.txt), and the tests pull in googletest,
+# neither of which the extension module links against.
+BUILD_POLYHEDRAL_GRAVITY_DOCS = "OFF"
+BUILD_POLYHEDRAL_GRAVITY_TESTS = "OFF"
+BUILD_POLYHEDRAL_GRAVITY_LIBRARY = "OFF"
+BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE = "OFF"
+BUILD_POLYHEDRAL_GRAVITY_BENCHMARK = "OFF"
+BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE = "ON"
+BUILD_SHARED_LIBS = "OFF"
+# Required since CMake 4.0 (does nothing before that) due to the outdated TetGen build system
+CMAKE_POLICY_VERSION_MINIMUM = "3.5"
+
+# The three knobs a user may reasonably want to set for a single install. Each takes its value from the
+# equally named environment variable, so that what the old setup.py honoured keeps working:
+#
+#     POLYHEDRAL_GRAVITY_FAST_MATH=ON pip install .
+#
+# and falls back to the default below when the variable is unset. The `-C cmake.define.<NAME>=<VALUE>`
+# form works for these as much as for anything above and takes precedence over the environment.
+# AUTO detects the vendor paradigm of whichever GPU toolchain is installed, see cmake/kokkos.cmake
+POLYHEDRAL_GRAVITY_DEVICE_BACKEND = { env = "POLYHEDRAL_GRAVITY_DEVICE_BACKEND", default = "AUTO" }
+POLYHEDRAL_GRAVITY_LOGGING_LEVEL = { env = "POLYHEDRAL_GRAVITY_LOGGING_LEVEL", default = "INFO" }
+# Faster, less accurate FLOAT32 arithmetic. FLOAT64 is bit-identical either way, see cmake/fast_math.cmake
+POLYHEDRAL_GRAVITY_FAST_MATH = { env = "POLYHEDRAL_GRAVITY_FAST_MATH", default = "OFF" }
+
+# ---------------------------------------------------------------------------------------------------
+# The two pieces of metadata which are not spelled out above
+# ---------------------------------------------------------------------------------------------------
+# version.cmake is the single source of the version, for the C++ library as much as for the wheel
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "version.cmake"
+regex = '''set\(POLYHEDRAL_GRAVITY_VERSION[ \t]+"(?P<value>[^"]+)"'''
+
+# The README is the long description, minus the figure, whose relative path does not resolve on PyPI
+[tool.scikit-build.metadata.readme]
+provider = "scikit_build_core.metadata.fancy_pypi_readme"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '(?s)<p align="center">\s*<img src="paper/figures/eros_010\.png".*?</p>'
+replacement = ''
+
+# ---------------------------------------------------------------------------------------------------
+# What goes into the source distribution
+# ---------------------------------------------------------------------------------------------------
+[tool.scikit-build.sdist]
+# Everything CMake needs to build the wheel is kept; what only serves the repository is not. Note that
+# "include" only adds files back which an exclude rule removed -- the exclude list is what limits the sdist.
+exclude = [
+    "build*/",          # the CMake build trees, hundreds of megabytes of object files
+    "docs/",            # built and published from the repository, not from the sdist
+    "paper/",           # the JOSS paper and its figures
+    "notebooks/",
+    "example-config/",  # sample inputs for the C++ executable, which a wheel does not build
+    ".github/",
+    "script/mesh/",     # the Eros mesh, only used by the benchmark driver
+    "test/resources/",  # 30 MB of expected values for the C++ tests, which a wheel does not build
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["test"]

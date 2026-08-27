@@ -23,6 +23,16 @@ else ()
     pybind11_add_module(_core ${PYTHON_INTERFACE_SRC} PolyhedralGravityPython.cpp)
 endif ()
 
+# scikit-build-core builds the wheel from what CMake installs, so the module has to be installed next to
+# the pure Python part of the package (see wheel.packages in pyproject.toml). SKBUILD is only defined when
+# the build was started by pip; a plain CMake build keeps the module in the build tree as before.
+if (SKBUILD)
+    # The COMPONENT is what keeps the wheel to just this module: the bundled dependencies (Kokkos above all)
+    # carry install rules of their own, and a plain "cmake --install" would put their headers, static
+    # libraries, and tools into site-packages. pyproject.toml installs this component only.
+    install(TARGETS _core LIBRARY DESTINATION polyhedral_gravity COMPONENT PolyhedralGravityPython)
+endif ()
+
 # Checks if MinGW is used, in this case, the .dll of the the standard library need to be linked statically to the
 # Python interface since otherwise they won't be found
 # https://github.com/pybind/pybind11/issues/2010 and https://cython.readthedocs.io/en/latest/src/tutorial/appendix.html
