@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "polyhedralGravity/model/KokkosSession.h"
+#include "polyhedralGravity/util/KokkosSession.h"
 #include "polyhedralGravity/model/GravityEvaluable.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
@@ -95,11 +95,12 @@ protected:
  */
 TEST_F(GravityModelBackendTest, CpuParallelMatchesCpuSerial) {
     using namespace polyhedralGravity;
-    const GravityEvaluable evaluable{_cube};
+    const GravityEvaluable serialEvaluable{_cube, ComputeBackend::CPU_SERIAL};
+    const GravityEvaluable parallelEvaluable{_cube, ComputeBackend::CPU_PARALLEL};
 
     for (const auto &computationPoint: _computationPoints) {
-        const auto serial = std::get<GravityModelResult>(evaluable(computationPoint, ComputeBackend::CPU_SERIAL));
-        const auto parallel = std::get<GravityModelResult>(evaluable(computationPoint, ComputeBackend::CPU_PARALLEL));
+        const auto serial = std::get<GravityModelResult>(serialEvaluable(computationPoint));
+        const auto parallel = std::get<GravityModelResult>(parallelEvaluable(computationPoint));
         expectResultsNear(parallel, serial, 1e-13,
                           "between CPU_SERIAL and CPU_PARALLEL at the computation point [" +
                                   std::to_string(computationPoint[0]) + ", " + std::to_string(computationPoint[1]) +
@@ -114,27 +115,27 @@ TEST_F(GravityModelBackendTest, CpuParallelMatchesCpuSerial) {
 TEST_F(GravityModelBackendTest, GpuParallelMatchesCpu) {
     using namespace polyhedralGravity;
     SKIP_WITHOUT_GPU()
-    const GravityEvaluable evaluable{_cube};
+    const GravityEvaluable hostEvaluable{_cube, ComputeBackend::CPU_PARALLEL};
+    const GravityEvaluable deviceEvaluable{_cube, ComputeBackend::GPU_PARALLEL};
 
     for (const auto &computationPoint: _computationPoints) {
-        const auto host = std::get<GravityModelResult>(evaluable(computationPoint, ComputeBackend::CPU_PARALLEL));
-        const auto device = std::get<GravityModelResult>(evaluable(computationPoint, ComputeBackend::GPU_PARALLEL));
+        const auto host = std::get<GravityModelResult>(hostEvaluable(computationPoint));
+        const auto device = std::get<GravityModelResult>(deviceEvaluable(computationPoint));
         expectResultsNear(device, host, 1e-10, "between CPU_PARALLEL and GPU_PARALLEL");
     }
 }
 
 /**
  * Requesting the GPU on a build without a GPU backend must fail loudly instead of silently computing
- * somewhere else.
+ * somewhere else. Since the backend is chosen up front, that failure happens while constructing the
+ * evaluable and not only once it is called.
  */
 TEST_F(GravityModelBackendTest, GpuParallelThrowsWithoutGpuBackend) {
     using namespace polyhedralGravity;
     if (kokkos::GPU_AVAILABLE) {
         GTEST_SKIP() << "This build has a GPU backend, so requesting it must not throw";
     }
-    const GravityEvaluable evaluable{_cube};
-    EXPECT_THROW(std::ignore = evaluable(Array3{0.0, 0.0, 0.0}, ComputeBackend::GPU_PARALLEL), std::runtime_error);
-    EXPECT_THROW(std::ignore = evaluable(_computationPoints, ComputeBackend::GPU_PARALLEL), std::runtime_error);
+    EXPECT_THROW((GravityEvaluable{_cube, ComputeBackend::GPU_PARALLEL}), std::runtime_error);
     EXPECT_THROW(std::ignore = GravityModel::evaluate(_cube, Array3{0.0, 0.0, 0.0}, ComputeBackend::GPU_PARALLEL),
                  std::runtime_error);
 }
@@ -145,8 +146,8 @@ TEST_F(GravityModelBackendTest, GpuParallelThrowsWithoutGpuBackend) {
  */
 TEST_F(GravityModelBackendTest, Float32ApproximatesFloat64) {
     using namespace polyhedralGravity;
-    const GravityEvaluable float64{_cube, ComputePrecision::FLOAT64};
-    const GravityEvaluable float32{_cube, ComputePrecision::FLOAT32};
+    const GravityEvaluable float64{_cube, ComputeBackend::CPU_PARALLEL, ComputePrecision::FLOAT64};
+    const GravityEvaluable float32{_cube, ComputeBackend::CPU_PARALLEL, ComputePrecision::FLOAT32};
     ASSERT_EQ(float32.getComputePrecision(), ComputePrecision::FLOAT32);
     ASSERT_EQ(float64.getComputePrecision(), ComputePrecision::FLOAT64);
 
@@ -163,13 +164,13 @@ TEST_F(GravityModelBackendTest, Float32ApproximatesFloat64) {
  */
 TEST_F(GravityModelBackendTest, MultiPointMatchesSinglePoint) {
     using namespace polyhedralGravity;
-    const GravityEvaluable evaluable{_cube};
-
     for (const auto backend: {ComputeBackend::CPU_SERIAL, ComputeBackend::CPU_PARALLEL}) {
-        const auto actual = std::get<std::vector<GravityModelResult>>(evaluable(_computationPoints, backend));
+        const GravityEvaluable evaluable{_cube, backend};
+        ASSERT_EQ(evaluable.getComputeBackend(), backend);
+        const auto actual = std::get<std::vector<GravityModelResult>>(evaluable(_computationPoints));
         ASSERT_EQ(actual.size(), _computationPoints.size());
         for (size_t index = 0; index < _computationPoints.size(); ++index) {
-            const auto expected = std::get<GravityModelResult>(evaluable(_computationPoints[index], backend));
+            const auto expected = std::get<GravityModelResult>(evaluable(_computationPoints[index]));
             expectResultsNear(actual[index], expected, 1e-13, "between the multi and the single point evaluation");
         }
     }
@@ -183,7 +184,8 @@ TEST_F(GravityModelBackendTest, RestoredFromStateMatchesOriginal) {
     using namespace polyhedralGravity;
     const GravityEvaluable original{_cube};
     const auto &[polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals] = original.getState();
-    const GravityEvaluable restored{polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals};
+    const GravityEvaluable restored{polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals,
+                                    original.getComputeBackend(), original.getComputePrecision()};
 
     for (const auto &computationPoint: _computationPoints) {
         const auto expected = std::get<GravityModelResult>(original(computationPoint));
@@ -197,10 +199,10 @@ TEST_F(GravityModelBackendTest, RestoredFromStateMatchesOriginal) {
  */
 TEST_F(GravityModelBackendTest, FreeFunctionMatchesEvaluable) {
     using namespace polyhedralGravity;
-    const GravityEvaluable evaluable{_cube};
+    const GravityEvaluable evaluable{_cube, ComputeBackend::CPU_SERIAL};
 
     for (const auto &computationPoint: _computationPoints) {
-        const auto expected = std::get<GravityModelResult>(evaluable(computationPoint, ComputeBackend::CPU_SERIAL));
+        const auto expected = std::get<GravityModelResult>(evaluable(computationPoint));
         const auto actual = GravityModel::evaluate(_cube, computationPoint, ComputeBackend::CPU_SERIAL);
         expectResultsNear(actual, expected, 1e-15, "between GravityModel::evaluate and GravityEvaluable");
     }

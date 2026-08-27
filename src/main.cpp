@@ -1,6 +1,6 @@
 #include "polyhedralGravity/Info.h"
 #include "polyhedralGravity/input/ConfigSource.h"
-#include "polyhedralGravity/model/KokkosSession.h"
+#include "polyhedralGravity/util/KokkosSession.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"

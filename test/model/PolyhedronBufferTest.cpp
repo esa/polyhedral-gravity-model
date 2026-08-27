@@ -6,8 +6,7 @@
 #include <vector>
 
 #include "polyhedralGravity/model/GravityModel.h"
-#include "polyhedralGravity/model/KokkosSession.h"
-#include "polyhedralGravity/model/PolyhedralMesh.h"
+#include "polyhedralGravity/util/KokkosSession.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
 

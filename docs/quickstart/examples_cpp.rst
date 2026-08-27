@@ -166,12 +166,17 @@ defined from within source code for a specific point and density.
         std::vector<std::array<double, 3>> points = ...
 
         // Instantiation of the GravityEvaluable object
-        // It optionally takes the ComputePrecision as a second argument (default: FLOAT64)
+        // It optionally takes the ComputeBackend (default: CPU_PARALLEL) and the
+        // ComputePrecision (default: FLOAT64). Both are fixed here rather than per call, so that
+        // the cached properties stay in the memory of that backend for the evaluable's lifetime
         GravityEvaluable evaluable{polyhedron};
 
         // From now, we can evaluate the gravity model for any point with
         const auto[pot, acc, tensor] = std::get<GravityModelResult>(evaluable(point));
         // or for multiple points with
         const auto results = std::get<std::vector<GravityModelResult>>(evaluable(points));
-        // and we can also choose the compute backend like for the free function
-        const auto onTheGpu = std::get<GravityModelResult>(evaluable(point, ComputeBackend::GPU_PARALLEL));
+
+        // Evaluating on another backend means another GravityEvaluable, which then keeps its
+        // cached properties in that backend's memory
+        GravityEvaluable onTheGpu{polyhedron, ComputeBackend::GPU_PARALLEL};
+        const auto deviceResult = std::get<GravityModelResult>(onTheGpu(point));

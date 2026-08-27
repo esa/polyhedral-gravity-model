@@ -216,17 +216,18 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
             integrity_check=PolyhedronIntegrity.HEAL,
         )
 
-        # Create the evaluable object
-        evaluable = GravityEvaluable(polyhedron, density)
+        # Create the evaluable object; the compute backend is fixed here, not per call,
+        # so that the cached properties stay in that backend's memory
+        evaluable = GravityEvaluable(polyhedron, backend=ComputeBackend.CPU_PARALLEL)
 
         for point in computation_points:
             # Evaluate the gravity model for single points (3)-array-like
-            potential, acceleration, tensor = evaluable(point, backend=ComputeBackend.CPU_PARALLEL)
+            potential, acceleration, tensor = evaluable(point)
 
         # Due to the GravityEvaluable's caching the above for-loop is nearly
         # as fast as the following (find the runtime details below), which returns
         # a list of triplets comprising potential, acceleration, tensor
-        results = evaluable(computation_points, backend=ComputeBackend.CPU_PARALLEL)
+        results = evaluable(computation_points)
 
 
 Handing over the mesh without copying it

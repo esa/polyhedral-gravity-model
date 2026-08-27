@@ -65,11 +65,15 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
     logger.info(f"Time taken:    {delta:.3f} microseconds per point")
     results[f"GravityEvaluable \n ${sample_size} \\times 1$ point"] = delta
 
-    evaluable = GravityEvaluable(polyhedron, precision=ComputePrecision.FLOAT32)
+    evaluable = GravityEvaluable(
+        polyhedron,
+        precision=ComputePrecision.FLOAT32,
+        backend=ComputeBackend.GPU_PARALLEL,
+#       backend=backend=ComputeBackend.CPU_PARALLEL,
+    )
 
     start_time = timeit.default_timer()
-    # evaluable(computation_points, backend=ComputeBackend.CPU_PARALLEL)
-    evaluable(computation_points, backend=ComputeBackend.GPU_PARALLEL)
+    evaluable(computation_points)
     end_time = timeit.default_timer()
 
     total_time = end_time - start_time

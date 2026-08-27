@@ -116,11 +116,8 @@ def test_polyhedral_gravity_evaluable(
         normal_orientation=normal_orientation,
         integrity_check=PolyhedronIntegrity.VERIFY,
     )
-    evaluable = GravityEvaluable(polyhedron=polyhedron)
-    sol = evaluable(
-        computation_points=points,
-        backend=ComputeBackend.CPU_PARALLEL,
-    )
+    evaluable = GravityEvaluable(polyhedron=polyhedron, backend=ComputeBackend.CPU_PARALLEL)
+    sol = evaluable(computation_points=points)
     potential = np.array([result[0] for result in sol])
     acceleration = np.array([result[1] for result in sol])
     np.testing.assert_array_almost_equal(potential, expected_potential)
@@ -155,7 +152,7 @@ def test_polyhedral_evaluable_pickle(
         normal_orientation=normal_orientation,
         integrity_check=PolyhedronIntegrity.DISABLE,
     )
-    initial_evaluable = GravityEvaluable(polyhedron=polyhedron)
+    initial_evaluable = GravityEvaluable(polyhedron=polyhedron, backend=ComputeBackend.CPU_PARALLEL)
     pickle_output = tmp_path.joinpath("evaluable.pk")
     with open(pickle_output, "wb") as f:
         pickle.dump(initial_evaluable, f, pickle.HIGHEST_PROTOCOL)
@@ -163,10 +160,7 @@ def test_polyhedral_evaluable_pickle(
     with open(pickle_output, "rb") as f:
         read_evaluable = pickle.load(f)
 
-    sol = read_evaluable(
-        computation_points=points,
-        backend=ComputeBackend.CPU_PARALLEL,
-    )
+    sol = read_evaluable(computation_points=points)
     potential = np.array([result[0] for result in sol])
     acceleration = np.array([result[1] for result in sol])
     np.testing.assert_array_almost_equal(potential, expected_potential)

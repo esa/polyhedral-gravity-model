@@ -88,9 +88,11 @@ def test_module_reports_its_execution_spaces():
 @pytest.mark.parametrize("backend", CPU_BACKENDS)
 def test_cpu_backends_agree(backend):
     """Every CPU backend runs the identical kernel, so they must agree with each other."""
-    evaluable = GravityEvaluable(polyhedron=_cube())
-    reference = _unpack(evaluable(computation_points=COMPUTATION_POINTS, backend=ComputeBackend.CPU_SERIAL))
-    actual = _unpack(evaluable(computation_points=COMPUTATION_POINTS, backend=backend))
+    serial = GravityEvaluable(polyhedron=_cube(), backend=ComputeBackend.CPU_SERIAL)
+    evaluable = GravityEvaluable(polyhedron=_cube(), backend=backend)
+    assert evaluable.backend == backend
+    reference = _unpack(serial(computation_points=COMPUTATION_POINTS))
+    actual = _unpack(evaluable(computation_points=COMPUTATION_POINTS))
     for actual_values, expected_values in zip(actual, reference):
         np.testing.assert_allclose(actual_values, expected_values, rtol=0.0, atol=1e-13)
 
@@ -98,19 +100,22 @@ def test_cpu_backends_agree(backend):
 @pytest.mark.skipif(not gpu_available(), reason="This build has no GPU backend")
 def test_gpu_backend_agrees_with_cpu():
     """The GPU runs the identical kernel and may only differ by the reduction's reassociation."""
-    evaluable = GravityEvaluable(polyhedron=_cube())
-    reference = _unpack(evaluable(computation_points=COMPUTATION_POINTS, backend=ComputeBackend.CPU_PARALLEL))
-    actual = _unpack(evaluable(computation_points=COMPUTATION_POINTS, backend=ComputeBackend.GPU_PARALLEL))
+    host = GravityEvaluable(polyhedron=_cube(), backend=ComputeBackend.CPU_PARALLEL)
+    device = GravityEvaluable(polyhedron=_cube(), backend=ComputeBackend.GPU_PARALLEL)
+    reference = _unpack(host(computation_points=COMPUTATION_POINTS))
+    actual = _unpack(device(computation_points=COMPUTATION_POINTS))
     for actual_values, expected_values in zip(actual, reference):
         np.testing.assert_allclose(actual_values, expected_values, rtol=0.0, atol=1e-10)
 
 
 @pytest.mark.skipif(gpu_available(), reason="This build has a GPU backend")
 def test_gpu_backend_raises_without_gpu():
-    """Requesting the GPU without a GPU backend must fail loudly, not silently compute elsewhere."""
-    evaluable = GravityEvaluable(polyhedron=_cube())
+    """Requesting the GPU without a GPU backend must fail loudly, not silently compute elsewhere.
+
+    The backend is chosen up front, so this already fails while the evaluable is being created.
+    """
     with pytest.raises(RuntimeError):
-        evaluable(computation_points=[0.0, 0.0, 0.0], backend=ComputeBackend.GPU_PARALLEL)
+        GravityEvaluable(polyhedron=_cube(), backend=ComputeBackend.GPU_PARALLEL)
     with pytest.raises(RuntimeError):
         evaluate(
             polyhedron=_cube(),
@@ -123,6 +128,7 @@ def test_float32_approximates_float64():
     """Single precision only reproduces a few significant digits, but must stay in the right ballpark."""
     float64 = GravityEvaluable(polyhedron=_cube(), precision=ComputePrecision.FLOAT64)
     float32 = GravityEvaluable(polyhedron=_cube(), precision=ComputePrecision.FLOAT32)
+    assert float32.backend == ComputeBackend.CPU_PARALLEL
     assert float64.precision == ComputePrecision.FLOAT64
     assert float32.precision == ComputePrecision.FLOAT32
 
@@ -135,8 +141,14 @@ def test_float32_approximates_float64():
 def test_defaults_are_cpu_parallel_and_float64():
     """The defaults must reproduce what an explicit CPU_PARALLEL/ FLOAT64 evaluation computes."""
     evaluable = GravityEvaluable(polyhedron=_cube())
+    assert evaluable.backend == ComputeBackend.CPU_PARALLEL
     assert evaluable.precision == ComputePrecision.FLOAT64
-    expected = _unpack(evaluable(computation_points=COMPUTATION_POINTS, backend=ComputeBackend.CPU_PARALLEL))
+    explicit = GravityEvaluable(
+        polyhedron=_cube(),
+        backend=ComputeBackend.CPU_PARALLEL,
+        precision=ComputePrecision.FLOAT64,
+    )
+    expected = _unpack(explicit(computation_points=COMPUTATION_POINTS))
     actual = _unpack(evaluable(computation_points=COMPUTATION_POINTS))
     for actual_values, expected_values in zip(actual, expected):
         np.testing.assert_array_equal(actual_values, expected_values)
@@ -155,8 +167,8 @@ def test_single_point_matches_multi_point():
 
 def test_free_function_matches_evaluable():
     """The free evaluate function is a thin wrapper and must not change the result."""
-    evaluable = GravityEvaluable(polyhedron=_cube())
-    expected = _unpack(evaluable(computation_points=COMPUTATION_POINTS, backend=ComputeBackend.CPU_SERIAL))
+    evaluable = GravityEvaluable(polyhedron=_cube(), backend=ComputeBackend.CPU_SERIAL)
+    expected = _unpack(evaluable(computation_points=COMPUTATION_POINTS))
     actual = _unpack(evaluate(
         polyhedron=_cube(),
         computation_points=COMPUTATION_POINTS,
@@ -168,14 +180,19 @@ def test_free_function_matches_evaluable():
 
 
 def test_pickle_round_trip_keeps_precision(tmp_path):
-    """Pickling a GravityEvaluable must preserve the precision and the computed values."""
-    original = GravityEvaluable(polyhedron=_cube(), precision=ComputePrecision.FLOAT32)
+    """Pickling a GravityEvaluable must preserve the backend, the precision, and the computed values."""
+    original = GravityEvaluable(
+        polyhedron=_cube(),
+        backend=ComputeBackend.CPU_SERIAL,
+        precision=ComputePrecision.FLOAT32,
+    )
     pickle_output = tmp_path / "evaluable.pk"
     with open(pickle_output, "wb") as file:
         pickle.dump(original, file, pickle.HIGHEST_PROTOCOL)
     with open(pickle_output, "rb") as file:
         restored = pickle.load(file)
 
+    assert restored.backend == ComputeBackend.CPU_SERIAL
     assert restored.precision == ComputePrecision.FLOAT32
     expected = _unpack(original(computation_points=COMPUTATION_POINTS))
     actual = _unpack(restored(computation_points=COMPUTATION_POINTS))

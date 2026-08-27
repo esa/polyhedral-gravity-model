@@ -1,4 +1,4 @@
-#include "KokkosSession.h"
+#include "polyhedralGravity/util/KokkosSession.h"
 
 #include <sstream>
 #include <stdexcept>

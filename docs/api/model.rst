@@ -80,17 +80,20 @@ PyTorch, or JAX, no matter whether that buffer lives on the host or on an accele
 Kokkos Backend
 --------------
 
-The namespace :cpp:any:`polyhedralGravity::kokkos` contains everything which directly touches Kokkos:
-the runtime session, the device-resident polyhedron, and the kernels. A user of this library never has
-to interact with it, since the Kokkos runtime is initialized on demand and finalized when the process
-exits.
+The namespace :cpp:any:`polyhedralGravity::kokkos` contains the standalone Kokkos parts of this library:
+the runtime session (``util/KokkosSession.h``) and the mesh views (``model/PolyhedralMeshView.h``). The
+kernels themselves live next to the model code they implement, i.e. the per-face kernel in
+``model/GravityModelDetail.h`` and the kernel launches in ``model/GravityEvaluable.cpp``. A user of this
+library never has to interact with any of it, since the Kokkos runtime is initialized on demand and
+finalized when the process exits.
 
 The mesh views come as a small hierarchy: a :cpp:struct:`polyhedralGravity::kokkos::PolyhedralMeshView`
 holds the elementary properties of a polyhedron, i.e. its vertices and faces, and belongs to the
 :cpp:class:`polyhedralGravity::Polyhedron`. A
 :cpp:struct:`polyhedralGravity::kokkos::GravitationalMeshView` extends it by the caches of Tsoulis'
 algorithm, which only make sense inside a :cpp:class:`polyhedralGravity::GravityEvaluable` and are
-therefore allocated there.
+therefore allocated there — in the memory space of the compute backend that
+:cpp:class:`polyhedralGravity::GravityEvaluable` was created for, and only there.
 
 .. doxygennamespace:: polyhedralGravity::kokkos
 

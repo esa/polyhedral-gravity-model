@@ -151,11 +151,11 @@ evaluations. This is especially useful if you want to compute the gravity
 for multiple computation points but don't know the "future points" in advance.
 
 ```python
-evaluable = GravityEvaluable(polyhedron=cube_polyhedron) # stores intermediate computation steps
-potential, acceleration, tensor = evaluable(
-  computation_points=computation_point,
+evaluable = GravityEvaluable(              # stores intermediate computation steps
+  polyhedron=cube_polyhedron,
   backend=ComputeBackend.CPU_PARALLEL,
 )
+potential, acceleration, tensor = evaluable(computation_points=computation_point)
 # Any future evaluable call after this one will be faster
 ```
 
@@ -169,6 +169,11 @@ The evaluation is implemented once with [Kokkos](https://kokkos.org/) and runs o
 | `ComputeBackend.CPU_SERIAL`        | `Serial`, i.e. one CPU thread                       |
 | `ComputeBackend.CPU_PARALLEL`      | `OpenMP`, i.e. all CPU threads (**default**)        |
 | `ComputeBackend.GPU_PARALLEL`      | `Cuda` (NVIDIA), `HIP` (AMD), or `SYCL` (Intel)     |
+
+A `GravityEvaluable` fixes its backend when it is created, not per call. That is what makes its caching
+worthwhile: the mesh and the cached properties are allocated once in the memory of the chosen backend and
+stay there, so a `GravityEvaluable` created for `GPU_PARALLEL` never puts them into host memory at all.
+Create one `GravityEvaluable` per backend to compare them.
 
 The backends this build actually offers are listed in `polyhedral_gravity.__parallelization__`.
 Requesting `GPU_PARALLEL` on a build without a GPU backend raises a `RuntimeError` rather than
@@ -284,13 +289,14 @@ const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point, backend
 
 ```cpp
 // Instantiation of the GravityEvaluable object
-// It optionally takes the ComputePrecision as a second argument (default: FLOAT64)
-GravityEvaluable evaluable{polyhedron};
+// The ComputeBackend and, optionally, the ComputePrecision are fixed here (default: FLOAT64),
+// so that the cached properties stay in that backend's memory for the evaluable's lifetime
+GravityEvaluable evaluable{polyhedron, backend};
 
 // From now, we can evaluate the gravity model for any point with
-const auto[potential, acceleration, tensor] = std::get<GravityModelResult>(evaluable(point, backend));
+const auto[potential, acceleration, tensor] = std::get<GravityModelResult>(evaluable(point));
 // or for multiple points with
-const auto results = std::get<std::vector<GravityModelResult>>(evaluable(points, backend));
+const auto results = std::get<std::vector<GravityModelResult>>(evaluable(points));
 ```
 
 Similarly to Python, the C++ implementation also provides mesh checking capabilities.

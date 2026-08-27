@@ -4,8 +4,8 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "polyhedralGravity/model/KokkosSession.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
+#include "polyhedralGravity/util/KokkosSession.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 
 namespace polyhedralGravity::kokkos {
@@ -113,7 +113,7 @@ namespace polyhedralGravity::kokkos {
      * The polyhedral mesh extended by everything Tsoulis' algorithm caches per face.
      *
      * The three caches only depend on the polyhedron and not on the computation point, so they are filled
-     * once by {@link KokkosEvaluation}'s initialization kernel and reused for every subsequent evaluation.
+     * once by the initialization kernel of a {@link GravityEvaluable} and reused for every subsequent evaluation.
      * In contrast to the mesh itself they are not an elementary property of a polyhedron, which is why they
      * only exist inside a {@link GravityEvaluable} and not inside a {@link Polyhedron}.
      *
@@ -226,41 +226,6 @@ namespace polyhedralGravity::kokkos {
                     view(faceIndex, segment, component) = triplet[segment][component];
                 }
             }
-        }
-    };
-
-    /**
-     * The raw output of the multi point kernel, i.e. one result per computation point before Tsoulis' prefix
-     * has been applied.
-     *
-     * @tparam FloatType the floating point precision of the evaluation
-     * @tparam MemorySpace the Kokkos memory space the views are allocated in
-     */
-    template<typename FloatType, typename MemorySpace>
-    struct EvaluationResultView {
-        /** The gravitational potential V foreach computation point, of the extents @f$(Q)@f$ */
-        ScalarView<FloatType, MemorySpace> potential;
-        /** The first order derivatives Vx, Vy, Vz foreach computation point, of the extents @f$(Q, 3)@f$ */
-        Vector3View<FloatType, MemorySpace> acceleration;
-        /** The second order derivatives foreach computation point, of the extents @f$(Q, 6)@f$ */
-        Vector6View<FloatType, MemorySpace> gradiometricTensor;
-        /** How many faces were numerically critical foreach computation point, of the extents @f$(Q)@f$ */
-        ScalarView<int, MemorySpace> numericallyCriticalFaces;
-
-        /**
-         * Allocates the four views for a given number of computation points.
-         * @param pointCount the number of computation points
-         * @return the uninitialized result views
-         */
-        [[nodiscard]] static EvaluationResultView allocate(const size_t pointCount) {
-            return {ScalarView<FloatType, MemorySpace>{
-                            Kokkos::view_alloc(Kokkos::WithoutInitializing, "polyhedralGravity::potential"), pointCount},
-                    Vector3View<FloatType, MemorySpace>{
-                            Kokkos::view_alloc(Kokkos::WithoutInitializing, "polyhedralGravity::acceleration"), pointCount},
-                    Vector6View<FloatType, MemorySpace>{
-                            Kokkos::view_alloc(Kokkos::WithoutInitializing, "polyhedralGravity::gradiometricTensor"), pointCount},
-                    ScalarView<int, MemorySpace>{
-                            Kokkos::view_alloc(Kokkos::WithoutInitializing, "polyhedralGravity::criticalFaces"), pointCount}};
         }
     };
 
