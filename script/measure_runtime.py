@@ -68,8 +68,8 @@ def run_time_measurements(sample_size: int, mesh_files: list[str]) -> Dict[str, 
     evaluable = GravityEvaluable(
         polyhedron,
         precision=ComputePrecision.FLOAT32,
-        backend=ComputeBackend.GPU_PARALLEL,
-#       backend=backend=ComputeBackend.CPU_PARALLEL,
+        # backend=ComputeBackend.GPU_PARALLEL,
+        backend=ComputeBackend.CPU_PARALLEL,
     )
 
     start_time = timeit.default_timer()
@@ -145,8 +145,11 @@ def main():
     logger.info("##########################################################")
     logger.info("Polyhedral Gravity Model Information:")
     logger.info(f"Version:                 {polyhedral_gravity.__version__}")
+    logger.info(f"Host Compiler:           {polyhedral_gravity.__host_compiler__}")
+    logger.info(f"Device Compiler:         {polyhedral_gravity.__device_compiler__}")
     logger.info(f"Parallelization Backend: {polyhedral_gravity.__parallelization__}")
     logger.info(f"Commit Hash:             {polyhedral_gravity.__commit__}")
+    logger.info(f"Fast Math Level:         {'Yes' if polyhedral_gravity.__fast_math__ else 'No'}")
     logger.info(f"Logging Level:           {polyhedral_gravity.__logging__}")
     logger.info("##########################################################")
     results = run_time_measurements(args.sample_size, args.mesh_files)

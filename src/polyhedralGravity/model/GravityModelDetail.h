@@ -202,6 +202,49 @@ namespace polyhedralGravity::GravityModel::detail {
     }
 
     /**
+     * Computes P' for a given plane p according to equation (22) of Tsoulis paper, from the plane's unit
+     * normal alone.
+     *
+     * This is the same projection as the overload above, but it does not need the Hessian form of the plane.
+     * The Hessian normal @f$(A, B, C)@f$ is @f$|G_{p1} \times G_{p2}|@f$ times the plane unit normal @f$N_p@f$,
+     * and @f$D@f$ is the same positive multiple of the signed plane distance, so the quotients @f$D/A@f$,
+     * @f$D/B@f$, and @f$D/C@f$ which decide the signs of P' below are exactly
+     * @f$ \tilde{h}_p / N_{p,x} @f$ and its siblings. Since @f$N_p@f$ is cached per face, this turns Tsoulis'
+     * steps 1-05 to 1-07 into a single dot product per face and computation point instead of a cross product,
+     * a square root, and a division.
+     *
+     * @param planeUnitNormal the plane unit normal N_p
+     * @param planeDistance the distance from P to the plane h_p, i.e. the magnitude of the signed distance
+     * @param signedPlaneDistance the signed distance of P to the plane, i.e. -(N_p * v_0) with v_0 relative to P
+     * @return P' for this plane
+     */
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION Vector3<FloatType> projectPointOrthogonallyOntoPlane(
+            const Vector3<FloatType> &planeUnitNormal, const FloatType planeDistance,
+            const FloatType signedPlaneDistance) {
+        using util::operator*;
+        //Calculate the projection point by (22) P'_ = N_i / norm(N_i) * h_i
+        Vector3<FloatType> orthogonalProjectionPoint = planeUnitNormal * planeDistance;
+
+        //The intersections of the plane with the axes, again without the minus (see the overload above), so
+        //the conditions for the signs are the reversed ones. Only the sign of each intersection is ever
+        //looked at, and the sign of a quotient is decided by the signs of its two operands, so the three
+        //divisions of the overload above are not carried out at all.
+        for (size_t index = 0; index < 3; ++index) {
+            // Comparison x == 0.0 is ok, since we only want to avoid nan values. A zero numerator or
+            // denominator gives an intersection of zero, which is not negative either way.
+            const bool intersectionIsNegative = signedPlaneDistance != 0.0 && planeUnitNormal[index] != 0.0 &&
+                                                (signedPlaneDistance < 0.0) != (planeUnitNormal[index] < 0.0);
+            if (intersectionIsNegative) {
+                orthogonalProjectionPoint[index] = Kokkos::abs(orthogonalProjectionPoint[index]);
+            } else if (planeUnitNormal[index] > 0) {
+                orthogonalProjectionPoint[index] = static_cast<FloatType>(-1.0) * orthogonalProjectionPoint[index];
+            }
+        }
+        return orthogonalProjectionPoint;
+    }
+
+    /**
      * Computes the segment normal orientations/ directions sigma_pq for a given plane p.
      * If sigma_pq is negative, this denotes that n_pq points to the half-plane containing P'. Nn case
      * sigma_pq is positive, P' resides in the other half-plane and if sigma_pq is zero, then P' lies directly
@@ -237,28 +280,30 @@ namespace polyhedralGravity::GravityModel::detail {
      * @param orthogonalProjectionPointOnPlane the orthogonal projection P' of P on this plane
      * @return P'' for this segment
      * @note If sigma_pq is zero then P'' == P', this is not checked by this method, but has to be assured first
+     *
+     * @note The three equations of (24), (25) and (26) state that P'' lies on the line through the two
+     * endpoints and that P'' - P' is perpendicular to that line, i.e. they say nothing more than that P'' is
+     * the orthogonal projection of P' onto the line. Solving them by Cramer's rule costs four @f$3 \times 3@f$
+     * determinants and three divisions per segment, whereas the foot of the perpendicular
+     * @f$ P'' = v_1 + \frac{(P' - v_1) \cdot G}{G \cdot G} G @f$ with @f$ G = v_2 - v_1 @f$ costs two dot
+     * products and one division. This is the hottest line of the whole model -- it runs three times per face
+     * and computation point -- so the closed form is used instead. It is also the better conditioned of the
+     * two, since it never forms the determinant of a matrix built from two nested cross products.
      */
     template<typename FloatType>
     KOKKOS_INLINE_FUNCTION Vector3<FloatType> projectPointOrthogonallyOntoSegment(
             const Vector3<FloatType> &vertex1, const Vector3<FloatType> &vertex2,
             const Vector3<FloatType> &orthogonalProjectionPointOnPlane) {
         using util::operator-;
-        using util::operator/;
-        using Matrix3 = util::Matrix<FloatType, 3, 3>;
-        //Preparing our the planes/ equations in matrix form
-        const Vector3<FloatType> matrixRow1 = vertex2 - vertex1;
-        const Vector3<FloatType> matrixRow2 = util::cross(vertex1 - orthogonalProjectionPointOnPlane, matrixRow1);
-        const Vector3<FloatType> matrixRow3 = util::cross(matrixRow2, matrixRow1);
-        const Vector3<FloatType> d = {util::dot(matrixRow1, orthogonalProjectionPointOnPlane),
-                                      util::dot(matrixRow2, orthogonalProjectionPointOnPlane),
-                                      util::dot(matrixRow3, vertex1)};
-        const Matrix3 columnMatrix = util::transpose(Matrix3{matrixRow1, matrixRow2, matrixRow3});
-        //Calculation and solving the equations of above
-        const FloatType determinant = util::det(columnMatrix);
-        return Vector3<FloatType>{util::det(Matrix3{d, columnMatrix[1], columnMatrix[2]}),
-                                  util::det(Matrix3{columnMatrix[0], d, columnMatrix[2]}),
-                                  util::det(Matrix3{columnMatrix[0], columnMatrix[1], d})} /
-               determinant;
+        using util::operator+;
+        using util::operator*;
+        //The segment G_pq spanned by the two endpoints, and P' relative to the first of them
+        const Vector3<FloatType> segmentVector = vertex2 - vertex1;
+        const Vector3<FloatType> relativeProjectionPoint = orthogonalProjectionPointOnPlane - vertex1;
+        //How far along the segment the foot of the perpendicular lies, as a fraction of the segment
+        const FloatType relativePosition =
+                util::dot(relativeProjectionPoint, segmentVector) / util::dot(segmentVector, segmentVector);
+        return vertex1 + segmentVector * relativePosition;
     }
 
     /**
@@ -328,6 +373,11 @@ namespace polyhedralGravity::GravityModel::detail {
         using util::operator-;
         std::array<DistanceTemplate<FloatType>, 3> distancesForPlane{};
 
+        //The 3D distance l_pq from P to a vertex is the same for the segment which ends at that vertex and
+        //the one which starts at it, so the three norms are taken once instead of six times
+        const Vector3<FloatType> vertexNorms{util::euclideanNorm(face[0]), util::euclideanNorm(face[1]),
+                                             util::euclideanNorm(face[2])};
+
         for (size_t j = 0; j < 3; ++j) {
             DistanceTemplate<FloatType> distance{};
             //orthogonal projection point on segment P'' for plane p and segment q
@@ -335,8 +385,8 @@ namespace polyhedralGravity::GravityModel::detail {
 
             //Calculate the 3D distances between P (0, 0, 0) and
             // the segment endpoints face[j] and face[(j + 1) % 3])
-            distance.l1 = util::euclideanNorm(face[j]);
-            distance.l2 = util::euclideanNorm(face[(j + 1) % 3]);
+            distance.l1 = vertexNorms[j];
+            distance.l2 = vertexNorms[(j + 1) % 3];
             //Calculate the 1D distances between P'' (every segment has its own) and
             // the segment endpoints face[j] and face[(j + 1) % 3])
             distance.s1 = util::euclideanNorm(orthogonalProjectionPointsOnSegment - face[j]);
@@ -652,15 +702,19 @@ namespace polyhedralGravity::GravityModel::detail {
         const Vector3<FloatType> planeUnitNormal = mesh.getPlaneUnitNormal(faceIndex);
         const Vector3Triplet<FloatType> segmentUnitNormals = mesh.getSegmentUnitNormals(faceIndex);
 
+        //1-04 to 1-07 Step: The plane normal orientation sigma_p, the plane distance h_p, and the position of
+        // P' all follow from projecting the face onto its own plane unit normal, which is already cached. The
+        // Hessian form of the plane is therefore never built here: it would recompute, once per computation
+        // point, a cross product which only depends on the polyhedron.
+        const FloatType planeProjection = util::dot(planeUnitNormal, face[0]);
         //1-04 Step: Compute Plane Normal Orientation sigma_p (direction of N_p in relation to P)
-        const FloatType planeNormalOrientation = computeUnitNormalOfPlaneDirection(planeUnitNormal, face[0]);
-        //1-05 Step: Compute Hessian Normal Plane Representation
-        const HessianPlaneTemplate<FloatType> hessianPlane = computeHessianPlane(face[0], face[1], face[2]);
-        //1-06 Step: Compute distance h_p between P and P'
-        const FloatType planeDistance = distanceBetweenOriginAndPlane(hessianPlane);
+        const auto planeNormalOrientation =
+                static_cast<FloatType>(util::sgn(planeProjection, EPSILON_ZERO<FloatType>));
+        //1-05 to 1-06 Step: Compute distance h_p between P and P'
+        const FloatType planeDistance = Kokkos::abs(planeProjection);
         //1-07 Step: Compute the actual position of P' (projection of P on the plane)
         const Vector3<FloatType> orthogonalProjectionPointOnPlane =
-                projectPointOrthogonallyOntoPlane(planeUnitNormal, planeDistance, hessianPlane);
+                projectPointOrthogonallyOntoPlane(planeUnitNormal, planeDistance, -planeProjection);
         //1-08 Step: Compute the segment normal orientation sigma_pq (direction of n_pq in relation to P')
         const Vector3<FloatType> segmentNormalOrientations =
                 computeUnitNormalOfSegmentsDirections(face, orthogonalProjectionPointOnPlane, segmentUnitNormals);

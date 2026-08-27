@@ -320,6 +320,7 @@ PYBIND11_MODULE(_core, m, py::mod_gil_not_used()) {
     m.attr("__logging__") = POLYHEDRAL_GRAVITY_LOGGING_LEVEL;
     m.attr("__host_compiler__") = POLYHEDRAL_GRAVITY_HOST_COMPILER;
     m.attr("__device_compiler__") = POLYHEDRAL_GRAVITY_DEVICE_COMPILER;
+    m.attr("__fast_math__") = POLYHEDRAL_GRAVITY_FAST_MATH;
 
     py::enum_<NormalOrientation>(m, "NormalOrientation", R"mydelimiter(
         The orientation of the plane unit normals of the polyhedron.

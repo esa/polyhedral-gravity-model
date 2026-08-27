@@ -5,6 +5,7 @@
 #include <vector>
 #include <utility>
 #include "polyhedralGravity/model/GravityModel.h"
+#include "polyhedralGravity/model/GravityModelDetail.h"
 #include "polyhedralGravity/model/Polyhedron.h"
 
 #include "GravityModelVectorUtility.h"
@@ -442,7 +443,17 @@ TEST_F(GravityModelTest, OrthogonalProjectionPointsOnSegment) {
                     expectedOrthogonalProjectionPointsOnPlane,
                     expectedSegmentNormalOrientations);
 
-    ASSERT_THAT(actualOrthogonalProjectionPointsOnSegment, ContainerEq(expectedOrthogonalProjectionPointsOnSegment));
+    // P'' is the foot of the perpendicular from P' onto the segment, which the implementation computes in
+    // closed form. The expected values below are the exact ones of this cube, so a comparison to the last bit
+    // would only pin down which of the equally valid roundings the arithmetic happens to produce.
+    ASSERT_EQ(actualOrthogonalProjectionPointsOnSegment.size(), expectedOrthogonalProjectionPointsOnSegment.size());
+    for (size_t i = 0; i < actualOrthogonalProjectionPointsOnSegment.size(); ++i) {
+        for (size_t j = 0; j < actualOrthogonalProjectionPointsOnSegment[i].size(); ++j) {
+            EXPECT_THAT(actualOrthogonalProjectionPointsOnSegment[i][j],
+                        Pointwise(DoubleNear(LOCAL_TEST_EPSILON), expectedOrthogonalProjectionPointsOnSegment[i][j]))
+                    << "The point P'' differed for plane " << i << " and segment " << j;
+        }
+    }
 }
 
 TEST_F(GravityModelTest, SegmentDistances) {
@@ -516,5 +527,35 @@ TEST_F(GravityModelTest, SingularityTerms) {
         EXPECT_THAT(actualSingularityTerms[i].second,
                     Pointwise(DoubleNear(LOCAL_TEST_EPSILON), expectedSingularityTerms[i].second))
                             << "The sing B value differed for singularity term (i) = (" << i << ')';
+    }
+}
+
+/**
+ * The kernel does not build the Hessian form of a plane. It derives the plane distance h_p and the position
+ * of P' from the cached plane unit normal instead, which costs one dot product rather than a cross product,
+ * a square root, and three divisions. This pins that shortcut to the Hessian based formulation it replaced:
+ * the two must agree for every plane of Tsoulis' example, otherwise the evaluation and the step by step
+ * functions tested above would silently drift apart.
+ */
+TEST_F(GravityModelTest, PlaneProjectionFromUnitNormalMatchesHessianForm) {
+    using namespace testing;
+    using namespace polyhedralGravity;
+    using namespace polyhedralGravity::GravityModel::detail;
+
+    for (size_t i = 0; i < expectedHessianPlanes.size(); ++i) {
+        const Array3 &planeUnitNormal = expectedPlaneUnitNormals[i];
+        // The face's first vertex, relative to the computation point, is all the shortcut needs
+        const Array3 firstVertex = _polyhedron.getResolvedFace(i, _computationPoint)[0];
+        const double planeProjection = util::dot(planeUnitNormal, firstVertex);
+
+        EXPECT_NEAR(std::abs(planeProjection), distanceBetweenOriginAndPlane(expectedHessianPlanes[i]),
+                    LOCAL_TEST_EPSILON)
+                << "The plane distance h_p differed for plane " << i;
+        EXPECT_NEAR(static_cast<double>(util::sgn(planeProjection, EPSILON_ZERO<double>)),
+                    expectedPlaneNormalOrientations[i], LOCAL_TEST_EPSILON)
+                << "The plane normal orientation sigma_p differed for plane " << i;
+        EXPECT_THAT(projectPointOrthogonallyOntoPlane(planeUnitNormal, std::abs(planeProjection), -planeProjection),
+                    Pointwise(DoubleNear(LOCAL_TEST_EPSILON), expectedOrthogonalProjectionPointsOnPlane[i]))
+                << "The projection point P' differed for plane " << i;
     }
 }

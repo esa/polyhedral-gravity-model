@@ -19,6 +19,8 @@ CMAKE_OPTIONS = {
     "POLYHEDRAL_GRAVITY_DEVICE_BACKEND": "AUTO",
     # Default value (INFO=2)
     "POLYHEDRAL_GRAVITY_LOGGING_LEVEL": "INFO",
+    # Faster, less accurate FLOAT32 arithmetic (FLOAT64 is bit-identical either way)
+    "POLYHEDRAL_GRAVITY_FAST_MATH": "OFF",
     # Not required for the python interface (--> OFF)
     "BUILD_POLYHEDRAL_GRAVITY_DOCS": "OFF",
     # Not required for the python interface (--> OFF)

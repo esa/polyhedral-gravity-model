@@ -42,6 +42,19 @@ if (BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE)
             )
 endif()
 
+###########################################
+# Building the Polyhedral Benchmark Driver
+###########################################
+if (BUILD_POLYHEDRAL_GRAVITY_BENCHMARK)
+    message(STATUS "Building the Polyhedral Gravity Benchmark Driver")
+
+    add_executable(${PROJECT_NAME}_benchmark ${PROJECT_SOURCE_DIR}/script/benchmark.cpp)
+    target_link_libraries(${PROJECT_NAME}_benchmark PUBLIC ${PROJECT_NAME}_lib)
+    set_target_properties(${PROJECT_NAME}_benchmark PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
+            )
+endif ()
+
 ##########################################
 # Building the Polyhedral Python Interface
 ##########################################

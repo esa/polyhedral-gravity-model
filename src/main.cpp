@@ -20,6 +20,7 @@ int main(const int argc, char *argv[]) {
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Logging Level:                 {}", POLYHEDRAL_GRAVITY_LOGGING_LEVEL);
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Host Compiler:                 {}", POLYHEDRAL_GRAVITY_HOST_COMPILER);
     POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Device Compiler:               {}", POLYHEDRAL_GRAVITY_DEVICE_COMPILER);
+    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Fast Math:                     {}", POLYHEDRAL_GRAVITY_FAST_MATH);
     POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
 
     if (argc != 2) {

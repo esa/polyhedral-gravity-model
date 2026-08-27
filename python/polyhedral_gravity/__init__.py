@@ -6,4 +6,5 @@ from ._core import (
     __logging__,
     __host_compiler__,
     __device_compiler__,
+    __fast_math__,
 )

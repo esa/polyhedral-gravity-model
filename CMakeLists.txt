@@ -37,6 +37,8 @@ cmake_dependent_option(BUILD_POLYHEDRAL_GRAVITY_LIBRARY "Builds the library (Def
         "NOT BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE AND NOT BUILD_POLYHEDRAL_GRAVITY_TESTS" ON)
 # Option to build the python interface
 option(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE "Set this to on if the python interface should be built (Default: ON)" ON)
+# Option to build the benchmark driver used for profiling the kernels
+option(BUILD_POLYHEDRAL_GRAVITY_BENCHMARK "Set to on if the benchmark driver should be built (Default: OFF)" OFF)
 # Option to build tests or not
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
 
@@ -60,6 +62,8 @@ include(git)
 # Kokkos determines which compilers translate the host and the device code, which the version.cmake below
 # embeds into Info.h, so it has to be set up first
 include(kokkos)
+# Adds the fast math flag, if requested, and defines what version.cmake embeds into Info.h
+include(fast_math)
 include(version.cmake)
 
 message(STATUS "#################################################################")
@@ -68,6 +72,7 @@ message(STATUS "Polyhedral Gravity Commit Hash      ${POLYHEDRAL_GRAVITY_COMMIT_
 message(STATUS "Polyhedral Gravity Logging Level    ${POLYHEDRAL_GRAVITY_LOGGING_LEVEL}")
 message(STATUS "Polyhedral Gravity Host Compiler    ${POLYHEDRAL_GRAVITY_HOST_COMPILER}")
 message(STATUS "Polyhedral Gravity Device Compiler  ${POLYHEDRAL_GRAVITY_DEVICE_COMPILER}")
+message(STATUS "Polyhedral Gravity Fast Math        ${POLYHEDRAL_GRAVITY_FAST_MATH}")
 message(STATUS "#################################################################")
 message(STATUS "Polyhedral Gravity Documentation    ${BUILD_POLYHEDRAL_GRAVITY_DOCS}")
 message(STATUS "Polyhedral Gravity Library          ${BUILD_POLYHEDRAL_GRAVITY_LIBRARY}")

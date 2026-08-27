@@ -41,4 +41,14 @@ namespace polyhedralGravity {
      */
     constexpr std::string_view POLYHEDRAL_GRAVITY_DEVICE_COMPILER = "@POLYHEDRAL_GRAVITY_DEVICE_COMPILER@";
 
+    /**
+     * Whether the library was compiled with fast, less accurate floating point arithmetic, i.e. with the
+     * CMake option @code POLYHEDRAL_GRAVITY_FAST_MATH @endcode.
+     *
+     * This only ever concerns {@link ComputePrecision::FLOAT32}: the compilers' fast math flags have no fast
+     * path for double precision, so {@link ComputePrecision::FLOAT64} is bit-identical either way.
+     * The value is set by the CMake configuration.
+     */
+    constexpr bool POLYHEDRAL_GRAVITY_FAST_MATH = @POLYHEDRAL_GRAVITY_FAST_MATH_LITERAL@;
+
 }// namespace polyhedralGravity
