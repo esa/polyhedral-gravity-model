@@ -222,24 +222,25 @@ namespace polyhedralGravity::GravityModel::detail {
     KOKKOS_INLINE_FUNCTION Vector3<FloatType> projectPointOrthogonallyOntoPlane(
             const Vector3<FloatType> &planeUnitNormal, const FloatType planeDistance,
             const FloatType signedPlaneDistance) {
-        using util::operator*;
         //Calculate the projection point by (22) P'_ = N_i / norm(N_i) * h_i
-        Vector3<FloatType> orthogonalProjectionPoint = planeUnitNormal * planeDistance;
+        Vector3<FloatType> orthogonalProjectionPoint{};
 
-        //The intersections of the plane with the axes, again without the minus (see the overload above), so
-        //the conditions for the signs are the reversed ones. Only the sign of each intersection is ever
-        //looked at, and the sign of a quotient is decided by the signs of its two operands, so the three
-        //divisions of the overload above are not carried out at all.
+        /*
+         * Each coordinate of P' is N_p times h_p up to its sign, and h_p is a magnitude, so every branch of
+         * the overload above ends at the same number |N_p| * h_p and differs only in the sign it gives it:
+         * a negative intersection makes the coordinate positive, and both remaining cases make it negative
+         * (a positive component is negated, a non-positive one is already non-positive). So the case
+         * distinction is a choice of sign and needs no control flow.
+         *
+         * Which sign is decided by the intersection D/N_p of the plane with that axis, taken without the
+         * minus as above, so the condition is the reversed one. A quotient is negative exactly when its
+         * two operands have strictly opposite signs, which is what the product below tests -- a zero on
+         * either side gives a zero product, and a zero intersection is not negative either.
+         */
         for (size_t index = 0; index < 3; ++index) {
-            // Comparison x == 0.0 is ok, since we only want to avoid nan values. A zero numerator or
-            // denominator gives an intersection of zero, which is not negative either way.
-            const bool intersectionIsNegative = signedPlaneDistance != 0.0 && planeUnitNormal[index] != 0.0 &&
-                                                (signedPlaneDistance < 0.0) != (planeUnitNormal[index] < 0.0);
-            if (intersectionIsNegative) {
-                orthogonalProjectionPoint[index] = Kokkos::abs(orthogonalProjectionPoint[index]);
-            } else if (planeUnitNormal[index] > 0) {
-                orthogonalProjectionPoint[index] = static_cast<FloatType>(-1.0) * orthogonalProjectionPoint[index];
-            }
+            const FloatType magnitude = Kokkos::abs(planeUnitNormal[index]) * planeDistance;
+            orthogonalProjectionPoint[index] =
+                    signedPlaneDistance * planeUnitNormal[index] < 0.0 ? magnitude : -magnitude;
         }
         return orthogonalProjectionPoint;
     }
@@ -356,6 +357,62 @@ namespace polyhedralGravity::GravityModel::detail {
     }
 
     /**
+     * Assigns the signs of Tsoulis (2021) to the four distances of one segment, which so far hold their
+     * plain magnitudes.
+     *
+     * Which of the four options of the second paper applies is decided by the position of P'' relative to
+     * the two endpoints of the segment. Options 1, 2, and 3 need not be told apart at all, because all
+     * three end at the same two numbers. Write @f$ u @f$ for the signed position of P'' along the segment,
+     * measured from its first endpoint, so that @f$ |s1| = |u| @f$ and @f$ |s2| = ||G_{pq}| - u| @f$:
+     *
+     *  - Option 1 is @f$ |s1| < |G_{pq}| @f$ and @f$ |s2| < |G_{pq}| @f$, which is @f$ 0 < u < |G_{pq}| @f$,
+     *    and asks for @f$ s1 = -|u| = -u @f$ and @f$ s2 = |G_{pq}| - u > 0 @f$.
+     *  - Option 2 is @f$ |s2| < |s1| @f$ with option 1 excluded, which is @f$ u \geq |G_{pq}| @f$, and asks
+     *    for @f$ s1 = -u @f$ and @f$ s2 = -(u - |G_{pq}|) = |G_{pq}| - u @f$.
+     *  - Option 3 is what remains, @f$ u \leq 0 @f$, and asks for @f$ s1 = |u| = -u @f$ and
+     *    @f$ s2 = |G_{pq}| - u > 0 @f$.
+     *
+     * So @f$ s1 = -u @f$ and @f$ s2 = |G_{pq}| - u @f$ in every one of the three: the magnitudes are the
+     * same either way and only their signs are at stake, so the two comparisons and the branches between
+     * them collapse into two sign selections. Only the 4. Option, where P coincides with P' and P'' and
+     * the 3D distances take a sign as well, still has to be told apart.
+     *
+     * @param distance the four magnitudes |s1|, |s2|, |l1|, |l2| of one segment, signed in place
+     * @param alongSegment the signed position u of P'' along the segment, from its first endpoint
+     * @param segmentNorm the length |G_pq| of that segment
+     */
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION void applySignsToDistances(DistanceTemplate<FloatType> &distance,
+                                                      const FloatType alongSegment,
+                                                      const FloatType segmentNorm) {
+        //4. Option: |s1 - l1| == 0 && |s2 - l2| == 0 Computation point P is located from the beginning on
+        // the direction of a specific segment (P coincides with P' and P'')
+        if (Kokkos::abs(distance.s1 - distance.l1) >= EPSILON_ZERO<FloatType> ||
+            Kokkos::abs(distance.s2 - distance.l2) >= EPSILON_ZERO<FloatType>) {
+            //1., 2. and 3. Option: s1 is -u and s2 is |G_pq| - u, so |s1| turns negative exactly when
+            // u is positive, and |s2| exactly when u is beyond the far endpoint of the segment
+            distance.s1 = alongSegment > 0.0 ? -distance.s1 : distance.s1;
+            distance.s2 = alongSegment > segmentNorm ? -distance.s2 : distance.s2;
+            return;
+        }
+        //4. Option - Case 2: P is located on the segment from its right side
+        // s1 = -|s1|, s2 = -|s2|, l1 = -|l1|, l2 = -|l2|
+        if (distance.s2 < distance.s1) {
+            distance.s1 *= -1.0;
+            distance.s2 *= -1.0;
+            distance.l1 *= -1.0;
+            distance.l2 *= -1.0;
+        } else if (Kokkos::abs(distance.s2 - distance.s1) < EPSILON_ZERO<FloatType>) {
+            //4. Option - Case 1: P is located inside the segment (s2 == s1)
+            // s1 = -|s1|, s2 = |s2|, l1 = -|l1|, l2 = |l2|
+            distance.s1 *= -1.0;
+            distance.l1 *= -1.0;
+        }
+        //4. Option - Case 3: P is located on the segment from its left side
+        // s1 = |s1|, s2 = |s2|, l1 = |l1|, l2 = |l2| --> Nothing to do!
+    }
+
+    /**
      * Computes the 3D distances l1_pq and l2_pq between the computation point P and the line
      * segment endpoints of each polyhedral segment for one plane.
      * Computes the 1D distances s1_pq and s2_pq between orthogonal projection of P on the line
@@ -391,49 +448,12 @@ namespace polyhedralGravity::GravityModel::detail {
             // the segment endpoints face[j] and face[(j + 1) % 3])
             distance.s1 = util::euclideanNorm(orthogonalProjectionPointsOnSegment - face[j]);
             distance.s2 = util::euclideanNorm(orthogonalProjectionPointsOnSegment - face[(j + 1) % 3]);
-
-            /*
-             * Additional remark:
-             * Details on these conditions are in the second paper referenced in the README.md (Tsoulis, 2021)
-             * The numbering of these conditions is equal to the numbering scheme of the paper
-             * Assign a sign to those magnitudes depending on the relative position of P'' to the two
-             * segment endpoints
-             */
-
-            //4. Option: |s1 - l1| == 0 && |s2 - l2| == 0 Computation point P is located from the beginning on
-            // the direction of a specific segment (P coincides with P' and P'')
-            if (Kokkos::abs(distance.s1 - distance.l1) < EPSILON_ZERO<FloatType> &&
-                Kokkos::abs(distance.s2 - distance.l2) < EPSILON_ZERO<FloatType>) {
-                //4. Option - Case 2: P is located on the segment from its right side
-                // s1 = -|s1|, s2 = -|s2|, l1 = -|l1|, l2 = -|l2|
-                if (distance.s2 < distance.s1) {
-                    distance.s1 *= -1.0;
-                    distance.s2 *= -1.0;
-                    distance.l1 *= -1.0;
-                    distance.l2 *= -1.0;
-                } else if (Kokkos::abs(distance.s2 - distance.s1) < EPSILON_ZERO<FloatType>) {
-                    //4. Option - Case 1: P is located inside the segment (s2 == s1)
-                    // s1 = -|s1|, s2 = |s2|, l1 = -|l1|, l2 = |l2|
-                    distance.s1 *= -1.0;
-                    distance.l1 *= -1.0;
-                }
-                //4. Option - Case 3: P is located on the segment from its left side
-                // s1 = |s1|, s2 = |s2|, l1 = |l1|, l2 = |l2| --> Nothing to do!
-            } else {
-                const FloatType norm = util::euclideanNorm(segmentVectorsForPlane[j]);
-                if (distance.s1 < norm && distance.s2 < norm) {
-                    //1. Option: |s1| < |G_ij| && |s2| < |G_ij| Point P'' is situated inside the segment
-                    // s1 = -|s1|, s2 = |s2|, l1 = |l1|, l2 = |l2|
-                    distance.s1 *= -1.0;
-                } else if (distance.s2 < distance.s1) {
-                    //2. Option: |s2| < |s1| Point P'' is on the right side of the segment
-                    // s1 = -|s1|, s2 = -|s2|, l1 = |l1|, l2 = |l2|
-                    distance.s1 *= -1.0;
-                    distance.s2 *= -1.0;
-                }
-                //3. Option: |s1| < |s2| Point P'' is on the left side of the segment
-                // s1 = |s1|, s2 = |s2|, l1 = |l1|, l2 = |l2| --> Nothing to do!
-            }
+            //Where P'' lies along the segment, which is what decides the signs of the four distances
+            const FloatType segmentNorm = util::euclideanNorm(segmentVectorsForPlane[j]);
+            const FloatType alongSegment =
+                    util::dot(orthogonalProjectionPointsOnSegment - face[j], segmentVectorsForPlane[j]) /
+                    segmentNorm;
+            applySignsToDistances(distance, alongSegment, segmentNorm);
             distancesForPlane[j] = distance;
         }
         return distancesForPlane;
@@ -501,9 +521,22 @@ namespace polyhedralGravity::GravityModel::detail {
                     planeDistance < EPSILON_ZERO<FloatType> || segmentDistance < EPSILON_ZERO<FloatType>;
             //Implementation of:
             // atan(h_p * s2_pq / h_pq * l2_pq) - atan(h_p * s1_pq / h_pq * l1_pq)
-            const FloatType arcTangent =
-                    Kokkos::atan((planeDistance * distance.s2) / (segmentDistance * distance.l2)) -
-                    Kokkos::atan((planeDistance * distance.s1) / (segmentDistance * distance.l1));
+            //The difference of the two arc tangents is evaluated as a single one via
+            // atan(x) - atan(y) = atan((x - y) / (1 + xy)) (+/- PI outside the principal branch), which
+            //halves the number of arc tangents. atan is the one transcendental of this kernel which
+            //-use_fast_math does not turn into a hardware instruction, so each of them is a polynomial of
+            //some twenty instructions
+            const FloatType upper = (planeDistance * distance.s2) / (segmentDistance * distance.l2);
+            const FloatType lower = (planeDistance * distance.s1) / (segmentDistance * distance.l1);
+            const FloatType denominator = FloatType{1} + upper * lower;
+            //The identity's principal value lies in (-PI/2, PI/2), the difference itself in (-PI, PI), so
+            //a whole PI is missing exactly when the denominator turned negative, with the sign of the
+            //difference being the sign of the larger of the two arguments
+            const FloatType branchOffset =
+                    denominator < 0.0 ? (upper < 0.0 ? static_cast<FloatType>(-util::PI)
+                                                     : static_cast<FloatType>(util::PI))
+                                      : FloatType{0};
+            const FloatType arcTangent = Kokkos::atan((upper - lower) / denominator) + branchOffset;
             transcendentalExpressionPerSegment.an = arcTangentVanishes ? FloatType{0} : arcTangent;
 
             transcendentalExpressionsForPlane[j] = transcendentalExpressionPerSegment;
@@ -615,6 +648,105 @@ namespace polyhedralGravity::GravityModel::detail {
     }
 
     /**
+     * Everything Tsoulis' steps 1-08 to 1-12 produce for the three segments of one plane p.
+     * @tparam FloatType the floating point precision of the evaluation
+     */
+    template<typename FloatType>
+    struct SegmentGeometry {
+        /** The segment unit normals n_pq */
+        Vector3Triplet<FloatType> segmentUnitNormals;
+        /** The segment normal orientations sigma_pq */
+        Vector3<FloatType> segmentNormalOrientations;
+        /** The segment distances h_pq between P' and P'' */
+        Vector3<FloatType> segmentDistances;
+        /** The norms of P' and each vertex of the plane */
+        Vector3<FloatType> projectionPointVertexNorms;
+        /** The distances l1, l2, s1, s2 foreach segment */
+        std::array<DistanceTemplate<FloatType>, 3> distances;
+    };
+
+    /**
+     * Computes Tsoulis' steps 1-08 to 1-12 for one plane p in a single pass over its three segments.
+     *
+     * The four quantities are computed together rather than one after the other because they all follow
+     * from the same two projections of @f$ P' - v_q @f$, and computing them separately means forming P''
+     * explicitly and then measuring three distances from it:
+     *
+     *  - @f$ n_{pq} @f$ itself is @f$ (G_{pq} \times N_p) / |G_{pq}| @f$ and not
+     *    @f$ (G_{pq} \times N_p) / |G_{pq} \times N_p| @f$: the plane unit normal is perpendicular to
+     *    every segment of its own plane and has length one, so the two denominators are the same number.
+     *    The normalization therefore shares the one reciprocal square root the segment needs anyway.
+     *  - @f$ n_{pq} @f$ is a unit vector, perpendicular to the segment and inside the plane, so
+     *    @f$ n_{pq} \cdot (P' - v_q) @f$ is at once the sign which decides @f$ \sigma_{pq} @f$ and the
+     *    magnitude of @f$ h_{pq} @f$. The component of @f$ P' - v_q @f$ along the segment contributes
+     *    nothing to that product, which is precisely the statement that P'' drops out of it.
+     *  - @f$ G_{pq} \cdot (P' - v_q) / |G_{pq}| @f$ is how far P'' lies along the segment, measured from
+     *    @f$ v_q @f$, so @f$ |s1| @f$ is its magnitude and @f$ |s2| @f$ its distance from @f$ |G_{pq}| @f$.
+     *
+     * P'' is therefore never formed as a point at all, which saves three vector differences, three
+     * additions, six Euclidean norms and three divisions per face and computation point, as well as the
+     * nine registers the three points occupied. {@link projectPointOrthogonallyOntoSegments} and
+     * {@link distancesBetweenProjectionPoints} still spell the same steps out the way the paper does.
+     *
+     * @param face the vertices of the plane p, relative to P
+     * @param segmentVectorsForPlane the segment vectors G_pq of the plane p
+     * @param planeUnitNormal the plane unit normal N_p of the plane p
+     * @param orthogonalProjectionPointOnPlane the orthogonal projection point P' of P on the plane p
+     * @return n_pq, sigma_pq, h_pq, the norms of P' and the vertices, and the distances l1, l2, s1, s2
+     */
+    template<typename FloatType>
+    KOKKOS_INLINE_FUNCTION SegmentGeometry<FloatType> computeSegmentGeometry(
+            const Vector3Triplet<FloatType> &face, const Vector3Triplet<FloatType> &segmentVectorsForPlane,
+            const Vector3<FloatType> &planeUnitNormal,
+            const Vector3<FloatType> &orthogonalProjectionPointOnPlane) {
+        using util::operator-;
+        using util::operator*;
+        SegmentGeometry<FloatType> geometry{};
+
+        //The 3D distance l_pq from P to a vertex is the same for the segment which ends at that vertex and
+        //the one which starts at it, so the three norms are taken once instead of six times
+        const Vector3<FloatType> vertexNorms{util::euclideanNorm(face[0]), util::euclideanNorm(face[1]),
+                                             util::euclideanNorm(face[2])};
+
+        for (size_t j = 0; j < 3; ++j) {
+            //P' relative to the first endpoint of this segment, the one vector both projections are taken of
+            const Vector3<FloatType> relativeProjectionPoint = orthogonalProjectionPointOnPlane - face[j];
+            //1-12 Step: the norm of P' and this segment's first endpoint
+            geometry.projectionPointVertexNorms[j] = util::euclideanNorm(relativeProjectionPoint);
+
+            //1-03 Step: n_pq, normalized by |G_pq| rather than by the length of the cross product
+            const FloatType squaredSegmentNorm = util::dot(segmentVectorsForPlane[j], segmentVectorsForPlane[j]);
+            const FloatType inverseSegmentNorm = Kokkos::rsqrt(squaredSegmentNorm);
+            const FloatType segmentNorm = squaredSegmentNorm * inverseSegmentNorm;
+            geometry.segmentUnitNormals[j] =
+                    util::cross(segmentVectorsForPlane[j], planeUnitNormal) * inverseSegmentNorm;
+
+            //1-08 and 1-10 Step: the projection onto n_pq, whose sign is sigma_pq (23) and whose magnitude
+            // is the distance h_pq of P' from the segment, i.e. from P''
+            const FloatType normalProjection = util::dot(geometry.segmentUnitNormals[j], relativeProjectionPoint);
+            geometry.segmentNormalOrientations[j] =
+                    static_cast<FloatType>(util::sgn(normalProjection, EPSILON_ZERO<FloatType>)) *
+                    static_cast<FloatType>(-1.0);
+            geometry.segmentDistances[j] = Kokkos::abs(normalProjection);
+
+            //1-09 and 1-11 Step: the projection onto the segment itself, which is where P'' lies along it
+            const FloatType alongSegment =
+                    util::dot(relativeProjectionPoint, segmentVectorsForPlane[j]) * inverseSegmentNorm;
+
+            DistanceTemplate<FloatType> distance{};
+            //The 3D distances between P (0, 0, 0) and the segment endpoints face[j] and face[(j + 1) % 3]
+            distance.l1 = vertexNorms[j];
+            distance.l2 = vertexNorms[(j + 1) % 3];
+            //The 1D distances between P'' and the very same two endpoints
+            distance.s1 = Kokkos::abs(alongSegment);
+            distance.s2 = Kokkos::abs(alongSegment - segmentNorm);
+            applySignsToDistances(distance, alongSegment, segmentNorm);
+            geometry.distances[j] = distance;
+        }
+        return geometry;
+    }
+
+    /**
      * The contribution of one polyhedral face to the gravity model's result at one computation point.
      *
      * This is the value type reduced over all faces of the polyhedron. It intentionally holds the raw sums,
@@ -713,8 +845,6 @@ namespace polyhedralGravity::GravityModel::detail {
         // the instructions it costs to reproduce it: 8% for 14 744 faces and 10% for 255 932.
         const Vector3Triplet<FloatType> segmentVectors = buildVectorsOfSegments(face[0], face[1], face[2]);
         const Vector3<FloatType> planeUnitNormal = mesh.getPlaneUnitNormal(faceIndex);
-        const Vector3Triplet<FloatType> segmentUnitNormals =
-                buildUnitNormalOfSegments(segmentVectors, planeUnitNormal);
 
         //1-04 to 1-07 Step: The plane normal orientation sigma_p, the plane distance h_p, and the position of
         // P' all follow from projecting the face onto its own plane unit normal, which is already cached. The
@@ -729,23 +859,17 @@ namespace polyhedralGravity::GravityModel::detail {
         //1-07 Step: Compute the actual position of P' (projection of P on the plane)
         const Vector3<FloatType> orthogonalProjectionPointOnPlane =
                 projectPointOrthogonallyOntoPlane(planeUnitNormal, planeDistance, -planeProjection);
-        //1-08 Step: Compute the segment normal orientation sigma_pq (direction of n_pq in relation to P')
-        const Vector3<FloatType> segmentNormalOrientations =
-                computeUnitNormalOfSegmentsDirections(face, orthogonalProjectionPointOnPlane, segmentUnitNormals);
-        //1-09 Step: Compute the orthogonal projection point P'' of P' on each segment
-        const Vector3Triplet<FloatType> orthogonalProjectionPointsOnSegmentsForPlane =
-                projectPointOrthogonallyOntoSegments(orthogonalProjectionPointOnPlane, segmentNormalOrientations, face);
-        //1-10 Step: Compute the segment distances h_pq between P'' and P'
-        const Vector3<FloatType> segmentDistances = distancesBetweenProjectionPoints(
-                orthogonalProjectionPointOnPlane, orthogonalProjectionPointsOnSegmentsForPlane);
-        //1-11 Step: Compute the 3D distances l1, l2 (between P and vertices)
-        // and 1D distances s1, s2 (between P'' and vertices)
-        const std::array<DistanceTemplate<FloatType>, 3> distances = distancesToSegmentEndpoints(
-                segmentVectors, orthogonalProjectionPointsOnSegmentsForPlane, face);
-        //1-12 Step: Compute the euclidian Norms of the vectors consisting of P and the vertices
-        // they are later used for determining the position of P in relation to the plane
-        const Vector3<FloatType> projectionPointVertexNorms =
-                computeNormsOfProjectionPointAndVertices(orthogonalProjectionPointOnPlane, face);
+        //1-08 to 1-12 Step: The segment normal orientations sigma_pq, the segment distances h_pq, the
+        // distances l1, l2, s1, s2, and the norms of P' and the vertices. All five follow from the two
+        // projections of P' - v_q onto n_pq and onto G_pq, so they are computed in one pass and the point
+        // P'' itself is never formed
+        const SegmentGeometry<FloatType> geometry = computeSegmentGeometry(
+                face, segmentVectors, planeUnitNormal, orthogonalProjectionPointOnPlane);
+        const Vector3Triplet<FloatType> &segmentUnitNormals = geometry.segmentUnitNormals;
+        const Vector3<FloatType> &segmentNormalOrientations = geometry.segmentNormalOrientations;
+        const Vector3<FloatType> &segmentDistances = geometry.segmentDistances;
+        const std::array<DistanceTemplate<FloatType>, 3> &distances = geometry.distances;
+        const Vector3<FloatType> &projectionPointVertexNorms = geometry.projectionPointVertexNorms;
         //1-13 Step: Compute the transcendental Expressions LN_pq and AN_pq
         const std::array<TranscendentalExpressionTemplate<FloatType>, 3> transcendentalExpressions =
                 computeTranscendentalExpressions(distances, planeDistance, segmentDistances,
