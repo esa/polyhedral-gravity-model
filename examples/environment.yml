@@ -1,0 +1,23 @@
+# The environment for every notebook in examples/notebooks and for the plotting script in scripts/.
+#
+# Create it with
+#   conda env create -f examples/environment.yml
+#   conda activate polyhedral-gravity-examples
+#
+# polyhedral-gravity comes from PyPI rather than conda-forge, since the wheels cover both x86_64 and
+# arm64, whereas the conda-forge package does not.
+name: polyhedral-gravity-examples
+channels:
+  - conda-forge
+dependencies:
+  - python==3.12
+  - jupyter
+  - numpy
+  - matplotlib
+  - sympy
+  - loguru
+  - tqdm
+  - pytorch
+  - pip
+  - pip:
+      - polyhedral-gravity

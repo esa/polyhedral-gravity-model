@@ -313,6 +313,6 @@ measurements. It requires PyTorch to be installed separately
     print(vertices.grad, density.grad)
 
 .. tip::
-   See the `PyTorch interface notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch.ipynb>`__
-   for a worked example, and the `benchmark notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch-benchmark.ipynb>`__
+   See the `PyTorch interface notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/examples/notebooks/polyhedral-gravity-torch.ipynb>`__
+   for a worked example, and the `benchmark notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/examples/notebooks/polyhedral-gravity-torch-benchmark.ipynb>`__
    for a CPU/GPU performance comparison against the C++ implementation.

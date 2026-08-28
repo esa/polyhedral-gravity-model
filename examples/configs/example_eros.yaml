@@ -2,8 +2,8 @@
 gravityModel:
   input:
     polyhedron:
-      - "../example-config/data/Eros.node"
-      - "../example-config/data/Eros.face"
+      - "../examples/data/Eros.node"
+      - "../examples/data/Eros.face"
     density: 2670.0
     points:
       - [0, 0, 0]

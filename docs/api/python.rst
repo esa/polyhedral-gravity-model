@@ -106,8 +106,8 @@ The optional :code:`polyhedral_gravity.torch` submodule provides a pure-PyTorch,
 autograd-differentiable re-implementation of :code:`evaluate(..)`. It is not
 imported by default and requires PyTorch to be installed separately
 (:code:`pip install torch`). See :ref:`examples-python` for a usage example,
-and the `PyTorch interface notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch.ipynb>`__
-and `benchmark notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch-benchmark.ipynb>`__
+and the `PyTorch interface notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/examples/notebooks/polyhedral-gravity-torch.ipynb>`__
+and `benchmark notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/examples/notebooks/polyhedral-gravity-torch-benchmark.ipynb>`__
 for further details.
 
 .. py:function:: polyhedral_gravity.torch.evaluate(vertices, faces, density, computation_points, gravitational_constant=6.67430e-11)

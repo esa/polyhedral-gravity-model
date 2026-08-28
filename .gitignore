@@ -6,3 +6,16 @@ dist
 docs/Doxyfile
 src/polyhedralGravity/Info.h
 **/__pycache__
+**/.ipynb_checkpoints
+
+# The figures written by scripts/generate_plots.py
+figures/
+
+# The shape models fetched by examples/data/download_models.sh
+examples/data/25143_Itokawa_200k.obj
+examples/data/67P_ESA_NAVCAM_Jul2015data_256k.obj
+examples/data/mu69_merged.obj
+examples/data/a8567.tab.obj
+examples/data/SHAPE_SFM_3M_v20180804.obj
+examples/data/4179toutatis.tab.obj
+examples/data/hartley2_2012_cart.obj

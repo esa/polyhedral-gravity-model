@@ -8,8 +8,12 @@ from matplotlib.legend_handler import HandlerTuple
 import timeit
 import argparse
 from loguru import logger
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Tuple
+
+# The example meshes live next to the example configurations, not next to this script
+DATA_DIR = Path(__file__).resolve().parent.parent / "examples" / "data"
 
 # The ways of calling the model, ordered from the most discouraged to the recommended one, which is also
 # the order in which they appear within a backend group and the direction in which their colour saturates.
@@ -258,7 +262,7 @@ def main():
         '-m', '--mesh-files',
         type=str,
         nargs='+',
-        default=["mesh/Eros.node", "mesh/Eros.face"],
+        default=[str(DATA_DIR / "Eros.node"), str(DATA_DIR / "Eros.face")],
         help="Input mesh file(s). Provide one or more file paths separated by a space.",
     )
     parser.add_argument(

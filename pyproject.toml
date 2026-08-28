@@ -119,10 +119,8 @@ exclude = [
     "build*/",          # the CMake build trees, hundreds of megabytes of object files
     "docs/",            # built and published from the repository, not from the sdist
     "paper/",           # the JOSS paper and its figures
-    "notebooks/",
-    "example-config/",  # sample inputs for the C++ executable, which a wheel does not build
+    "examples/",        # sample inputs, notebooks and figures for the C++ executable and the notebooks
     ".github/",
-    "script/mesh/",     # the Eros mesh, only used by the benchmark driver
     "test/resources/",  # 30 MB of expected values for the C++ tests, which a wheel does not build
 ]
 

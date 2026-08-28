@@ -1,5 +1,5 @@
 # Data taken from https://github.com/darioizzo/geodesyNets/tree/master/3dmeshes (last accessed: 07.04.2022)
-# and unpickled with /script/mesh.py
+# and unpickled with /examples/notebooks/mesh_utility.py
 # Node count, 3 dimensions, no attribute, no boundary marker
 24235 3 0 0
 # Node index, node coordinates

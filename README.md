@@ -256,7 +256,7 @@ cube_polyhedron = Polyhedron(
 
 > [!TIP]
 > More examples and plots are depicted in the
-[jupyter notebook](script/polyhedral-gravity.ipynb) and the [second jupyter notebook](script/Kleopatra.ipynb)
+[jupyter notebook](examples/notebooks/polyhedral-gravity.ipynb) and the [second jupyter notebook](examples/notebooks/Kleopatra.ipynb)
 
 
 ### Minimal C++ Example
@@ -453,7 +453,7 @@ After the build, the gravity model can be run by executing:
 
 where the YAML-Configuration-File contains the required parameters.
 Examples for Configuration Files and Polyhedral Source Files can be
-found in this repository in the folder `/example-config/`.
+found in this repository in the folder `/examples/configs/`.
 
 #### Input Configuration File
 
@@ -469,8 +469,8 @@ Further, one must specify the name of the .csv output file.
 gravityModel:
   input:
     polyhedron:                                 # polyhedron source-file(s)
-      - "../example-config/data/tsoulis.node"   # .node contains the vertices
-      - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
+      - "../examples/data/tsoulis.node"        # .node contains the vertices
+      - "../examples/data/tsoulis.face"        # .face contains the triangular faces
     density: 2670.0                             # constant density, units must match with the mesh (see a section below)
                                                 # Depends on metric_unit: 'km' -> kg/km^3, 'm' -> kg/m^3, 'unitless' -> 'unitless'
     points:                                     # Location of the computation point(s) P
