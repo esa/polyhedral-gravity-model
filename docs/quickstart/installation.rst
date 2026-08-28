@@ -108,6 +108,7 @@ POLYHEDRAL_GRAVITY_FAST_MATH (:code:`OFF`)             Faster, less accurate FLO
 BUILD_POLYHEDRAL_GRAVITY_DOCS (:code:`OFF`)            Build this documentation
 BUILD_POLYHEDRAL_GRAVITY_TESTS (:code:`ON`)            Build the Tests
 BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (:code:`ON`) Build the Python interface
+BUILD_POLYHEDRAL_GRAVITY_BENCHMARK (:code:`OFF`)       Build the benchmark driver used for timing and profiling the kernels (fetches :code:`argparse`)
 ====================================================== ==========================================================================================================================
 
 The host backends need no configuration: the Kokkos :code:`Serial` backend is always compiled in, and the

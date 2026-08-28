@@ -54,8 +54,11 @@ endif()
 if (BUILD_POLYHEDRAL_GRAVITY_BENCHMARK)
     message(STATUS "Building the Polyhedral Gravity Benchmark Driver")
 
+    # argparse parses the benchmark driver's command line and is required by no other target
+    include(argparse)
+
     add_executable(${PROJECT_NAME}_benchmark benchmark.cpp)
-    target_link_libraries(${PROJECT_NAME}_benchmark PUBLIC ${PROJECT_NAME}_lib)
+    target_link_libraries(${PROJECT_NAME}_benchmark PUBLIC ${PROJECT_NAME}_lib argparse::argparse)
     set_target_properties(${PROJECT_NAME}_benchmark PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
             )

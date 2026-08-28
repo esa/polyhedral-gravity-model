@@ -404,6 +404,7 @@ The following options are available:
 |                       BUILD_POLYHEDRAL_GRAVITY_DOCS (`OFF`)  | Build this documentation                                                                         |
 |                       BUILD_POLYHEDRAL_GRAVITY_TESTS (`ON`)  | Build the Tests                                                                                  |
 |            BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE (`ON`)  | Build the Python interface                                                                       |
+|                  BUILD_POLYHEDRAL_GRAVITY_BENCHMARK (`OFF`)  | Build the benchmark driver used for timing and profiling the kernels (fetches `argparse`)        |
 
 The host backends need no configuration: the Kokkos `Serial` backend is always compiled in and the
 `OpenMP` backend is enabled whenever an OpenMP installation is found (on macOS this is Homebrew's
