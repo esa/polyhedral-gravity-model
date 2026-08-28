@@ -20,6 +20,13 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
         target_compile_options(${PROJECT_NAME}_lib PRIVATE ${POLYHEDRAL_GRAVITY_FAST_MATH_FLAG})
     endif ()
 
+    # Line tables for the profiler. This is a compile option and not a CMAKE_CXX_FLAGS entry on purpose:
+    # the flag names an nvcc feature, and g++ would read a "-lineinfo" reaching the link line as "-l ineinfo".
+    if (POLYHEDRAL_GRAVITY_LINE_INFO)
+        target_compile_options(${PROJECT_NAME}_lib PRIVATE
+                $<IF:$<STREQUAL:${POLYHEDRAL_GRAVITY_DEVICE_BACKEND},CUDA>,-lineinfo,-gline-tables-only>)
+    endif ()
+
     # Link libraries needed in all targets
     target_link_libraries(${PROJECT_NAME}_lib
             spdlog::spdlog

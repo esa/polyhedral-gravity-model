@@ -475,33 +475,36 @@ namespace polyhedralGravity::GravityModel::detail {
             const FloatType r1Norm = projectionPointVertexNorms[(j + 1) % 3];
             const FloatType r2Norm = projectionPointVertexNorms[j];
 
+            //Both expressions are evaluated unconditionally and then selected, rather than guarded by a
+            //branch. The guards below hold only for the degenerate positions of P', so the branch almost
+            //never skips the work it protects, and what it does cost is a divergent branch on every
+            //segment of every face. A non-finite value produced by the degenerate case is discarded by the
+            //selection and never reaches the sums.
+
             //Compute LN_pq according to (14)
             // If sigma_pq == 0 && either of the distances of P' to the two segment endpoints == 0 OR
             // the 1D and 3D distances are smaller than some EPSILON
             // then LN_pq can be set to zero
-            if ((segmentNormalOrientation == 0.0 &&
-                 (r1Norm < EPSILON_ZERO<FloatType> || r2Norm < EPSILON_ZERO<FloatType>)) ||
-                (Kokkos::abs(distance.s1 + distance.s2) < EPSILON_ZERO<FloatType> &&
-                 Kokkos::abs(distance.l1 + distance.l2) < EPSILON_ZERO<FloatType>)) {
-                transcendentalExpressionPerSegment.ln = 0.0;
-            } else {
-                //Implementation of
-                // log((s2_pq + l2_pq) / (s1_pq + l1_pq))
-                transcendentalExpressionPerSegment.ln =
-                        Kokkos::log((distance.s2 + distance.l2) / (distance.s1 + distance.l1));
-            }
+            const bool logarithmVanishes =
+                    (segmentNormalOrientation == 0.0 &&
+                     (r1Norm < EPSILON_ZERO<FloatType> || r2Norm < EPSILON_ZERO<FloatType>)) ||
+                    (Kokkos::abs(distance.s1 + distance.s2) < EPSILON_ZERO<FloatType> &&
+                     Kokkos::abs(distance.l1 + distance.l2) < EPSILON_ZERO<FloatType>);
+            //Implementation of
+            // log((s2_pq + l2_pq) / (s1_pq + l1_pq))
+            const FloatType logarithm = Kokkos::log((distance.s2 + distance.l2) / (distance.s1 + distance.l1));
+            transcendentalExpressionPerSegment.ln = logarithmVanishes ? FloatType{0} : logarithm;
 
             //Compute AN_pq according to (15)
             // If h_p == 0 or h_pq == 0 then AN_pq is zero, too (distances are always positive!)
-            if (planeDistance < EPSILON_ZERO<FloatType> || segmentDistance < EPSILON_ZERO<FloatType>) {
-                transcendentalExpressionPerSegment.an = 0.0;
-            } else {
-                //Implementation of:
-                // atan(h_p * s2_pq / h_pq * l2_pq) - atan(h_p * s1_pq / h_pq * l1_pq)
-                transcendentalExpressionPerSegment.an =
-                        Kokkos::atan((planeDistance * distance.s2) / (segmentDistance * distance.l2)) -
-                        Kokkos::atan((planeDistance * distance.s1) / (segmentDistance * distance.l1));
-            }
+            const bool arcTangentVanishes =
+                    planeDistance < EPSILON_ZERO<FloatType> || segmentDistance < EPSILON_ZERO<FloatType>;
+            //Implementation of:
+            // atan(h_p * s2_pq / h_pq * l2_pq) - atan(h_p * s1_pq / h_pq * l1_pq)
+            const FloatType arcTangent =
+                    Kokkos::atan((planeDistance * distance.s2) / (segmentDistance * distance.l2)) -
+                    Kokkos::atan((planeDistance * distance.s1) / (segmentDistance * distance.l1));
+            transcendentalExpressionPerSegment.an = arcTangentVanishes ? FloatType{0} : arcTangent;
 
             transcendentalExpressionsForPlane[j] = transcendentalExpressionPerSegment;
         }
@@ -525,70 +528,74 @@ namespace polyhedralGravity::GravityModel::detail {
             const Vector3<FloatType> &projectionPointVertexNorms, const Vector3<FloatType> &planeUnitNormal,
             FloatType planeDistance, FloatType planeNormalOrientation) {
         using util::operator*;
+
+        //All four cases of the Flow text produce the same shape, sing A = factor * h_p and
+        //sing B = factor * sigma_p * N_p, and differ in nothing but that factor. They are therefore
+        //evaluated as one selection over four factors followed by a single return, instead of four
+        //returns reached through nested branches and loop continuations.
+
         //1. Case: If all sigma_pq for a given plane p are 1.0 then P' lies inside the plane S_p
-        bool allInside = true;
-        for (size_t j = 0; j < 3; ++j) {
-            allInside &= segmentNormalOrientationForPlane[j] == 1.0;
-        }
-        if (allInside) {
-            const FloatType factor = static_cast<FloatType>(-1.0 * util::PI2);
-            //sing alpha = -2pi*h_p and sing beta = -2pi*sigma_p*N_p
-            return {factor * planeDistance, planeUnitNormal * (factor * planeNormalOrientation)};
-        }
+        const bool allInside = segmentNormalOrientationForPlane[0] == 1.0 &&
+                               segmentNormalOrientationForPlane[1] == 1.0 &&
+                               segmentNormalOrientationForPlane[2] == 1.0;
 
         //2. Case: If sigma_pq == 0 AND norm(P' - v1) < norm(G_ij) && norm(P' - v2) < norm(G_ij) with G_ij
-        // as the vector of v1 and v2
-        // then P' is located on one line segment G_p of plane p, but not on any of its vertices
-        bool anyOnLine = false;
-        for (size_t j = 0; j < 3; ++j) {
-            //segmentNormalOrientation != 0.0
-            if (Kokkos::abs(segmentNormalOrientationForPlane[j]) > EPSILON_ZERO<FloatType>) {
-                continue;
-            }
-            const FloatType segmentVectorNorm = util::euclideanNorm(segmentVectorsForPlane[j]);
-            anyOnLine |= projectionPointVertexNorms[(j + 1) % 3] < segmentVectorNorm &&
-                         projectionPointVertexNorms[j] < segmentVectorNorm &&
-                         projectionPointVertexNorms[(j + 1) % 3] >= EPSILON_ZERO<FloatType> &&
-                         projectionPointVertexNorms[j] >= EPSILON_ZERO<FloatType>;
-        }
-        if (anyOnLine) {
-            const FloatType factor = static_cast<FloatType>(-1.0 * util::PI);
-            //sing alpha = -pi*h_p and sing beta = -pi*sigma_p*N_p
-            return {factor * planeDistance, planeUnitNormal * (factor * planeNormalOrientation)};
-        }
-
-        //3. Case If sigma_pq == 0 AND norm(P' - v1) < 0 || norm(P' - v2) < 0
+        // as the vector of v1 and v2, then P' is located on one line segment G_p of plane p, but not on
+        // any of its vertices
+        //3. Case: If sigma_pq == 0 AND norm(P' - v1) == 0 || norm(P' - v2) == 0
         // then P' is located at one of G_p's vertices
+        bool anyOnLine = false;
+        bool anyOnVertex = false;
+        size_t vertexSegment = 0;
+        bool vertexIsFirstEndpoint = false;
         for (size_t j = 0; j < 3; ++j) {
-            //segmentNormalOrientation != 0.0
+            //This guard stays a branch, unlike the ones around the transcendental expressions. It does not
+            //merely protect a selection: everything below it is work which a segment P' does not lie on --
+            //the overwhelmingly common case -- never has to do at all
             if (Kokkos::abs(segmentNormalOrientationForPlane[j]) > EPSILON_ZERO<FloatType>) {
                 continue;
             }
             const FloatType r1Norm = projectionPointVertexNorms[(j + 1) % 3];
             const FloatType r2Norm = projectionPointVertexNorms[j];
-            //r1Norm == 0.0 || r2Norm == 0.0
-            if (!(r1Norm < EPSILON_ZERO<FloatType> || r2Norm < EPSILON_ZERO<FloatType>)) {
-                continue;
-            }
-            //Two segment vectors G_1 and G_2 of this plane
-            const Vector3<FloatType> &g1 = r1Norm < EPSILON_ZERO<FloatType>
-                                                   ? segmentVectorsForPlane[j]
-                                                   : segmentVectorsForPlane[(j - 1 + 3) % 3];
-            const Vector3<FloatType> &g2 = r1Norm < EPSILON_ZERO<FloatType>
-                                                   ? segmentVectorsForPlane[(j + 1) % 3]
-                                                   : segmentVectorsForPlane[j];
-            // theta = arcos((G_2 * -G_1) / (|G_2| * |G_1|))
-            const FloatType gdot = util::dot(g1 * static_cast<FloatType>(-1.0), g2);
-            const FloatType theta = gdot == 0.0
-                                            ? static_cast<FloatType>(util::PI_2)
-                                            : Kokkos::acos(gdot / (util::euclideanNorm(g1) * util::euclideanNorm(g2)));
-            //sing alpha = -theta*h_p and sing beta = -theta*sigma_p*N_p
-            const FloatType factor = static_cast<FloatType>(-1.0) * theta;
-            return {factor * planeDistance, planeUnitNormal * (factor * planeNormalOrientation)};
+            //Both sides are non-negative, so comparing the squares decides the same question as comparing
+            //the norms and saves the only square root this function would otherwise need
+            const FloatType squaredSegmentNorm =
+                    util::dot(segmentVectorsForPlane[j], segmentVectorsForPlane[j]);
+            anyOnLine |= r1Norm * r1Norm < squaredSegmentNorm && r2Norm * r2Norm < squaredSegmentNorm &&
+                         r1Norm >= EPSILON_ZERO<FloatType> && r2Norm >= EPSILON_ZERO<FloatType>;
+            const bool onVertex = r1Norm < EPSILON_ZERO<FloatType> || r2Norm < EPSILON_ZERO<FloatType>;
+            //The first such segment is the one the loop used to return on, so later ones must not override it
+            vertexSegment = anyOnVertex ? vertexSegment : j;
+            vertexIsFirstEndpoint =
+                    anyOnVertex ? vertexIsFirstEndpoint : (onVertex && r1Norm < EPSILON_ZERO<FloatType>);
+            anyOnVertex |= onVertex;
         }
 
-        //4. Case Otherwise P' is located outside the plane S_p and then the singularity equals zero
-        return {static_cast<FloatType>(0.0), Vector3<FloatType>{0.0, 0.0, 0.0}};
+        //The angle of the 3. Case is the one thing which is still guarded: it is the only case needing an
+        //arccosine and two norms, and it is the rarest of the four
+        FloatType vertexFactor{0.0};
+        if (anyOnVertex) {
+            //Two segment vectors G_1 and G_2 of this plane
+            const Vector3<FloatType> &g1 = vertexIsFirstEndpoint
+                                                   ? segmentVectorsForPlane[vertexSegment]
+                                                   : segmentVectorsForPlane[(vertexSegment + 2) % 3];
+            const Vector3<FloatType> &g2 = vertexIsFirstEndpoint
+                                                   ? segmentVectorsForPlane[(vertexSegment + 1) % 3]
+                                                   : segmentVectorsForPlane[vertexSegment];
+            // theta = arcos((G_2 * -G_1) / (|G_2| * |G_1|))
+            const FloatType gdot = util::dot(g1 * static_cast<FloatType>(-1.0), g2);
+            const FloatType theta =
+                    gdot == 0.0 ? static_cast<FloatType>(util::PI_2)
+                                : Kokkos::acos(gdot / (util::euclideanNorm(g1) * util::euclideanNorm(g2)));
+            vertexFactor = static_cast<FloatType>(-1.0) * theta;
+        }
+
+        //sing alpha = factor * h_p and sing beta = factor * sigma_p * N_p, with the 1. Case taking
+        //precedence over the 2., the 2. over the 3., and the 4. Case being a factor of zero
+        const FloatType factor = allInside ? static_cast<FloatType>(-1.0 * util::PI2)
+                               : anyOnLine ? static_cast<FloatType>(-1.0 * util::PI)
+                                           : vertexFactor;
+        return {factor * planeDistance, planeUnitNormal * (factor * planeNormalOrientation)};
     }
 
     /**
@@ -696,11 +703,18 @@ namespace polyhedralGravity::GravityModel::detail {
 
         //1. Step: Compute the ingredients for the current plane
         //1-01 to 1-03 Step: The segment vectors, plane unit normals, and segment unit normals only depend on
-        // the polyhedron and were therefore already computed once by the initialization kernel
+        // the polyhedron, so none of them needs the computation point
         const Vector3Triplet<FloatType> face = mesh.resolveFace(faceIndex, computationPoint);
-        const Vector3Triplet<FloatType> segmentVectors = mesh.getSegmentVectors(faceIndex);
+        // G_pq and n_pq are recomputed here rather than read back from the caches the initialization kernel
+        // filled. That looks backwards -- it trades 36 + 36 bytes of cached data per face for roughly 60
+        // arithmetic instructions -- but it is what the profiler asks for: the evaluation is bound by
+        // instruction issue, yet the per-face byte volume streaming through L1 is what actually paces it.
+        // Measured on an RTX 5080 (FLOAT32, fast math), reading one byte less per face is worth more than
+        // the instructions it costs to reproduce it: 8% for 14 744 faces and 10% for 255 932.
+        const Vector3Triplet<FloatType> segmentVectors = buildVectorsOfSegments(face[0], face[1], face[2]);
         const Vector3<FloatType> planeUnitNormal = mesh.getPlaneUnitNormal(faceIndex);
-        const Vector3Triplet<FloatType> segmentUnitNormals = mesh.getSegmentUnitNormals(faceIndex);
+        const Vector3Triplet<FloatType> segmentUnitNormals =
+                buildUnitNormalOfSegments(segmentVectors, planeUnitNormal);
 
         //1-04 to 1-07 Step: The plane normal orientation sigma_p, the plane distance h_p, and the position of
         // P' all follow from projecting the face onto its own plane unit normal, which is already cached. The

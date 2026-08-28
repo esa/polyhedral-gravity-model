@@ -19,3 +19,6 @@ examples/data/a8567.tab.obj
 examples/data/SHAPE_SFM_3M_v20180804.obj
 examples/data/4179toutatis.tab.obj
 examples/data/hartley2_2012_cart.obj
+
+# Nsight Compute reports are large binaries; regenerate them with the command in profiling-results/README.md
+profiling-results/*.ncu-rep

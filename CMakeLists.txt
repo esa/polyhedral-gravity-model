@@ -47,6 +47,8 @@ cmake_dependent_option(BUILD_POLYHEDRAL_GRAVITY_LIBRARY "Builds the library (Def
 option(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE "Set this to on if the python interface should be built (Default: ON)" ON)
 # Option to build the benchmark driver used for profiling the kernels
 option(BUILD_POLYHEDRAL_GRAVITY_BENCHMARK "Set to on if the benchmark driver should be built (Default: OFF)" OFF)
+# Option to embed line tables, so that a profiler can attribute counters to source lines
+option(POLYHEDRAL_GRAVITY_LINE_INFO "Embed source line information for profilers such as ncu (Default: OFF)" OFF)
 # Option to build tests or not
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
 

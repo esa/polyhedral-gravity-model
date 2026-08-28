@@ -192,7 +192,15 @@ namespace polyhedralGravity::detail {
             const GravitationalMeshView<FloatType, MemorySpace> &mesh,
             const Vector3View<FloatType, MemorySpace> &points) {
         using GravityModel::detail::evaluateFace;
-        using Policy = Kokkos::TeamPolicy<ExecutionSpace>;
+        /*
+         * The launch bounds are what keeps this kernel off the register cliff. Left to itself, nvcc gives
+         * the body 90 registers, which fits 5 blocks of 128 threads onto an SM and leaves the schedulers
+         * with 39% occupancy. Asking for 6 blocks brings it to 80 registers and 47% occupancy without a
+         * single spill, and is worth 2-4% (RTX 5080, FLOAT32). Asking for more is a trap: at 7 blocks the
+         * body spills to local memory and the kernel loses 12-14%, at 8 it loses 60%. The bound is ignored
+         * by the host backends, where the team size stays whatever Kokkos::AUTO picks.
+         */
+        using Policy = Kokkos::TeamPolicy<ExecutionSpace, Kokkos::LaunchBounds<128, 6>>;
         const size_t pointCount = points.extent(0);
         const size_t faceCount = mesh.countFaces();
         const EvaluationResultView<FloatType, MemorySpace> results =
