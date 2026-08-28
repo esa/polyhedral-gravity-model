@@ -6,6 +6,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# This project uses no C++20 modules, only headers. CMake nevertheless emits a module scanning step for
+# every C++20 source (CMake >= 3.28, Ninja), and in a CUDA build that step runs through Kokkos'
+# kokkos_launch_compiler/ nvcc_wrapper, which does not understand its "-E ... -fmodules-ts -fdeps-*"
+# command line and mangles it into
+#     cc1plus: error: to generate dependencies you must specify either '-M' or '-MM'
+# Turning the scan off removes both the breakage and the per-source cost. Ignored before CMake 3.28.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 # Appends the the module path to contain additional CMake modules for this project
 # and include everything necessary
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
