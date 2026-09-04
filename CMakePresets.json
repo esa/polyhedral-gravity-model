@@ -1,0 +1,85 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "benchmark-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "description": "Everything the benchmark driver needs and nothing else: Release, line tables for the profiler, and no tests, Python interface, or standalone executable to wait for",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_POLYHEDRAL_GRAVITY_BENCHMARK": "ON",
+        "POLYHEDRAL_GRAVITY_LINE_INFO": "ON",
+        "BUILD_POLYHEDRAL_GRAVITY_TESTS": "OFF",
+        "BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE": "OFF",
+        "BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE": "OFF",
+        "CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+      }
+    },
+    {
+      "name": "benchmark",
+      "inherits": "benchmark-base",
+      "displayName": "Benchmark (IEEE arithmetic)",
+      "description": "The benchmark driver on whichever device backend this machine's toolchain provides (AUTO)",
+      "cacheVariables": {
+        "POLYHEDRAL_GRAVITY_DEVICE_BACKEND": "AUTO",
+        "POLYHEDRAL_GRAVITY_FAST_MATH": "OFF"
+      }
+    },
+    {
+      "name": "benchmark-fast-math",
+      "inherits": "benchmark",
+      "displayName": "Benchmark (fast math)",
+      "description": "As 'benchmark', but with the fast, less accurate FLOAT32 arithmetic. FLOAT64 is bit-identical either way",
+      "cacheVariables": {
+        "POLYHEDRAL_GRAVITY_FAST_MATH": "ON"
+      }
+    },
+    {
+      "name": "benchmark-cuda",
+      "inherits": "benchmark",
+      "displayName": "Benchmark CUDA (IEEE arithmetic)",
+      "description": "As 'benchmark', with the device backend pinned to CUDA rather than detected, so that a machine holding several toolchains cannot pick another one",
+      "cacheVariables": {
+        "POLYHEDRAL_GRAVITY_DEVICE_BACKEND": "CUDA"
+      }
+    },
+    {
+      "name": "benchmark-cuda-fast-math",
+      "inherits": "benchmark-cuda",
+      "displayName": "Benchmark CUDA (fast math)",
+      "description": "The configuration the ncu recipes in scripts/BENCHMARK.md profile: CUDA, fast math, line tables",
+      "cacheVariables": {
+        "POLYHEDRAL_GRAVITY_FAST_MATH": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "benchmark",
+      "configurePreset": "benchmark",
+      "targets": "polyhedralGravity_benchmark"
+    },
+    {
+      "name": "benchmark-fast-math",
+      "configurePreset": "benchmark-fast-math",
+      "targets": "polyhedralGravity_benchmark"
+    },
+    {
+      "name": "benchmark-cuda",
+      "configurePreset": "benchmark-cuda",
+      "targets": "polyhedralGravity_benchmark"
+    },
+    {
+      "name": "benchmark-cuda-fast-math",
+      "configurePreset": "benchmark-cuda-fast-math",
+      "targets": "polyhedralGravity_benchmark"
+    }
+  ]
+}

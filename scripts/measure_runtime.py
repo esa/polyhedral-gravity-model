@@ -2,15 +2,21 @@
 from polyhedral_gravity import evaluate, Polyhedron, PolyhedronIntegrity, GravityEvaluable, ComputePrecision, ComputeBackend
 import polyhedral_gravity
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.legend_handler import HandlerTuple
 import timeit
 import argparse
+import os
+import platform
+import subprocess
+import sys
 from loguru import logger
+from datetime import datetime, timezone
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 # The example meshes live next to the example configurations, not next to this script
 DATA_DIR = Path(__file__).resolve().parent.parent / "examples" / "data"
@@ -61,11 +67,40 @@ def bar_color(option: Tuple[str, str], precision_name: str):
 
 @dataclass(frozen=True)
 class Configuration:
-    """One point of the Cartesian product, i.e. one bar of the plot."""
+    """One point of the Cartesian product, i.e. one bar of the plot and one row of the CSV."""
     interface: str
     call_style: str
     backend_name: str
     precision_name: str
+
+
+@dataclass(frozen=True)
+class Measurement:
+    """The timings of one configuration, i.e. the wall clock time of each of its repeats in seconds."""
+    timings: Tuple[float, ...]
+    sample_size: int
+
+    @property
+    def best_total_s(self) -> float:
+        return min(self.timings)
+
+    @property
+    def worst_total_s(self) -> float:
+        return max(self.timings)
+
+    @property
+    def mean_total_s(self) -> float:
+        return sum(self.timings) / len(self.timings)
+
+    @property
+    def spread(self) -> float:
+        """The factor between the slowest and the fastest repeat, i.e. 1.0 for a perfectly quiet machine."""
+        return self.worst_total_s / self.best_total_s
+
+    @property
+    def runtime_per_point_us(self) -> float:
+        """The reported number: the fastest repeat, per computation point, in microseconds."""
+        return self.best_total_s / self.sample_size * 1e6
 
 
 def is_gpu_available() -> bool:
@@ -76,6 +111,54 @@ def is_gpu_available() -> bool:
     """
     spaces = {space.strip().lower() for space in polyhedral_gravity.__parallelization__.split(",")}
     return bool(spaces - {"serial", "openmp", "threads"})
+
+
+def first_line_of(command: Sequence[str]) -> Optional[str]:
+    """The first non-empty line of ``command``'s output, or None if it is not installed or fails."""
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True, timeout=15, check=True)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+    return lines[0] if lines else None
+
+
+def cpu_name() -> str:
+    """The CPU's model name, from wherever the platform at hand keeps it.
+
+    ``platform.processor()`` is the portable call, but it returns the bare architecture on Linux and an
+    empty string often enough that it is only worth using as the last resort.
+    """
+    if sys.platform == "darwin":
+        name = first_line_of(["sysctl", "-n", "machdep.cpu.brand_string"])
+        if name:
+            return name
+    elif sys.platform.startswith("linux"):
+        cpuinfo = Path("/proc/cpuinfo")
+        if cpuinfo.exists():
+            for line in cpuinfo.read_text().splitlines():
+                if line.startswith(("model name", "Model name", "Hardware")):
+                    return line.split(":", 1)[1].strip()
+    return platform.processor() or platform.machine() or "unknown"
+
+
+def gpu_name() -> str:
+    """The name(s) of the installed accelerator(s), asked of whichever vendor tool answers.
+
+    Purely informational, so every probe is allowed to fail: a build without a device backend, or a
+    machine without the vendor's tooling, simply reports that nothing was found.
+    """
+    nvidia = first_line_of(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"])
+    if nvidia:
+        return nvidia
+    amd = first_line_of(["rocm-smi", "--showproductname", "--csv"])
+    if amd:
+        return amd
+    if sys.platform == "darwin":
+        chipset = first_line_of(["bash", "-c", "system_profiler SPDisplaysDataType | grep 'Chipset Model'"])
+        if chipset:
+            return chipset.split(":", 1)[1].strip()
+    return "none detected"
 
 
 def build_runner(
@@ -100,7 +183,7 @@ def build_runner(
     return lambda: evaluable(computation_points)
 
 
-def run_time_measurements(sample_size: int, mesh_files: List[str], repeats: int) -> Dict[Configuration, float]:
+def run_time_measurements(polyhedron: Polyhedron, sample_size: int, repeats: int) -> Dict[Configuration, Measurement]:
     """Measures the Cartesian product of the three options, both precisions, and every available backend.
 
     Every configuration is timed ``repeats`` times and the fastest run is kept, as the C++ benchmark driver
@@ -111,14 +194,8 @@ def run_time_measurements(sample_size: int, mesh_files: List[str], repeats: int)
     reproduced to within a few percent.
 
     Returns:
-        a mapping from configuration to runtime per computation point in microseconds
+        a mapping from configuration to the timings of its repeats
     """
-    polyhedron = Polyhedron(
-        polyhedral_source=mesh_files,
-        density=1.0,
-        integrity_check=PolyhedronIntegrity.DISABLE,
-    )
-
     # Generate the random cartesian computation points, the same ones for every configuration
     computation_points = np.random.uniform(-2, 2, (sample_size, 3))
 
@@ -126,7 +203,7 @@ def run_time_measurements(sample_size: int, mesh_files: List[str], repeats: int)
     if len(backends) != len(BACKENDS):
         logger.warning("No GPU backend in this build, skipping GPU_PARALLEL")
 
-    results: Dict[Configuration, float] = dict()
+    results: Dict[Configuration, Measurement] = dict()
     for backend_name, backend in backends:
         logger.info("##########################################################")
         logger.info(f"Backend {backend_name}")
@@ -145,19 +222,19 @@ def run_time_measurements(sample_size: int, mesh_files: List[str], repeats: int)
                     runner()
                     timings.append(timeit.default_timer() - start_time)
 
-                total_time = min(timings)
-                delta = total_time / sample_size * 1e6
-                results[configuration] = delta
+                measurement = Measurement(tuple(timings), sample_size)
+                results[configuration] = measurement
                 logger.info(
                     f"{interface:>16s} {call_style:>5s} {precision_name} | "
-                    f"Best {total_time:8.3f} s | {delta:10.3f} us per point | "
-                    f"spread {max(timings) / total_time:4.2f}x"
+                    f"Best {measurement.best_total_s:8.3f} s | "
+                    f"{measurement.runtime_per_point_us:10.3f} us per point | "
+                    f"spread {measurement.spread:4.2f}x"
                 )
     logger.info("##########################################################")
     return results
 
 
-def create_plot(runtime_results: Dict[Configuration, float], sample_size: int) -> None:
+def create_plot(runtime_results: Dict[Configuration, Measurement], sample_size: int) -> None:
     """Creates the grouped bar chart of the runtime results.
 
     The backend is the group on the x-axis and the option is annotated underneath it; colour carries
@@ -177,7 +254,7 @@ def create_plot(runtime_results: Dict[Configuration, float], sample_size: int) -
             for precision_index, (precision_name, _) in enumerate(PRECISIONS):
                 slot = option_index * len(PRECISIONS) + precision_index
                 position = group_index + (slot - (bars_per_group - 1) / 2) * bar_width
-                value = runtime_results[Configuration(*option, backend_name, precision_name)]
+                value = runtime_results[Configuration(*option, backend_name, precision_name)].runtime_per_point_us
                 ax.bar(
                     position, value, width=bar_width * 0.9,
                     color=bar_color(option, precision_name),
@@ -198,7 +275,7 @@ def create_plot(runtime_results: Dict[Configuration, float], sample_size: int) -
 
     # Headroom for the rotated value labels and the two legends above the tallest bar. On a logarithmic
     # axis a constant factor is what a constant amount of space is, hence the multiplication.
-    values = list(runtime_results.values())
+    values = [measurement.runtime_per_point_us for measurement in runtime_results.values()]
     ax.set_ylim(bottom=min(values) / 3.0, top=max(values) * 25.0)
 
     # A thin rule between the backend groups, so that the eye does not have to rely on the gap alone
@@ -247,6 +324,65 @@ def create_plot(runtime_results: Dict[Configuration, float], sample_size: int) -
     logger.info("Wrote runtime_measurements.png")
 
 
+def export_to_csv(
+        runtime_results: Dict[Configuration, Measurement],
+        polyhedron: Polyhedron,
+        mesh_files: List[str],
+        repeats: int,
+        csv_file: Path,
+) -> None:
+    """Writes one row per configuration to ``csv_file``.
+
+    The table is deliberately denormalized: everything describing the run -- the library, the two
+    compilers, the mesh, and the machine -- is repeated in every row, so that CSVs of different
+    machines or commits can simply be concatenated and grouped by whichever column one is after.
+    """
+    # Constant across the rows of one run, but the whole point of the export: the columns one groups by
+    # once the CSVs of several machines, builds, or commits sit in the same DataFrame
+    environment = {
+        "sample_size": next(iter(runtime_results.values())).sample_size,
+        "repeats": repeats,
+        "mesh_files": " ".join(Path(mesh_file).name for mesh_file in mesh_files),
+        "mesh_vertices": len(polyhedron.vertices),
+        "mesh_faces": len(polyhedron.faces),
+        "version": polyhedral_gravity.__version__,
+        "commit": polyhedral_gravity.__commit__,
+        "host_compiler": polyhedral_gravity.__host_compiler__,
+        "device_compiler": polyhedral_gravity.__device_compiler__,
+        "parallelization": polyhedral_gravity.__parallelization__,
+        "fast_math": polyhedral_gravity.__fast_math__,
+        "logging_level": polyhedral_gravity.__logging__,
+        "cpu": cpu_name(),
+        "cpu_logical_cores": os.cpu_count(),
+        "omp_num_threads": os.environ.get("OMP_NUM_THREADS", ""),
+        "gpu": gpu_name(),
+        "operating_system": f"{platform.system()} {platform.release()}",
+        "machine": platform.machine(),
+        "python_version": platform.python_version(),
+        "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+
+    rows = [
+        {
+            "backend": configuration.backend_name,
+            "interface": configuration.interface,
+            "call_style": configuration.call_style,
+            "precision": configuration.precision_name,
+            "runtime_per_point_us": measurement.runtime_per_point_us,
+            "best_total_s": measurement.best_total_s,
+            "mean_total_s": measurement.mean_total_s,
+            "worst_total_s": measurement.worst_total_s,
+            "spread": measurement.spread,
+            **environment,
+        }
+        for configuration, measurement in runtime_results.items()
+    ]
+
+    dataframe = pd.DataFrame(rows)
+    dataframe.to_csv(csv_file, index=False)
+    logger.info(f"Wrote {csv_file} ({len(dataframe)} rows, {len(dataframe.columns)} columns)")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Command line interface for benchmarking the Python interface of the polyhedral gravity model "
@@ -276,6 +412,15 @@ def main():
         action='store_true',
         help="Option to create and display a plot. Use this flag to enable plotting. Defaults to False.",
     )
+    parser.add_argument(
+        '-e', '--export-to-csv',
+        type=Path,
+        nargs='?',
+        const=Path("runtime_measurements.csv"),
+        default=None,
+        help="Export the measurements, together with the build and machine they were taken on, to a CSV "
+             "file. Optionally takes the file to write. Defaults to runtime_measurements.csv",
+    )
     args = parser.parse_args()
 
     logger.info("Benchmarking the Polyhedral Gravity Model")
@@ -285,6 +430,7 @@ def main():
     logger.info(f"Mesh files:        {args.mesh_files}")
     logger.info(f"Repeats:           {args.repeats}")
     logger.info(f"Plotting Results:  {'Yes' if args.plot else 'No'}")
+    logger.info(f"CSV Export:        {args.export_to_csv if args.export_to_csv else 'No'}")
     logger.info("##########################################################")
     logger.info("Polyhedral Gravity Model Information:")
     logger.info(f"Version:                 {polyhedral_gravity.__version__}")
@@ -295,10 +441,18 @@ def main():
     logger.info(f"Fast Math Level:         {'Yes' if polyhedral_gravity.__fast_math__ else 'No'}")
     logger.info(f"Logging Level:           {polyhedral_gravity.__logging__}")
     logger.info("##########################################################")
-    results = run_time_measurements(args.sample_size, args.mesh_files, args.repeats)
+    polyhedron = Polyhedron(
+        polyhedral_source=args.mesh_files,
+        density=1.0,
+        integrity_check=PolyhedronIntegrity.DISABLE,
+    )
+    results = run_time_measurements(polyhedron, args.sample_size, args.repeats)
     if args.plot:
         logger.info("Plotting Results")
         create_plot(results, args.sample_size)
+    if args.export_to_csv:
+        logger.info("Exporting Results")
+        export_to_csv(results, polyhedron, args.mesh_files, args.repeats, args.export_to_csv)
 
 
 if __name__ == "__main__":
