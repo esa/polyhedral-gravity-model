@@ -135,3 +135,19 @@ else ()
     )
     FetchContent_MakeAvailable(Kokkos)
 endif ()
+
+# Kokkos_ENABLE_CUDA_CONSTEXPR above only reaches a Kokkos built by FetchContent. A pre-installed Kokkos
+# carries whatever it was configured with, and without the option nvcc merely warns (#20013) about every
+# std::array::operator[] in device code and emits calls that silently evaluate to zero on the GPU.
+if (Kokkos_FOUND AND Kokkos_ENABLE_CUDA AND Kokkos_CXX_COMPILER_ID STREQUAL "NVIDIA"
+        AND NOT "CUDA_CONSTEXPR" IN_LIST Kokkos_OPTIONS)
+    message(STATUS "Kokkos: The installation at ${Kokkos_DIR} lacks CUDA_CONSTEXPR, adding -expt-relaxed-constexpr")
+    target_compile_options(Kokkos::kokkoscore INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-expt-relaxed-constexpr>)
+endif ()
+
+# Kokkos routes every CXX compile through kokkos_launch_compiler -> nvcc_wrapper, which uses g++ as
+# the host compiler. g++ rejects the clang-only -f[no-]color-diagnostics that CMake emits whenever
+# CMAKE_COLOR_DIAGNOSTICS is defined (IDEs such as CLion set it via the environment).
+# This hacky trick avoids issues when have one build folder being used by Clion and via the CLI
+unset(CMAKE_COLOR_DIAGNOSTICS CACHE)
+unset(CMAKE_COLOR_DIAGNOSTICS)
