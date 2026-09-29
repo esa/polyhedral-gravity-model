@@ -299,6 +299,15 @@ namespace polyhedralGravity {
 
     private:
         /**
+         * Checks that every face references only existing vertices, i.e. that every vertex index is
+         * smaller than the number of vertices. This check is mandatory and always executed at construction time
+         * since resolving an out-of-range index would otherwise cause an out-of-bounds read.
+         *
+         * @throws std::invalid_argument if a face references a non-existing vertex
+         */
+        void checkVertexIndicesInRange() const;
+
+        /**
          * Checks the integrity of the polyhedron depending on the integrity flag.
          *
          * @param integrity the behavior depends on the value, see {@link PolyhedronIntegrity}

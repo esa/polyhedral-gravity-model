@@ -31,12 +31,14 @@ namespace polyhedralGravity {
 
         /**
          * Reads elements from a .obj file (Wavefront OBJ file format)
-         * This method only supports vertex (v) and faces (f) as input.
+         * This method only supports vertex (v) and faces (f) as input. Every other keyword is ignored.
+         * Faces must be triangular and must reference their vertices by a non-negative index.
          *
          * This is also the file format of polyhedrons in some datasets, e.g.,in
          * https://pds.nasa.gov/ds-view/pds/viewDataset.jsp?dsid=EAR-A-5-DDR-RADARSHAPE-MODELS-V2.0
          * However, the suffix for these files is .tab
          * @param filename of the input source without suffix
+         * @throws std::runtime_error if the file cannot be opened or contains a malformed vertex or face
          * @see Refer to https://de.wikipedia.org/wiki/Wavefront_OBJ for further help with the format
          */
         PolyhedralSource readObj(const std::string &filename);
