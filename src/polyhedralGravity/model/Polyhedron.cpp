@@ -19,6 +19,8 @@ namespace polyhedralGravity {
             POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
             std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) {return face - 1;});
         }
+        // Must happen before any face index is resolved to a vertex (including the integrity measures below)
+        this->checkVertexIndicesInRange();
         this->runIntegrityMeasures(integrity);
     }
 
@@ -167,6 +169,21 @@ namespace polyhedralGravity {
             // 3b. Step: Return the inwards pointing as major orientation and
             // the violating faces, i.e. which have outwards pointing normals
             return std::make_pair(NormalOrientation::INWARDS, violatingIndices);
+        }
+    }
+
+    void Polyhedron::checkVertexIndicesInRange() const {
+        const size_t numberOfVertices = _vertices.size();
+        for (size_t faceIndex = 0; faceIndex < _faces.size(); ++faceIndex) {
+            for (const size_t vertexIndex: _faces[faceIndex]) {
+                if (vertexIndex >= numberOfVertices) {
+                    std::stringstream sstream{};
+                    sstream << "The face with index " << faceIndex << " references the vertex index " << vertexIndex
+                            << ", but the mesh only contains " << numberOfVertices << " vertices. "
+                            << "The mesh is malformed and cannot be used to construct a polyhedron!";
+                    throw std::invalid_argument(sstream.str());
+                }
+            }
         }
     }
 

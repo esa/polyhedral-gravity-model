@@ -169,6 +169,29 @@ TEST_F(PolyhedronTest, FaceCorrection) {
     ASSERT_THAT(polyhedron.getFaces(), ContainerEq(_facesOutwards));
 }
 
+TEST_F(PolyhedronTest, OutOfRangeVertexIndex) {
+    using namespace polyhedralGravity;
+    using namespace testing;
+    // A face referencing a non-existing vertex would lead to an out-of-bounds read and must be rejected
+    // independently of the chosen integrity option
+    const std::vector<IndexArray3> facesOutOfRange{
+            {0, 1, 999},
+            {1, 3, 2},
+            {0, 4, 5}
+    };
+    for (const auto &integrity: {PolyhedronIntegrity::DISABLE, PolyhedronIntegrity::AUTOMATIC,
+                                 PolyhedronIntegrity::VERIFY, PolyhedronIntegrity::HEAL}) {
+        EXPECT_THROW(Polyhedron(_cubeVertices, facesOutOfRange, 1.0, NormalOrientation::OUTWARDS, integrity), std::invalid_argument);
+    }
+    // The same holds for a 1-based indexed mesh, where the indices are shifted by -1 beforehand
+    const std::vector<IndexArray3> facesOutOfRangeOneBased{
+            {1, 2, 1000},
+            {2, 4, 3},
+            {1, 5, 6}
+    };
+    EXPECT_THROW(Polyhedron(_cubeVertices, facesOutOfRangeOneBased, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE), std::invalid_argument);
+}
+
 TEST_F(PolyhedronTest, CubeOutwardNormals) {
     using namespace polyhedralGravity;
     using namespace testing;
