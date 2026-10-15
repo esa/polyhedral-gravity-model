@@ -11,71 +11,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  # 1.a Buidl the wheels on a matrix of Windows, MacOS, and Linux platforms using cibuildwheel
+  # 1.a Build the wheels on a matrix of Windows, macOS, and Linux platforms using cibuildwheel
+  #     Builds CPython (incl. free-threaded 3.14t+) and PyPy wheels
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        # Linux: x86_64 and aarch64 wheels (manylinux & musllinux) are built natively on the respective runner
+        # macOS: The arm64 runner builds arm64 wheels and cross-compiles the x86_64 wheels with Apple Clang
+        # Windows: x86_64 and ARM64 wheels are built natively with MSVC on the respective runner
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest, windows-11-arm]
     steps:
-      - uses: actions/checkout@v4
-        ############################# LINUX WHEELS #############################
-        # In case of Linux we need to install compiler and build tools before building the wheels
-        # We set-up QEMU to enable aarch64 builds in the GitHub Runner (which is x86_64 based)
-        # We build wheels for manylinux and musllinux for aarch64 and x86_64
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-        if: matrix.os == 'ubuntu-latest'
-      - name: Build wheels (Linux)
-        uses: pypa/cibuildwheel@v3.1.4
-        env:
-          CIBW_BEFORE_BUILD: pipx install ninja cmake
-          CIBW_ENABLE: cpython-freethreading pypy
-          CIBW_ARCHS_LINUX: "x86_64 aarch64"
-          CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
-        with:
-          package-dir: .
-          output-dir: dist
-        if: matrix.os == 'ubuntu-latest'
-      ############################# MACOS WHEELS #############################
-      # We use Apple Clang as it is the only compiler offering cross-compiling for x86_64
-      # The macOS GitHub Runner is nowadays arm64 based
-      # For the x86_64, we set the MACOSX_DEPLOYMENT_TARGET='10.15' (released 2019) in order to have support for C++17
-      # We don't need this for arm64 since macOS arm64 initially supported C++17/ came years later than macOS 10.15
-      - name: Build wheels (macOS)
-        uses: pypa/cibuildwheel@v3.1.4
-        env:
-          CIBW_BEFORE_BUILD: pipx install ninja cmake
-          CIBW_ENABLE: cpython-freethreading pypy
-          CIBW_ENVIRONMENT: 'MACOSX_DEPLOYMENT_TARGET="10.15"'
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
-          CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
-        with:
-          package-dir: .
-          output-dir: dist
-        if: matrix.os == 'macos-latest'
-      ############################# WINDOWS WHEELS #############################
+      - uses: actions/checkout@v7
       # Set up the Visual Studio environment on Windows (required, so that CMake finds the compiler)
-      # We use the Microsoft Visual Studio Compiler to compile the wheel
-      # As of 09.09.2024, it is not yet possible to build free-threaded wheel on Windows
+      # The toolchain's target architecture must match the runner's architecture
       - uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.os == 'windows-latest'
-      - name: Build wheels (Windows)
-        uses: pypa/cibuildwheel@v3.1.4
+        with:
+          arch: ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
+        if: runner.os == 'Windows'
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v4.3.0
         env:
           CIBW_BEFORE_BUILD: pipx install ninja cmake
-          CIBW_ENABLE: pypy cpython-freethreading
-          CIBW_ARCHS_WINDOWS: "auto64"
+          CIBW_ENABLE: pypy
+          CIBW_ARCHS: auto64
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          # For x86_64, we need at least macOS 10.15 (released 2019) for C++17 support
+          # (arm64 wheels automatically target macOS 11.0 or newer)
+          CIBW_ENVIRONMENT_MACOS: 'MACOSX_DEPLOYMENT_TARGET="10.15"'
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:
           package-dir: .
           output-dir: dist
-        if: matrix.os == 'windows-latest'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: artifact-wheels-${{ matrix.os }}
           path: dist/*.whl
@@ -85,10 +55,10 @@ jobs:
     name: Make SDist
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build SDist
         run: pipx run build --sdist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: artifact-sdist
           path: dist/*.tar.gz
@@ -104,7 +74,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: artifact-*
           merge-multiple: true
@@ -124,7 +94,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: artifact-*
           merge-multiple: true

@@ -1,7 +1,7 @@
 include(FetchContent)
 
 message(STATUS "Setting up spdlog")
-set(SPDLOG_VERSION 1.14.1)
+set(SPDLOG_VERSION 1.17.0)
 
 # Known Issue:
 # If you install spdlog@1.14.1 via homebrew on ARM macOS, CMake will find spdlog

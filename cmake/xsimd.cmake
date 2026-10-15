@@ -1,7 +1,7 @@
 include(FetchContent)
 
 message(STATUS "Setting up xsimd Library")
-set(XSIMD_VERSION 11.1.0)
+set(XSIMD_VERSION 14.3.0)
 
 find_package(xsimd ${XSIMD_VERSION} QUIET)
 
