@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Build
@@ -38,11 +38,10 @@ jobs:
     name: PyTorch Interface (CPU)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v3
         with:
-          micromamba-version: '1.5.6-0'
           environment-file: environment.yml
           cache-downloads: true
           cache-environment: true
@@ -65,13 +64,12 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-latest'
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v3
         with:
-          micromamba-version: '1.5.6-0'
           environment-file: environment.yml
           cache-downloads: true
           cache-environment: true

@@ -111,12 +111,12 @@ class CMakeBuild(build_ext):
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
 
-        # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
-        # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
-        # from Python.
+        # We use PYBIND11_FINDPYTHON, i.e. CMake's FindPython, which only respects Python_EXECUTABLE.
+        # Without it, FindPython searches on its own and does not find free-threaded interpreters
+        # (e.g. python3.14t), picking up any other Python on the system instead (wrong ABI/extension suffix).
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DPython_EXECUTABLE={sys.executable}",
         ]
         build_args = []
 

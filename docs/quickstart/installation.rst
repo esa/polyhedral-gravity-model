@@ -102,13 +102,13 @@ Dependencies (automatically set-up)
 
 Dependencies (all of them are automatically set-up via :code:`CMake`):
 
-- GoogleTest (1.15.2 or compatible), only required for testing
-- spdlog (1.13.0 or compatible), required for logging
+- GoogleTest (1.18.0 or compatible), only required for testing
+- spdlog (1.17.0 or compatible), required for logging
 - tetgen (1.6 or compatible), required for I/O
-- yaml-cpp (0.8.0 or compatible), required for I/O
+- yaml-cpp (0.9.0 or compatible), required for I/O
 - thrust (2.1.0 or compatible), required for parallelization and utility
-- xsimd (11.1.0 or compatible), required for vectorization of the :code:`atan(..)`
-- pybind11 (2.12.0 or compatible), required for the Python interface, but not the C++ standalone
+- xsimd (14.3.0 or compatible), required for vectorization of the :code:`atan(..)`
+- pybind11 (3.1.0 or compatible), required for the Python interface, but not the C++ standalone
 
 Build this documentation
 ------------------------
