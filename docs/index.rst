@@ -76,6 +76,7 @@ published in the *Journal of Open Source Software*:
    background/approach
    background/mesh_integrity
    background/evaluable_vs_evaluate
+   background/gpu_acceleration
 
 .. toctree::
    :caption: PYTHON API REFERENCE
