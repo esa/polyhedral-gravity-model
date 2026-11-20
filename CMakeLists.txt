@@ -43,6 +43,10 @@ cmake_dependent_option(BUILD_POLYHEDRAL_GRAVITY_LIBRARY "Builds the library (Def
 option(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE "Set this to on if the python interface should be built (Default: ON)" ON)
 # Option to build tests or not
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
+# Option to build benchmarks or not
+option(BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT "Set to on if the benchmark executable should be built (Default: ON)" ON)
+# Option to enable Include-What-You-Use warnings during compilation
+option(ENABLE_IWYU "Set to on to enable Include-What-You-Use warnings (Default: OFF)" OFF)
 
 if (_LIBCPP_DISABLE_AVAILABILITY)
     message(STATUS "Disabling availability macros for libc++")
@@ -74,6 +78,7 @@ message(STATUS "Polyhedral Gravity Library          ${BUILD_POLYHEDRAL_GRAVITY_L
 message(STATUS "Polyhedral Gravity C++ Executable   ${BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE}")
 message(STATUS "Polyhedral Gravity Python Interface ${BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE}")
 message(STATUS "Polyhedral Gravity Tests            ${BUILD_POLYHEDRAL_GRAVITY_TESTS}")
+message(STATUS "Polyhedral Gravity Time Benchmark   ${BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT}")
 message(STATUS "#################################################################")
 #######################################################
 # Including dependencies needed across multiple targets
@@ -85,6 +90,10 @@ include(tetgen)
 include(xsimd)
 include(clang_format)
 include(cmake_format)
+
+if (${ENABLE_IWYU})
+    include(include-what-you-use)
+endif ()
 
 ###############################
 # Thrust Parallelization Set-Up

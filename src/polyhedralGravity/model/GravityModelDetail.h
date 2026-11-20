@@ -1,7 +1,9 @@
 #pragma once
 
-#include <utility>
+#include <algorithm>
 #include <array>
+#include <utility>
+#include <variant>
 #include <vector>
 #include <algorithm>
 #include <variant>
@@ -15,14 +17,14 @@
 #include "thrust/execution_policy.h"
 #include "xsimd/xsimd.hpp"
 
-#include "Polyhedron.h"
 #include "GravityModelData.h"
+#include "Polyhedron.h"
 #include "polyhedralGravity/input/TetgenAdapter.h"
+#include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/util/UtilityThrust.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
-#include "polyhedralGravity/output/Logging.h"
+#include "polyhedralGravity/util/UtilityThrust.h"
 
 namespace polyhedralGravity::GravityModel::detail {
 

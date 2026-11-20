@@ -181,7 +181,7 @@ namespace polyhedralGravity {
             return !(rhs == *this);
         }
 
-         /**
+        /**
          * Pretty output of this struct on the given ostream.
          * @param os the ostream
          * @param hessianPlane a HessianPlane
@@ -193,4 +193,4 @@ namespace polyhedralGravity {
         }
     };
 
-}
+}// namespace polyhedralGravity

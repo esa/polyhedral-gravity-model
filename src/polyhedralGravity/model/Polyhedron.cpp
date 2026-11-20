@@ -3,12 +3,13 @@
 namespace polyhedralGravity {
 
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
-                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
         : _vertices{vertices},
           _faces{faces},
           _density{density},
           _orientation{orientation},
-          _metricUnit{metricUnit} {
+          _metricUnit{metricUnit},
+          _enableParallelQuery{treeAlgorithm == PlaneSelectionAlgorithm::Algorithm::NOTREE} {
         using util::operator-;
         // Checks that the node with index zero is actually used
         // In case it is not used, the indexing presumably starts mathematically at one
@@ -21,20 +22,22 @@ namespace polyhedralGravity {
         }
         // Must happen before any face index is resolved to a vertex (including the integrity measures below)
         this->checkVertexIndicesInRange();
+        // tree needs the shifted + validated faces, so build it only now
+        _tree = std::make_shared<KDTree>(_vertices, _faces, treeAlgorithm);
         this->runIntegrityMeasures(integrity);
     }
 
-    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
-        : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity, metricUnit} {
+    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
+        : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity, metricUnit, treeAlgorithm} {
     }
 
-    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
-        : Polyhedron{MeshReader::getPolyhedralSource(polyhedralFiles), density, orientation, integrity, metricUnit} {
+    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
+        : Polyhedron{MeshReader::getPolyhedralSource(polyhedralFiles), density, orientation, integrity, metricUnit, treeAlgorithm} {
     }
 
-    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
         : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : MeshReader::getPolyhedralSource(std::get<PolyhedralFiles>(polyhedralSource)),
-                     density, orientation, integrity, metricUnit} {
+                     density, orientation, integrity, metricUnit, treeAlgorithm} {
     }
 
     const std::vector<Array3> &Polyhedron::getVertices() const {
@@ -132,24 +135,31 @@ namespace polyhedralGravity {
         return std::make_tuple(_vertices, _faces, _density, _orientation, _metricUnit);
     }
 
-    std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
+    std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() {
         // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
         const auto &[polyBegin, polyEnd] = this->transformIterator();
         const size_t n = this->countFaces();
         // Vector contains TRUE if the corrspeonding index VIOLATES the OUTWARDS cirteria
         // Vector contains FALSE if the cooresponding index FULFILLS the OUTWARDS criteria
         thrust::device_vector<bool> violatingBoolOutwards(n, false);
-        thrust::transform(
-                thrust::device,
-                polyBegin,
-                polyEnd,
-                violatingBoolOutwards.begin(),
-                [&](const auto &face) {
-                    // If the ray intersects the polyhedron odd number of times the normal points inwards
-                    // Hence, violating the OUTWARDS constraint
-                    const size_t intersects = this->countRayPolyhedronIntersections(face);
-                    return intersects % 2 != 0;
-                });
+        const auto transformWithPolicy = [&violatingBoolOutwards, &polyBegin, &polyEnd, this](const auto &policy) {
+            thrust::transform(
+                    policy,
+                    polyBegin,
+                    polyEnd,
+                    violatingBoolOutwards.begin(),
+                    [&](const auto &face) {
+                        // If the ray intersects the polyhedron odd number of times the normal points inwards
+                        // Hence, violating the OUTWARDS constraint
+                        const size_t intersects = this->countRayPolyhedronIntersections(face);
+                        return intersects % 2 != 0;
+                    });
+        };
+        if (_enableParallelQuery) {
+            transformWithPolicy(thrust::device);
+        } else {
+            transformWithPolicy(thrust::host);
+        }
         const size_t numberOfOutwardsViolations = std::count(violatingBoolOutwards.cbegin(), violatingBoolOutwards.cend(), true);
         // 2. Step: Create a set with only the indices violating the constraint
         std::set<size_t> violatingIndices{};
@@ -170,6 +180,10 @@ namespace polyhedralGravity {
             // the violating faces, i.e. which have outwards pointing normals
             return std::make_pair(NormalOrientation::INWARDS, violatingIndices);
         }
+    }
+
+    void Polyhedron::prebuildKDTree() const {
+        _tree->prebuildTree();
     }
 
     void Polyhedron::checkVertexIndicesInRange() const {
@@ -265,48 +279,8 @@ namespace polyhedralGravity {
         const Array3 rayOrigin = centroid + (rayVector * EPSILON_ZERO_OFFSET);
 
         // Count every triangular face which is intersected by the ray
-        const auto &[begin, end] = this->transformIterator();
-        std::set<Array3> intersections{};
-        std::for_each(begin, end, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &otherFace) {
-            const std::unique_ptr<Array3> intersection = rayIntersectsTriangle(rayOrigin, rayVector, otherFace);
-            if (intersection != nullptr) {
-                intersections.insert(*intersection);
-            }
-        });
-        return intersections.size();
+        return this->_tree->countIntersections(rayOrigin, rayVector);
     }
 
-    std::unique_ptr<Array3> Polyhedron::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle) {
-        // Adapted Möller–Trumbore intersection algorithm
-        // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-        using namespace util;
-        const Array3 edge1 = triangle[1] - triangle[0];
-        const Array3 edge2 = triangle[2] - triangle[0];
-        const Array3 h = cross(rayVector, edge2);
-        const double a = dot(edge1, h);
-        if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
-            return nullptr;
-        }
-
-        const double f = 1.0 / a;
-        const Array3 s = rayOrigin - triangle[0];
-        const double u = f * dot(s, h);
-        if (u < 0.0 || u > 1.0) {
-            return nullptr;
-        }
-
-        const Array3 q = cross(s, edge1);
-        const double v = f * dot(rayVector, q);
-        if (v < 0.0 || u + v > 1.0) {
-            return nullptr;
-        }
-
-        const double t = f * dot(edge2, q);
-        if (t > EPSILON_ZERO_OFFSET) {
-            return std::make_unique<Array3>(rayOrigin + rayVector * t);
-        } else {
-            return nullptr;
-        }
-    }
 
 }// namespace polyhedralGravity
