@@ -2,72 +2,81 @@
 #include "polyhedralGravity/input/ConfigSource.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/model/GravityModel.h"
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
+#include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/output/CSVWriter.h"
 #include "polyhedralGravity/output/Logging.h"
 #include <chrono>
+#include <sstream>
 
-int main(int argc, char *argv[]) {
+int main(const int argc, char *argv[]) {
     using namespace polyhedralGravity;
 
-    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "####################################################################################");
-    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Model Version:                 {}", POLYHEDRAL_GRAVITY_VERSION);
-    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Commit Hash:                   {}", POLYHEDRAL_GRAVITY_COMMIT_HASH);
-    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Model Parallelization Backend: {}", POLYHEDRAL_GRAVITY_PARALLELIZATION);
-    SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Polyhedral Gravity Logging Level:                 {}", POLYHEDRAL_GRAVITY_LOGGING_LEVEL);
+    POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
+    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Model Version:                 {}", POLYHEDRAL_GRAVITY_VERSION);
+    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Commit Hash:                   {}", POLYHEDRAL_GRAVITY_COMMIT_HASH);
+    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Model Parallelization Backend: {}", POLYHEDRAL_GRAVITY_PARALLELIZATION);
+    POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedral Gravity Logging Level:                 {}", POLYHEDRAL_GRAVITY_LOGGING_LEVEL);
+    POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
 
     if (argc != 2) {
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Wrong program call! "
-                                                                                "Please use the program like this:\n"
-                                                                                "./polyhedralGravity [YAML-Configuration-File]\n");
+        POLYHEDRAL_GRAVITY_LOG_ERROR("Wrong program call! Please use the program like this: ./polyhedralGravity [YAML-Configuration-File]");
         return 0;
     }
 
     try {
         const std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>(argv[1]);
-        const auto polyhedralSource = config->getDataSource()->getPolyhedralSource();
+        const auto polyhedralSource = config->getPolyhedralSource();
         const auto density = config->getDensity();
         const auto computationPoints = config->getPointsOfInterest();
         const auto outputFileName = config->getOutputFileName();
+        const auto metricUnit = config->getMeshUnit();
         const PolyhedronIntegrity checkPolyhedralInput = config->getMeshInputCheckStatus() ? PolyhedronIntegrity::HEAL : PolyhedronIntegrity::DISABLE;
 
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "####################################################################################");
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Number of Vertices:                               {}", std::get<0>(polyhedralSource).size());
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Number of Faces:                                  {}", std::get<1>(polyhedralSource).size());
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Number of Computation Points:                     {}", computationPoints.size());
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Mesh Check Enabled:                               {}", config->getMeshInputCheckStatus());
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Output File:                                      {}", outputFileName);
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "####################################################################################");
+        POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedron creation and check (if enabled) started.");
+        const auto startPolyhedron = std::chrono::high_resolution_clock::now();
+        const Polyhedron polyhedron{polyhedralSource, density, NormalOrientation::OUTWARDS, checkPolyhedralInput, metricUnit};
+        const auto endPolyhedron = std::chrono::high_resolution_clock::now();
+        const auto durationPolyhedron = endPolyhedron - startPolyhedron;
+        const auto msPolyhedron = std::chrono::duration_cast<std::chrono::microseconds>(durationPolyhedron).count();
+        POLYHEDRAL_GRAVITY_LOG_INFO("Polyhedron instantiated and checked. It took {} microseconds.", msPolyhedron);
 
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "The calculation started...");
-        const auto start = std::chrono::high_resolution_clock::now();
-        const Polyhedron polyhedron{polyhedralSource, density, NormalOrientation::OUTWARDS, checkPolyhedralInput};
+        POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
+        POLYHEDRAL_GRAVITY_LOG_INFO("Number of Vertices:                               {}", polyhedron.countVertices());
+        POLYHEDRAL_GRAVITY_LOG_INFO("Number of Faces:                                  {}", polyhedron.countFaces());
+        POLYHEDRAL_GRAVITY_LOG_INFO("Number of Computation Points:                     {}", computationPoints.size());
+        POLYHEDRAL_GRAVITY_LOG_INFO("Mesh Check Enabled:                               {}", config->getMeshInputCheckStatus());
+        POLYHEDRAL_GRAVITY_LOG_INFO("Mesh Unit:                                        {}", polyhedron.getMeshUnitAsString());
+        POLYHEDRAL_GRAVITY_LOG_INFO("Density:                                          {} {}", polyhedron.getDensity(), polyhedron.getDensityUnit());
+        POLYHEDRAL_GRAVITY_LOG_INFO("Output File:                                      {}", outputFileName);
+        POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
+
+        POLYHEDRAL_GRAVITY_LOG_INFO("Gravity Evaluation has started!");
+        const auto startCalc = std::chrono::high_resolution_clock::now();
+
         const auto result = GravityModel::evaluate(polyhedron, computationPoints, true);
-        const auto end = std::chrono::high_resolution_clock::now();
-        const auto duration = end - start;
-        const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(duration);
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                           "The calculation finished. It took {} microseconds.", ms.count());
-        SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                           "Or on average {} microseconds/point",
-                           static_cast<double>(ms.count()) / static_cast<double>(computationPoints.size()));
+
+        const auto endCalc = std::chrono::high_resolution_clock::now();
+        const auto durationCalc = endCalc - startCalc;
+        const auto msCalc = std::chrono::duration_cast<std::chrono::microseconds>(durationCalc).count();
+        POLYHEDRAL_GRAVITY_LOG_INFO("The calculation of the Gravity Model has finished. It took {} microseconds or on average {} microseconds/point",
+            msCalc, static_cast<double>(msCalc) / static_cast<double>(computationPoints.size()));
+        POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
 
         //The results
         if (!outputFileName.empty()) {
-            SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                               "Writing results to specified output file {}", outputFileName);
+            POLYHEDRAL_GRAVITY_LOG_INFO("Writing results to specified output file {}", outputFileName);
             const CSVWriter csvWriter{outputFileName};
             csvWriter.printResult(computationPoints, result);
-            SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                               "Writing finished!");
+            POLYHEDRAL_GRAVITY_LOG_INFO("Writing finished!");
         } else {
-            SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                               "No output filename was specified!");
+            POLYHEDRAL_GRAVITY_LOG_WARN("No output filename was specified!");
         }
 
         return 0;
 
     } catch (const std::exception &e) {
-        SPDLOG_LOGGER_ERROR(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "{}", e.what());
+        POLYHEDRAL_GRAVITY_LOG_ERROR("{}", e.what());
         return -1;
     }
 }

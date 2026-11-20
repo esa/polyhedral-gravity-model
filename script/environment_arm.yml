@@ -6,6 +6,7 @@ dependencies:
   - numpy
   - matplotlib
   - sympy
+  - loguru
   - pip
   - pip:
     - polyhedral-gravity

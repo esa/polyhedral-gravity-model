@@ -30,7 +30,9 @@ CMAKE_OPTIONS = {
     # Should be of course ON!
     "BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE": "ON",
     # Build static libs by default (On conda-forge we build shared libs by setting this to ON)
-    "BUILD_SHARED_LIBS": "OFF"
+    "BUILD_SHARED_LIBS": "OFF",
+    # Required since CMake 4.0 (doesn't do anything before that) due to the outdated TetGen build system
+    "CMAKE_POLICY_VERSION_MINIMUM": "3.5",
 }
 # ---------------------------------------------------------------------------------
 
@@ -53,7 +55,21 @@ def get_cmake_generator():
     else:
         return None
 
-def get_version():
+def get_git_version():
+    """Returns the version of the polyhedral gravity package by using git describe"""
+    version_string = subprocess.check_output([
+        "git", "describe", "--tags", "--abbrev=0",
+        "--match", "v[0-9]*.[0-9]*.[0-9]*",        # plain
+        "--match", "v[0-9]*.[0-9]*.[0-9]*a*",      # alpha
+        "--match", "v[0-9]*.[0-9]*.[0-9]*b*",      # beta
+        "--match", "v[0-9]*.[0-9]*.[0-9]*rc*",     # release candidate
+        "--match", "v[0-9]*.[0-9]*.[0-9]*.post*",  # post
+        "--match", "v[0-9]*.[0-9]*.[0-9]*.dev*",   # dev
+    ]).decode("utf-8").strip()
+    # Remove the leading "v"
+    return version_string[1:]
+
+def get_cmake_version():
     """Returns the version of the polyhedral gravity package by reading the CMake file."""
     # Path to the CMake file
     cmake_file = os.path.join(os.path.dirname(__file__), "version.cmake" )
@@ -67,7 +83,7 @@ def get_version():
         content = file.read()
 
     # Use regex to extract the PROJECT_VERSION
-    version_match = re.search(r'set\(PROJECT_VERSION\s+([^\s)]+)\)', content)
+    version_match = re.search(r'set\(POLYHEDRAL_GRAVITY_VERSION\s+"(.*)"', content)
     if version_match:
         return version_match.group(1)
     else:
@@ -95,12 +111,12 @@ class CMakeBuild(build_ext):
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
 
-        # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
-        # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
-        # from Python.
+        # We use PYBIND11_FINDPYTHON, i.e. CMake's FindPython, which only respects Python_EXECUTABLE.
+        # Without it, FindPython searches on its own and does not find free-threaded interpreters
+        # (e.g. python3.14t), picking up any other Python on the system instead (wrong ABI/extension suffix).
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DPython_EXECUTABLE={sys.executable}",
         ]
         build_args = []
 
@@ -141,7 +157,9 @@ class CMakeBuild(build_ext):
         # MSVC special cases
         if self.compiler.compiler_type == "msvc":
             # Single config generators are handled "normally"
-            single_config = any(x in cmake_generator for x in {"NMake", "Ninja"})
+            single_config = cmake_generator is not None and any(
+                x in cmake_generator for x in {"NMake", "Ninja"}
+            )
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
@@ -194,19 +212,21 @@ picture_in_readme = '''<p align="center">
 # --------------------------------------------------------------------------------
 setup(
     name="polyhedral_gravity",
-    version=get_version(),
+    version=get_cmake_version(),
     author="Jonas Schuhmacher",
     author_email="jonas.schuhmacher@tum.de",
     description="Package to compute full gravity tensor of a given constant density polyhedron for arbitrary points "
                 "according to the geodetic convention",
     long_description=open("README.md").read().replace(picture_in_readme, ''),
     long_description_content_type="text/markdown",
-    ext_modules=[CMakeExtension("polyhedral_gravity")],
+    ext_modules=[CMakeExtension("polyhedral_gravity._core")],
+    packages=["polyhedral_gravity"],
+    package_dir={"polyhedral_gravity": "python/polyhedral_gravity"},
     cmdclass={"build_ext": CMakeBuild},
     license="GPLv3",
     license_file="LICENSE",
     zip_safe=False,
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     include_package_data=True,
     project_urls={
         "Homepage": "https://github.com/esa/polyhedral-gravity-model",

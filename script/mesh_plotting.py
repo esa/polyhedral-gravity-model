@@ -31,9 +31,6 @@ def plot_triangulation(vertices, faces, title, filename=None):
     ax.set_ylabel("$y$")
     ax.set_zlabel("$z$")
 
-    ax.set_xlim(-1, 1)
-    ax.set_ylim(-1, 1)
-    ax.set_zlim(-1, 1)
 
     if filename is not None:
         fig.savefig(filename, dpi=300)
@@ -84,7 +81,7 @@ def plot_grid_2d(X, Y, z, title, filename=None, labels=("$x$", "$y$"), limits=(-
     ax.set_xlabel(xl)
     ax.set_ylabel(yl)
 
-    # fig.colorbar(surf, aspect=5, orientation='vertical', shrink=0.5)
+    fig.colorbar(surf, aspect=5, orientation='vertical', shrink=0.5)
 
     if filename is not None:
         fig.savefig(filename, dpi=300)

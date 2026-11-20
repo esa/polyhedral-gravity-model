@@ -7,5 +7,6 @@ gravityModel:
     density: 2670.0
     points:
       - [0, 0, 0]
+    metric_unit: unitless
   output:
     filename: "gravity_result_eros.csv"

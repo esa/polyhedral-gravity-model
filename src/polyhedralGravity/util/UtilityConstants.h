@@ -20,14 +20,14 @@ namespace polyhedralGravity::util {
     constexpr double PI_2 = 1.5707963267948966192313216916397514420985846996875529104874722961;
 
     /**
-     * The gravitational constant G in [m^3/(kg*s^2)].
-     * @related in his paper above Equation (4)
+     * The gravitational constant G in @f$[m^3/(kg*s^2)]@f$.
+     * In Tsoulis et al. (2012) above Equation (4)
      */
     constexpr double GRAVITATIONAL_CONSTANT = 6.67430e-11;
 
     /**
      * The assumed constant density rho for a polyhedron after Tsoulis paper in @f$[kg/m^3]@f$.
-     * @related in his paper above Equation (4)
+     * In Tsoulis et al. (2012) above Equation (4)
      */
     constexpr double DEFAULT_CONSTANT_DENSITY = 2670.0;
 

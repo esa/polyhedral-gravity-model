@@ -24,6 +24,22 @@ protected:
             {-1.0, 1.0, 1.0}
     };
 
+    // The indexing starts at 1 rather than at zero
+    const std::vector<polyhedralGravity::IndexArray3> _facesCorrection{
+                {2, 4, 3},
+                {1, 4, 2},
+                {1, 2, 6},
+                {1, 6, 5},
+                {1, 8, 4},
+                {1, 5, 8},
+                {2, 3, 7},
+                {2, 7, 6},
+                {3, 4, 7},
+                {4, 8, 7},
+                {5, 6, 7},
+                {5, 7, 8}
+    };
+
     const std::vector<polyhedralGravity::IndexArray3> _facesOutwards{
             {1, 3, 2},
             {0, 3, 1},
@@ -143,6 +159,38 @@ protected:
             {6, 2, 7}
     };
 };
+
+TEST_F(PolyhedronTest, FaceCorrection) {
+    using namespace polyhedralGravity;
+    using namespace testing;
+
+    const auto polyhedron = Polyhedron(_cubeVertices, _facesCorrection, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE);
+    // The faces indices need to be shifted by -1, i.e., the indexing starts with vertex 0 not 1
+    ASSERT_THAT(polyhedron.getFaces(), ContainerEq(_facesOutwards));
+}
+
+TEST_F(PolyhedronTest, OutOfRangeVertexIndex) {
+    using namespace polyhedralGravity;
+    using namespace testing;
+    // A face referencing a non-existing vertex would lead to an out-of-bounds read and must be rejected
+    // independently of the chosen integrity option
+    const std::vector<IndexArray3> facesOutOfRange{
+            {0, 1, 999},
+            {1, 3, 2},
+            {0, 4, 5}
+    };
+    for (const auto &integrity: {PolyhedronIntegrity::DISABLE, PolyhedronIntegrity::AUTOMATIC,
+                                 PolyhedronIntegrity::VERIFY, PolyhedronIntegrity::HEAL}) {
+        EXPECT_THROW(Polyhedron(_cubeVertices, facesOutOfRange, 1.0, NormalOrientation::OUTWARDS, integrity), std::invalid_argument);
+    }
+    // The same holds for a 1-based indexed mesh, where the indices are shifted by -1 beforehand
+    const std::vector<IndexArray3> facesOutOfRangeOneBased{
+            {1, 2, 1000},
+            {2, 4, 3},
+            {1, 5, 6}
+    };
+    EXPECT_THROW(Polyhedron(_cubeVertices, facesOutOfRangeOneBased, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE), std::invalid_argument);
+}
 
 TEST_F(PolyhedronTest, CubeOutwardNormals) {
     using namespace polyhedralGravity;
@@ -307,6 +355,16 @@ TEST_F(PolyhedronTest, CorrectBigPolyhedron) {
     ASSERT_NO_THROW(Polyhedron(
                 std::vector<std::string>({"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}),
                 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY)
+            );
+}
+
+TEST_F(PolyhedronTest, FileDoesNotExistPolyhedron) {
+    using namespace testing;
+    using namespace polyhedralGravity;
+    // All normals are pointing outwards, extensive Eros example
+    ASSERT_THROW(Polyhedron(
+                std::vector<std::string>({"resources/FileDoesNotExist.node", "resources/FileDoesNotExist.face"}),
+                1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY), std::runtime_error
             );
 }
 

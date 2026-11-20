@@ -46,7 +46,7 @@ namespace polyhedralGravity::util {
      *
      * @return true if the ULP distance between lhs and rhs is less than or equal to the provided ulpDistance value, otherwise, false.
      *  Returns true if both numbers are exactly the same. Returns false if the signs do not match.
-     * @example The ULP distance between 3.0 and std::nextafter(3.0, INFINITY) would be 1,
+     * @note The ULP distance between 3.0 and std::nextafter(3.0, INFINITY) would be 1,
      *      the ULP distance of 3.0 and std::nextafter(std::nextafter(3.0, INFINITY), INFINITY) would be 2, etc.
      * @see https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
      */

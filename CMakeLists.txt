@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+cmake_policy(SET CMP0079 NEW)
 project(polyhedralGravity)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -47,10 +48,17 @@ option(BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT "Set to on if the benchmark exe
 # Option to enable Include-What-You-Use warnings during compilation
 option(ENABLE_IWYU "Set to on to enable Include-What-You-Use warnings (Default: OFF)" OFF)
 
-IF (_LIBCPP_DISABLE_AVAILABILITY)
+if (_LIBCPP_DISABLE_AVAILABILITY)
     message(STATUS "Disabling availability macros for libc++")
     add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
 endif ()
+
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang"))
+    # Fixes undefined _VSTD when using Apple Clang 17
+    message(STATUS "Using Apple Clang compiler. Defining _VSTD=std.")
+    add_definitions(-D_VSTD=std)
+endif()
+
 
 # Resolves missing fmt symbols when working with spdlog (bundled via brew/ conda on Arm architecture)
 # Refer to https://github.com/gabime/spdlog/issues/660
@@ -81,6 +89,7 @@ include(spdlog)
 include(tetgen)
 include(xsimd)
 include(clang_format)
+include(cmake_format)
 
 if (${ENABLE_IWYU})
     include(include-what-you-use)

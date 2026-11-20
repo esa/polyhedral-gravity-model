@@ -1,39 +1,43 @@
 #include "Polyhedron.h"
 
-#include "polyhedralGravity/input/TetgenAdapter.h"
-
-
 namespace polyhedralGravity {
 
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
-                           const std::vector<IndexArray3> &faces, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
+                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
         : _vertices{vertices},
           _faces{faces},
           _density{density},
           _orientation{orientation},
-          _tree{std::make_shared<KDTree>(vertices, faces, treeAlgorithm)}, _enableParallelQuery{treeAlgorithm == PlaneSelectionAlgorithm::Algorithm::NOTREE} {
-        //Checks that the node with index zero is actually used
-        if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
+          _metricUnit{metricUnit},
+          _enableParallelQuery{treeAlgorithm == PlaneSelectionAlgorithm::Algorithm::NOTREE} {
+        using util::operator-;
+        // Checks that the node with index zero is actually used
+        // In case it is not used, the indexing presumably starts mathematically at one
+        // In this case, we shift it by -1, so that the indexing start with zero
+        if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](const auto &face) {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;
             })) {
-            throw std::invalid_argument("The node with index zero (0) was never used in any face! This is "
-                                        "no valid polyhedron. Probable issue: Started numbering the vertices of "
-                                        "the polyhedron at one (1).");
+            POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
+            std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) {return face - 1;});
         }
+        // Must happen before any face index is resolved to a vertex (including the integrity measures below)
+        this->checkVertexIndicesInRange();
+        // tree needs the shifted + validated faces, so build it only now
+        _tree = std::make_shared<KDTree>(_vertices, _faces, treeAlgorithm);
         this->runIntegrityMeasures(integrity);
     }
 
-    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
-        : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity, treeAlgorithm} {
+    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
+        : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity, metricUnit, treeAlgorithm} {
     }
 
-    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
-        : Polyhedron{TetgenAdapter{polyhedralFiles}.getPolyhedralSource(), density, orientation, integrity, treeAlgorithm} {
+    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
+        : Polyhedron{MeshReader::getPolyhedralSource(polyhedralFiles), density, orientation, integrity, metricUnit, treeAlgorithm} {
     }
 
-    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
-        : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : TetgenAdapter{std::get<PolyhedralFiles>(polyhedralSource)}.getPolyhedralSource(),
-                     density, orientation, integrity, treeAlgorithm} {
+    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit, const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm)
+        : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : MeshReader::getPolyhedralSource(std::get<PolyhedralFiles>(polyhedralSource)),
+                     density, orientation, integrity, metricUnit, treeAlgorithm} {
     }
 
     const std::vector<Array3> &Polyhedron::getVertices() const {
@@ -80,24 +84,63 @@ namespace polyhedralGravity {
         return _orientation == NormalOrientation::OUTWARDS ? 1.0 : -1.0;
     }
 
+    MetricUnit Polyhedron::getMeshUnit() const {
+        return _metricUnit;
+    }
+
+    std::string Polyhedron::getMeshUnitAsString() const {
+        std::stringstream meshUnit{};
+        meshUnit << _metricUnit;
+        return meshUnit.str();
+    }
+
+    std::string Polyhedron::getDensityUnit() const {
+        std::stringstream densityUnit{};
+        if (_metricUnit != MetricUnit::UNITLESS) {
+            densityUnit << "kg/" << _metricUnit << "^3";
+        } else {
+            densityUnit << _metricUnit;
+        }
+        return densityUnit.str();
+    }
+
+
+    double Polyhedron::getGravityModelScaling() const {
+        switch (_metricUnit) {
+            case MetricUnit::UNITLESS:
+                return getDensity() * getOrientationFactor();
+            case MetricUnit::METER:
+                return util::GRAVITATIONAL_CONSTANT * getDensity() * getOrientationFactor();
+            case MetricUnit::KILOMETER:
+                // Gravitational Constant in km^3/(kg * s^2)
+                constexpr double GRAVITATIONAL_CONSTANT_KM = util::GRAVITATIONAL_CONSTANT * 1e-9;
+                return GRAVITATIONAL_CONSTANT_KM * getDensity() * getOrientationFactor();
+        }
+        throw std::invalid_argument{"The metric unit is not supported!"};
+    }
+
+
     std::string Polyhedron::toString() const {
         std::stringstream sstream{};
-        sstream << "<polyhedral_gravity.Polyhedron, density = " << _density << ", vertices = "
-                << countVertices() << ", faces = " << countFaces() << ", orientation = " << _orientation << ">";
+        sstream << "<polyhedral_gravity.Polyhedron, density = " << _density << " " << getDensityUnit()
+                << ", vertices = " << countVertices()
+                << ", faces = " << countFaces()
+                << ", orientation = " << _orientation
+                << ", mesh_unit = '" << getMeshUnitAsString() << "'"
+                << ">";
         return sstream.str();
     }
 
-    std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation> Polyhedron::getState() const {
-        return std::make_tuple(_vertices, _faces, _density, _orientation);
+    std::tuple<std::vector<Array3>, std::vector<IndexArray3>, double, NormalOrientation, MetricUnit> Polyhedron::getState() const {
+        return std::make_tuple(_vertices, _faces, _density, _orientation, _metricUnit);
     }
 
-
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() {
-        // 1. Step: Find all indices of normals which violate the constraint outwards pointing
+        // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
         const auto &[polyBegin, polyEnd] = this->transformIterator();
         const size_t n = this->countFaces();
-        // Vector contains TRUE if the corresponding index VIOLATES the OUTWARDS criteria
-        // Vector contains FALSE if the corresponding index FULFILLS the OUTWARDS criteria
+        // Vector contains TRUE if the corrspeonding index VIOLATES the OUTWARDS cirteria
+        // Vector contains FALSE if the cooresponding index FULFILLS the OUTWARDS criteria
         thrust::device_vector<bool> violatingBoolOutwards(n, false);
         const auto transformWithPolicy = [&violatingBoolOutwards, &polyBegin, &polyEnd, this](const auto &policy) {
             thrust::transform(
@@ -138,8 +181,24 @@ namespace polyhedralGravity {
             return std::make_pair(NormalOrientation::INWARDS, violatingIndices);
         }
     }
+
     void Polyhedron::prebuildKDTree() const {
         _tree->prebuildTree();
+    }
+
+    void Polyhedron::checkVertexIndicesInRange() const {
+        const size_t numberOfVertices = _vertices.size();
+        for (size_t faceIndex = 0; faceIndex < _faces.size(); ++faceIndex) {
+            for (const size_t vertexIndex: _faces[faceIndex]) {
+                if (vertexIndex >= numberOfVertices) {
+                    std::stringstream sstream{};
+                    sstream << "The face with index " << faceIndex << " references the vertex index " << vertexIndex
+                            << ", but the mesh only contains " << numberOfVertices << " vertices. "
+                            << "The mesh is malformed and cannot be used to construct a polyhedron!";
+                    throw std::invalid_argument(sstream.str());
+                }
+            }
+        }
     }
 
     void Polyhedron::runIntegrityMeasures(const PolyhedronIntegrity &integrity) {
@@ -148,13 +207,12 @@ namespace polyhedralGravity {
             case PolyhedronIntegrity::DISABLE:
                 return;
             case PolyhedronIntegrity::AUTOMATIC:
-                SPDLOG_LOGGER_WARN(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(),
-                                   "The mesh check is enabled and analyzes the polyhedron for degenerated faces & "
-                                   "that all plane unit normals point in the specified direction. This checks requires "
-                                   "a quadratic runtime cost which is most of the time not desirable. "
-                                   "Please explicitly set the integrity_check to either VERIFY, HEAL or DISABLE."
-                                   "You can find further details in the documentation!");
-            // NO BREAK! AUTOMATIC implies VERIFY, but with a info message to explicitly set the option
+                POLYHEDRAL_GRAVITY_LOG_WARN("The mesh check is enabled and analyzes the polyhedron for degnerated faces & "
+                                            "that all plane unit normals point in the specified direction. This checks requires "
+                                            "a quadratic runtime cost which is most of the time not desirable. "
+                                            "Please explicitly set the integrity_check to either VERIFY, HEAL or DISABLE."
+                                            "You can find further details in the documentation!");
+            // NO BREAK! AUTOMATIC implies VERIFY, but with a info mesage to explcitly set the option
             case PolyhedronIntegrity::VERIFY:
             // NO BREAK! VERIFY terminates earlier, but does in the beginning the same as HEAL
             case PolyhedronIntegrity::HEAL:
@@ -169,7 +227,7 @@ namespace polyhedralGravity {
                         sstream << "Instead all plane unit normals are pointing "
                                 << actualOrientation
                                 << ". You can either reconstruct the polyhedron with the orientation set to " << actualOrientation
-                                << ". Alternatively, you can reconstruct with the integrity_check set to HEAL";
+                                << ". Alternativly, you can reconstruct with the inetgrity_check set to HEAL";
                     } else {
                         sstream << "The actual majority orientation of the polyhedron's normals is " << actualOrientation
                                 << ". You can either:\n 1) Fix the ordering of the following faces:\n"
@@ -200,7 +258,7 @@ namespace polyhedralGravity {
     void Polyhedron::healPlaneUnitNormalOrientation(const NormalOrientation &actualOrientation, const std::set<size_t> &violatingIndices) {
         // Assign the majority plane unit normal orientation
         _orientation = actualOrientation;
-        // Fix the violating faces by exchanging the vertex ordering (exchanging index 0 with index 1 in the face)
+        // Fix the vioalting faces by exchaning the vertex ordering (exchaning index 0 with index 1 in the face)
         std::for_each(violatingIndices.cbegin(), violatingIndices.cend(), [this](size_t i) {
             std::swap(this->_faces[i][0], this->_faces[i][1]);
         });
@@ -223,4 +281,6 @@ namespace polyhedralGravity {
         // Count every triangular face which is intersected by the ray
         return this->_tree->countIntersections(rayOrigin, rayVector);
     }
-};// namespace polyhedralGravity
+
+
+}// namespace polyhedralGravity

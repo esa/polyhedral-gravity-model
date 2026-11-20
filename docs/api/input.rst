@@ -5,23 +5,26 @@ Overview
 --------
 
 The Polyhedral Gravity Model comes with multiple ways of processing
-input. In general, there are the two abstract interfaces
-:code:`ConfigSource` and :code:`DataSource` and their
-respective implementations :code:`YAMLConfigReader` and
-:code:`TetgenAdapter`. The first duet is used for
-getting the information what execrably to calculate, whereas
-the second duet is used for processing the polyhedral source.
+input. In general, there are is one abstract interface
+:code:`ConfigSource` to specify a model evaluation.
+Its implementation is realized in the class :code:`YAMLConfigReader`.
 
-Abstract Interfaces
+The file input is delegated from the :code:`YAMLConfigReader` to
+the functions in the namespace :code:`MeshReader` which
+vice-versa delegates calls to Tetgen's file formats to the
+:code:`TetgenAdapter`.
+
+
+Configuration Input
 -------------------
 
 .. doxygenclass:: polyhedralGravity::ConfigSource
 
-.. doxygenclass:: polyhedralGravity::DataSource
+.. doxygenclass:: polyhedralGravity::YAMLConfigReader
 
-Implementations
+Mesh File Input
 ---------------
 
-.. doxygenclass:: polyhedralGravity::YAMLConfigReader
+.. doxygennamespace:: polyhedralGravity::MeshReader
 
 .. doxygenclass:: polyhedralGravity::TetgenAdapter

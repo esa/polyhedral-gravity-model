@@ -47,7 +47,7 @@ if any([
 # -- Project information -----------------------------------------------------
 
 project = "Polyhedral Gravity Model"
-copyright = "2024, Jonas Schuhmacher"
+copyright = "2022 - 2025, Jonas Schuhmacher"
 author = "Jonas Schuhmacher"
 
 # -- General configuration ---------------------------------------------------

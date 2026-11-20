@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <variant>
+#include <type_traits>
 
 #include "thrust/iterator/zip_iterator.h"
 #include "thrust/iterator/transform_iterator.h"

@@ -55,26 +55,26 @@ plane unit normal is inwards pointing.
 
     from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity, NormalOrientation
 
-        # Reading the vertices and files from a .node and .face file
-        file_vertices = '___.node'      # str, path to file
-        file_nodes = '___.face'         # str, path to file
-        density = ...                   # float
-        computation_points = ...        # (N,3)-array-like
+    # Reading the vertices and files from a .node and .face file
+    file_vertices = '___.node'      # str, path to file
+    file_nodes = '___.face'         # str, path to file
+    density = ...                   # float
+    computation_points = ...        # (N,3)-array-like
 
-        # Evaluate the gravity model
-        # Notice that the last argument could also be a list of points
-        # Returns a list of tuple of potential, acceleration and tensor
-        polyhedron = Polyhedron(
-            polyhedral_source=[file_vertices, file_nodes],
-            density=density,
-            normal_orientation=NormalOrientation.OUTWARDS,
-            integrity_check=PolyhedronIntegrity.VERIFY,
-        )
-        results = evaluate(
-            polyhedron=polyhedron,
-            computation_points=computation_points,
-            parallel=True,
-        )
+    # Evaluate the gravity model
+    # Notice that the last argument could also be a list of points
+    # Returns a list of tuple of potential, acceleration and tensor
+    polyhedron = Polyhedron(
+        polyhedral_source=[file_vertices, file_nodes],
+        density=density,
+        normal_orientation=NormalOrientation.OUTWARDS,
+        integrity_check=PolyhedronIntegrity.VERIFY,
+    )
+    results = evaluate(
+        polyhedron=polyhedron,
+        computation_points=computation_points,
+        parallel=True,
+    )
 
 
 **Example 2b:** Evaluating the gravity model for a given constant density polyhedron
@@ -87,21 +87,21 @@ It will raise a ValueError if at least on plane unit normal is inwards pointing.
 
     from polyhedral_gravity import Polyhedron, evaluate, PolyhedronIntegrity
 
-        # Reading the vertices and files from a single .mesh file
-        file = '___.mesh'       # str, path to file
-        density = ...           # float
-        computation_point = ... # (3)-array-like
+    # Reading the vertices and files from a single .mesh file
+    file = '___.mesh'       # str, path to file
+    density = ...           # float
+    computation_point = ... # (3)-array-like
 
-        # Evaluate the gravity model
-        # Notice that the last argument could also be a list of points
-        # Returns a tuple of potential, acceleration and tensor
-        # If computation_point would be a (N,3)-array, the output would be list of triplets!
-        polyhedron = Polyhedron(
-            polyhedral_source=[file],
-            density=density,
-            integrity_check=PolyhedronIntegrity.VERIFY,
-        )
-        potential, acceleration, tensor = evaluate(polyhedron, computation_point)
+    # Evaluate the gravity model
+    # Notice that the last argument could also be a list of points
+    # Returns a tuple of potential, acceleration and tensor
+    # If computation_point would be a (N,3)-array, the output would be list of triplets!
+    polyhedron = Polyhedron(
+        polyhedral_source=[file],
+        density=density,
+        integrity_check=PolyhedronIntegrity.VERIFY,
+    )
+    potential, acceleration, tensor = evaluate(polyhedron, computation_point)
 
 
 For example 2a and 2b, refer to :ref:`supported-polyhedron-source-files` to view the available
@@ -161,6 +161,33 @@ And we also need to pay the additional quadratic runtime for the checking algori
     potential, acceleration, tensor = evaluate(polyhedron, computation_point)
 
 
+**Example 4:** Here we focus on physical properties of the mesh and density.
+The evaluation's output depends on the input units.
+If the density is given in :math:`kg/m^3`, and the mesh is in :math:`m`, then the
+potential is :math:`m^2/s^2`.
+You can change the length unit in case your mesh input is scaled differently
+by using the switch :code:`metric_unit`. It allows the values :code:`METER`,
+:code:`KILOMETER`, or :code:`UNITLESS`.
+In the last case, the gravitational constant :math:`G` is not multiplied to the output.
+
+.. code-block:: python
+
+    from polyhedral_gravity import Polyhedron, evaluate, MetricUnit
+
+    # Defining every input parameter in the source code
+    file = '___.obj'        # str, path to file
+    density = ...           # float
+    computation_point = ... # (3)-array-like
+
+    # Evaluate gravity model with a polyhedron defined whose mesh is in kilometers
+    polyhedron = Polyhedron(
+        polyhedral_source=[file],        # Mesh in km
+        density=density,                 # Density now in kg/km^3
+        metric_unit=MetricUnit.KILOMETER # Alternative: METER (default) or UNITLESS
+    )
+    potential, acceleration, tensor = evaluate(polyhedron, computation_point)
+
+
 GravityEvaluable
 ----------------
 
@@ -200,3 +227,40 @@ Have a look at the example below to see how to use the :code:`GravityEvaluable` 
         # as fast as the following (find the runtime details below), which returns
         # a list of triplets comprising potential, acceleration, tensor
         results = evaluable(computation_points, parallel=True)
+
+
+PyTorch Interface (Differentiable)
+-----------------------------------
+
+In addition to the C++-backed :code:`evaluate(..)`, the optional
+:code:`polyhedral_gravity.torch` submodule provides a pure-PyTorch
+re-implementation of the same Tsoulis (2012) line-integral formula. It is
+differentiable with respect to both the polyhedron's vertex positions and its
+density, and runs on CPU or CUDA. This is useful for gradient-based
+optimization, e.g. recovering a shape or density distribution from gravity
+measurements. It requires PyTorch to be installed separately
+(:code:`pip install torch`); it is not a hard dependency of
+:code:`polyhedral-gravity-model`.
+
+.. code-block:: python
+
+    import torch
+    from polyhedral_gravity.torch import evaluate as torch_evaluate
+
+    vertices = torch.tensor(..., dtype=torch.float64, requires_grad=True)  # (N, 3)
+    faces = torch.tensor(...)                                              # (F, 3) int
+    density = torch.tensor(1.0, requires_grad=True)
+    computation_points = torch.tensor(...)                                 # (Q, 3)
+
+    potential, acceleration, tensor = torch_evaluate(
+        vertices, faces, density, computation_points,
+    )
+
+    # Gradients flow back through the analytic formula, e.g. for shape/density optimization
+    potential.sum().backward()
+    print(vertices.grad, density.grad)
+
+.. tip::
+   See the `PyTorch interface notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch.ipynb>`__
+   for a worked example, and the `benchmark notebook <https://github.com/esa/polyhedral-gravity-model/blob/main/notebooks/polyhedral-gravity-torch-benchmark.ipynb>`__
+   for a CPU/GPU performance comparison against the C++ implementation.

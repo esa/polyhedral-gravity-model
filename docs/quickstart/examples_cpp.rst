@@ -40,10 +40,12 @@ Further one must specify the name of the .csv output file.
           - "../example-config/data/tsoulis.node"   # .node contains the vertices
           - "../example-config/data/tsoulis.face"   # .face contains the triangular faces
         density: 2670.0                             # constant density, units must match with the mesh (see section below)
+                                                    # Depends on metric_unit: 'km' -> kg/km^3, 'm' -> kg/m^3, 'unitless' -> 'unitless'
         points: # Location of the computation point(s) P
           - [ 0, 0, 0 ]                             # Here it is situated at the origin
         check_mesh: true                            # Fully optional, enables mesh autodetect+repair of
                                                     # the polyhedron's vertex ordering (not given: true)
+        metric_unit: m                              # One of 'm', 'km' or ' unitless' (not given: 'm')
       output:
         filename: "gravity_result.csv"              # The name of the output file
 
@@ -126,6 +128,9 @@ some plane unit normals point outwards and some point inwards,
 the :code:`HEAL` option will fix the :code:`NormalOrientation` and any inconsistencies
 related to it. It won't throw an exception.
 The result will always be fine.
+Further, you can also specify the metric unit of the mesh, which is one of :code:`MetricUnit`,
+either :code:`METER`, :code:`KILOMETER`, or :code:`UNITLESS`.
+Important! This also influences the unit of the output and the required density input.
 
 .. code-block:: cpp
 
@@ -134,8 +139,9 @@ The result will always be fine.
         auto polyhedralSource = config->getDataSource()->getPolyhedralSource();
         double density = config->getDensity();
         std::array<double, 3> point = config->getPointsOfInterest()[0];
+        const auto metricUnit = config->getMeshUnit();
 
-        Polyhedron polyhedron{polyhedralSource, density, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL};
+        Polyhedron polyhedron{polyhedralSource, density, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL, metricUnit};
         const auto[pot, acc, tensor] = GravityModel::evaluate(polyhedron, point);
 
 

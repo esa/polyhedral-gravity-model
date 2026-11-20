@@ -1,9 +1,10 @@
 #pragma once
 
-#include <vector>
-#include <memory>
 #include <string>
-#include "DataSource.h"
+#include <tuple>
+#include <vector>
+#include <array>
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 
 namespace polyhedralGravity {
 
@@ -15,6 +16,7 @@ namespace polyhedralGravity {
 
     public:
 
+        /** Default Virtual Destructor */
         virtual ~ConfigSource() = default;
 
         /**
@@ -45,10 +47,18 @@ namespace polyhedralGravity {
         virtual bool getMeshInputCheckStatus() = 0;
 
         /**
-         * The DataSource of the given Polyhedron.
-         * @return data source (e. g. a file reader)
+         * The source structure of a Polyhedron consisting of vertices and faces
+         * @return a polyhedral source consisting of vertices and faces
          */
-        virtual std::shared_ptr<DataSource> getDataSource() = 0;
+        virtual PolyhedralSource getPolyhedralSource() = 0;
+
+        /**
+         * Returns the unit of measurement used for the polyhedron mesh.
+         * This specifies the physical unit in which the mesh dimensions are defined.
+         * Could be metric units such as meters, kilometers, or unitless.
+         * @return the unit of the polyhedral mesh as a MetricUnit enum
+         */
+        virtual MetricUnit getMeshUnit() = 0;
 
     };
 

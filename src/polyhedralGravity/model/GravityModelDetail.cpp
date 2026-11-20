@@ -287,8 +287,13 @@ namespace polyhedralGravity::GravityModel::detail {
 
                                   //The last subtraction is implemented via -distance.l1 (the minus/ inversion
                                   // is sustained through all operations, even the atan(..)
-                                  xsimd::batch<double> reg1(distance.s2, distance.s1);
-                                  xsimd::batch<double> reg2(distance.l2, -distance.l1);
+                                  // The batch must hold exactly two doubles, independent of the target ISA
+                                  // (e.g. with AVX2 enabled, xsimd::batch<double> would hold four)
+                                  using Batch2d = xsimd::make_sized_batch_t<double, 2>;
+                                  static_assert(!std::is_void_v<Batch2d>,
+                                                "No SIMD architecture with two double lanes available");
+                                  Batch2d reg1(distance.s2, distance.s1);
+                                  Batch2d reg2(distance.l2, -distance.l1);
 
                                   reg1 = xsimd::mul(reg1, planeDistance);
                                   reg2 = xsimd::mul(reg2, segmentDistance);
@@ -338,10 +343,12 @@ namespace polyhedralGravity::GravityModel::detail {
                     return false;
                 }
 
-                const double segmentVectorNorm = euclideanNorm(segmentVector);
-                return projectionPointVertexNorms[(j + 1) % 3] < segmentVectorNorm &&
-                       projectionPointVertexNorms[j] < segmentVectorNorm;
-            })) {
+            const double segmentVectorNorm = euclideanNorm(segmentVector);
+            return projectionPointVertexNorms[(j + 1) % 3] < segmentVectorNorm &&
+                   projectionPointVertexNorms[j] < segmentVectorNorm &&
+                   projectionPointVertexNorms[(j + 1) % 3] >= EPSILON_ZERO_OFFSET &&
+                   projectionPointVertexNorms[j] >= EPSILON_ZERO_OFFSET;
+        })) {
             using namespace util;
             //sing alpha = -pi*h_p
             return std::make_pair(-1.0 * util::PI * planeDistance,
@@ -374,8 +381,8 @@ namespace polyhedralGravity::GravityModel::detail {
             })) {
             using namespace util;
             //Two segment vectors G_1 and G_2 of this plane
-            const Array3 &g1 = r1Norm == 0.0 ? segmentVectorsForPlane[j] : segmentVectorsForPlane[(j - 1 + 3) % 3];
-            const Array3 &g2 = r1Norm == 0.0 ? segmentVectorsForPlane[(j + 1) % 3] : segmentVectorsForPlane[j];
+            const Array3 &g1 = r1Norm < EPSILON_ZERO_OFFSET ? segmentVectorsForPlane[j] : segmentVectorsForPlane[(j - 1 + 3) % 3];
+            const Array3 &g2 = r1Norm < EPSILON_ZERO_OFFSET ? segmentVectorsForPlane[(j + 1) % 3] : segmentVectorsForPlane[j];
             // theta = arcos((G_2 * -G_1) / (|G_2| * |G_1|))
             const double gdot = dot(g1 * -1.0, g2);
             const double theta = gdot == 0.0 ? util::PI_2 : std::acos(gdot / (euclideanNorm(g1) * euclideanNorm(g2)));

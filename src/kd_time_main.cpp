@@ -1,3 +1,4 @@
+#include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include <benchmark/benchmark.h>
 
@@ -20,12 +21,12 @@ namespace polyhedralGravity {
 
     Polyhedron createPolyhedron(const PolyhedralFiles &polyhedralFiles,
                                    const PlaneSelectionAlgorithm::Algorithm &algorithm) {
-        return {polyhedralFiles, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, algorithm};
+        return {polyhedralFiles, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::METER, algorithm};
     }
 
     void BM_Eros_Polyhedron_Tree(benchmark::State &state, const PlaneSelectionAlgorithm::Algorithm &algorithm) {
         const PolyhedralFiles polyhedralFiles = {erosFilePaths.at(state.range(0)) + ".node", erosFilePaths.at(state.range(0)) + ".face"};
-        Polyhedron polyhedron = {polyhedralFiles, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, algorithm};//createPolyhedron(polyhedralFiles, algorithm);
+        Polyhedron polyhedron = {polyhedralFiles, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, MetricUnit::METER, algorithm};//createPolyhedron(polyhedralFiles, algorithm);
         for (auto _: state) {
             auto result = polyhedron.checkPlaneUnitNormalOrientation();
             benchmark::ClobberMemory();

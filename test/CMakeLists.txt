@@ -24,4 +24,4 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources" DESTINATION "${CMAKE_CURRENT_B
 include(GoogleTest)
 
 # Adds the Tests to CTest by querying the test target executable
-gtest_discover_tests(${PROJECT_NAME}_test)
+gtest_discover_tests(${PROJECT_NAME}_test DISCOVERY_MODE PRE_TEST)
